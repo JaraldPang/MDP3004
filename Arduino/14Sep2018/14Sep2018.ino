@@ -6,7 +6,7 @@
 /**
  * Everything About Sensor
  *
- * MDP Board Pin <> Arduino Pin <> Sensor Range <> Model
+ * MDP Board Pin <> Arduino Pin <> Sensor Range <> Model <> Location
  * Top Sensor
  * PS1 <> A0  <> SE5  Distance <= 85          (1080)    TLeft
  * PS3 <> A2  <> SE7  30 <= Distance <= 130   (20150)   TMiddle
@@ -15,7 +15,7 @@
  * Bottom Sensor
  * PS2 <> A1  <> SE3 Distance <=80            (1080)    BRight(Front)
  * PS4 <> A3  <> SE1 Distance <=70            (1080)    BRight(Back)
- * PS6 <> A5  <> SE6 Distance < ????          (20150)   BLeft(Front)
+ * PS6 <> A5  <> SE6 Distance <=85            (1080)    BLeft(Front)
  *
  *
  * Sensor Variables Declaration
@@ -38,8 +38,8 @@
 
 #define Eq0x 0.041755
 #define Eq0off 0.00375
-#define Eq2x 0
-#define Eq2off 0
+#define Eq2x 0.420821
+#define Eq2off 0.012706
 #define Eq4x 0.043097
 #define Eq4off 0.00477
 
@@ -47,8 +47,8 @@
 #define Eq1off 0.00493
 #define Eq3x 0.046427
 #define Eq3off 0.00891
-#define Eq5x 0
-#define Eq5off 0
+#define Eq5x 0.041436
+#define Eq5off 0.00574
 
 long ps1, ps2, ps4;
 double sensorVal1, sensorVal2, sensorVal3;
@@ -116,9 +116,9 @@ double computePID() {
   //Serial.println(String(encoderLeftCounter) + ", " + String(encoderRightCounter) + ", " + String(encoderLeftCounter - encoderRightCounter));
   double kp, ki, kd, p, i, d, error, pid;
 
-  kp = 20;
-  ki = 0;
-  kd = 0;
+  kp = 45; //adjustment later
+  ki = 0; //error rate 
+  kd = 0.1; //post adjustment
 
   error = encoderLeftCounter - encoderRightCounter;
   integral += error;
@@ -320,7 +320,7 @@ void moveBack(int cm) {
   }
   while (encoderLeftCounter < targetTick) {
     pid = computePID();
-    md.setSpeeds(((0.5 * SPEED_MOVE) - pid, ((0.5 * SPEED_MOVE) + pid));
+    md.setSpeeds(((0.5 * SPEED_MOVE) - pid), ((0.5 * SPEED_MOVE) + pid));
   }
 
   md.setBrakes(400, 400);
@@ -365,21 +365,22 @@ void sensordata() {
   //Reciprocal Value = 1/(DistanceReflective + 0.42)
   //Distance Reflective = Analog * 5/1023
   float dis0 = 1 / (Eq0x * (sensorValue0 * (0.0048875855327468)) - Eq0off) - 0.42;
-  float dis1 = 1 / (Eq1x * (sensorValue1 * (0.0048875855327468)) - Eq1off) - 0.42;
   float dis2 = 1 / (Eq2x * (sensorValue2 * (0.0048875855327468)) - Eq2off) - 0.42;
-  float dis3 = 1 / (Eq3x * (sensorValue3 * (0.0048875855327468)) - Eq3off) - 0.42;
   float dis4 = 1 / (Eq4x * (sensorValue4 * (0.0048875855327468)) - Eq4off) - 0.42;
+  
+  float dis1 = 1 / (Eq1x * (sensorValue1 * (0.0048875855327468)) - Eq1off) - 0.42;
+  float dis3 = 1 / (Eq3x * (sensorValue3 * (0.0048875855327468)) - Eq3off) - 0.42;
   float dis5 = 1 / (Eq5x * (sensorValue5 * (0.0048875855327468)) - Eq5off) - 0.42;
 
-  Serial.print(String(dis1) + "," + String(dis3) + "," + String(dis5) + ","
-               + String(dis2) + "," + String(dis4) + "," + String(dis6) + "\r\n");
+  Serial.print(String(dis0) + " , " + String(dis2) + " , " + String(dis4-2.0) + " , "
+               + String(dis1) + " , " + String(dis3-1.0) + " , " + String(dis5) + "\r\n");
 
   sample0.clear();
   sample1.clear();
   sample2.clear();
   sample3.clear();
   sample4.clear();
-  sample5.clear();
+  //sample5.clear();
 }
 
 
@@ -408,7 +409,7 @@ void setup() {
 }
 
 void loop() {
-  moveForward(50);
-  delay(3000);
-  moveBack(10);
+  sensordata();
+  //moveForward(100);
+  delay(5000);
 }

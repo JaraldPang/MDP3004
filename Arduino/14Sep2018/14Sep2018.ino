@@ -116,9 +116,9 @@ double computePID() {
   //Serial.println(String(encoderLeftCounter) + ", " + String(encoderRightCounter) + ", " + String(encoderLeftCounter - encoderRightCounter));
   double kp, ki, kd, p, i, d, error, pid;
 
-  kp = 45; //adjustment later
-  ki = 0; //error rate 
-  kd = 0.1; //post adjustment
+  kp = -22; //adjustment later > 50 wheel no spin 
+  ki = 0; //error rate > 0.5 turn circle, cannot go higher than 0.1
+  kd = 0; //post adjustment
 
   error = encoderLeftCounter - encoderRightCounter;
   integral += error;
@@ -272,20 +272,24 @@ void moveForward(double cm) {
       //md.setSpeeds(-((SPEED_MOVE ) - pid), SPEED_MOVE + pid);
       //md.setSpeeds(-((SPEED_MOVE * 0.86) - pid), SPEED_MOVE + pid);
       //md.setSpeeds(-((SPEED_MOVE * 0.845) - pid), SPEED_MOVE + pid);
-      md.setSpeeds(((SPEED_MOVE * 0.7) - pid), SPEED_MOVE + pid);
+      Serial.print("R/E1 ");
+      Serial.print((SPEED_MOVE * 0.7) + pid);
+      Serial.print("\t L/E2 ");
+      Serial.println((SPEED_MOVE * 0.85) - pid);
+      md.setSpeeds(((SPEED_MOVE * 0.7) + pid), (SPEED_MOVE * 0.85) - pid);
     }
 
     while (encoderLeftCounter < targetTick - 25) {
       pid = computePID();
-      md.setSpeeds(((0.8 * SPEED_MOVE) - pid), (0.85 * SPEED_MOVE) + pid);
+      md.setSpeeds(((0.7 * SPEED_MOVE) + pid), (0.8 * SPEED_MOVE) - pid);
     }
     while (encoderLeftCounter < targetTick - 15) {
       pid = computePID();
-      md.setSpeeds(((0.6 * SPEED_MOVE) - pid), (0.65 * SPEED_MOVE) + pid);
+      md.setSpeeds(((0.6 * SPEED_MOVE) + pid), (0.6 * SPEED_MOVE) - pid);
     }
     while (encoderLeftCounter < targetTick) {
       pid = computePID();
-      md.setSpeeds(((0.5 * SPEED_MOVE) - pid), (0.55 * SPEED_MOVE) + pid);
+      md.setSpeeds(((0.5 * SPEED_MOVE) + pid), (0.5 * SPEED_MOVE) - pid);
     }
     //to bypass the curve motion movement
     //rotate back by 5% of the distance
@@ -298,7 +302,7 @@ void moveForward(double cm) {
     }
     //turnRight_sil(3.5);
   }
-  md.setBrakes(200, 200);
+  md.setBrakes(400, 400);
   //Serial.print("OK\r\n");
 }
 

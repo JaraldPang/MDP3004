@@ -34,7 +34,7 @@
 // 20-150 cm (Long)
 #define MODEL_LONG 20150
 
-#define SampleSize 40
+#define SampleSize 50
 
 #define Eq0x 0.041755
 #define Eq0off 0.00375
@@ -197,7 +197,7 @@ void moveForward(double cm) {
     }
     while (encoderLeftCounter < targetTick  - 50) {
       pid = computePID();
-      md.setSpeeds(((SPEED_MOVE ) - pid), SPEED_MOVE + pid);
+      md.setSpeeds(((0.8 * SPEED_MOVE ) - pid), (0.8 * SPEED_MOVE) + pid);
     }
     while (encoderLeftCounter < targetTick - 25) {
       pid = computePID();
@@ -218,7 +218,7 @@ void moveForward(double cm) {
     //29.2
     while (encoderLeftCounter < targetTick) {
       pid = computePID();
-      md.setSpeeds(((SPEED_MOVE * 0.86) - pid), SPEED_MOVE + pid);
+      md.setSpeeds(((SPEED_MOVE * 0.86) - pid), (SPEED_MOVE * 0.86) + pid);
     }
     //turnRight_sil(1);
   }
@@ -227,20 +227,20 @@ void moveForward(double cm) {
     while (encoderLeftCounter < targetTick  - 50) {
       pid = computePID();
       //0.885
-      md.setSpeeds(((SPEED_MOVE * 0.875) - pid), SPEED_MOVE + pid);
+      md.setSpeeds(((SPEED_MOVE * 2) - pid), SPEED_MOVE + pid);
     }
 
     while (encoderLeftCounter < targetTick - 25) {
       pid = computePID();
-      md.setSpeeds(((0.8 * SPEED_MOVE) - pid), (0.85 * SPEED_MOVE) + pid);
+      md.setSpeeds(((0.8 * SPEED_MOVE) - pid), (0.8 * SPEED_MOVE) + pid);
     }
     while (encoderLeftCounter < targetTick - 15) {
       pid = computePID();
-      md.setSpeeds(((0.6 * SPEED_MOVE) - pid), (0.65 * SPEED_MOVE) + pid);
+      md.setSpeeds(((0.6 * SPEED_MOVE) - pid), (0.6 * SPEED_MOVE) + pid);
     }
     while (encoderLeftCounter < targetTick) {
       pid = computePID();
-      md.setSpeeds(((0.5 * SPEED_MOVE) - pid), (0.55 * SPEED_MOVE) + pid);
+      md.setSpeeds(((0.5 * SPEED_MOVE) - pid), (0.5 * SPEED_MOVE) + pid);
     }
     //to bypass the curve motion movement
     //turnRight_sil(2);
@@ -298,7 +298,7 @@ void moveForward(double cm) {
     }
     //turnRight_sil(3.5);
   }
-  md.setBrakes(400, 400);
+  md.setBrakes(200, 200);
   //Serial.print("OK\r\n");
 }
 
@@ -328,6 +328,10 @@ void moveBack(int cm) {
   Serial.print("OK\r\n");
 }
 
+void rotate90right() {
+  md.setSpeeds(0,SPEED_MOVE);
+  delay(1000);
+}
 
 void sensordata() {
 
@@ -384,17 +388,6 @@ void sensordata() {
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
@@ -409,7 +402,8 @@ void setup() {
 }
 
 void loop() {
-  sensordata();
-  //moveForward(100);
+  //sensordata();
+  moveForward(150);
   delay(5000);
+  //rotate90right();
 }

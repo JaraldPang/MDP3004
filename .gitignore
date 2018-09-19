@@ -4,9 +4,8 @@ mdpenv
 #ignore the following files
 .idea/
 
-OKare/db.sqlite3
-
-OKare/OKareApp/__pycache__
+### Java ###
+.class
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
@@ -14,4 +13,4 @@ __pycache__/
 *.py[cod]
 
 *.pyc
-OKare/OKareApp/migrations/0001_initial.py
+

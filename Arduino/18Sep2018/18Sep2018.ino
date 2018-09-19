@@ -394,7 +394,7 @@ void moveForward(double cm) {
   }
 
   md.setM1Brake(400);
-  delayMicroseconds(1700);
+  delayMicroseconds(500);
   md.setM2Brake(400);
   
   //Serial.print("OK\r\n");
@@ -411,34 +411,140 @@ void moveBack(int cm) {
   while (encoderLeftCounter < min(50, targetTick)) {
     pid = computePID();
     md.setSpeeds(
-      ((0.5 * SPEED_MOVE) + pid),
-      ((0.5 * SPEED_MOVE) - pid)
+      -((0.5 * SPEED_MOVE) + pid),
+      -((0.5 * SPEED_MOVE) - pid)
     );
   }
 
   while (encoderLeftCounter < targetTick - 50) {
     pid = computePID();
     md.setSpeeds(
-      ((SPEED_MOVE) + pid),
-      ((SPEED_MOVE) - pid)
+      -((1.0 * SPEED_MOVE) + pid),
+      -((1.0 * SPEED_MOVE) - pid)
     );
   }
 
   while (encoderLeftCounter < targetTick) {
     pid = computePID();
     md.setSpeeds(
-      ((0.5 * SPEED_MOVE) + pid),
-      ((0.5 * SPEED_MOVE) - pid)
+      -((0.5 * SPEED_MOVE) + pid),
+      -((0.5 * SPEED_MOVE) - pid)
     );
   }
 
-  md.setM1Brake(400);
-  delayMicroseconds(1700);
   md.setM2Brake(400);
+  delayMicroseconds(500);
+  md.setM1Brake(400);
   
   delay(100);
   Serial.print("OK\r\n");
 }
+
+void turnLeft(double deg){
+  double pid;
+  float targetTick;
+  integral = 0;
+  encoderLeftCounter = encoderRightCounter = prevTick = 0;
+
+/*
+  if (deg <= 90) targetTick = deg * 4.39; //4.523
+  else if (deg <= 180 ) targetTick = deg * 4.62;
+  else if (deg <= 360 ) targetTick = deg * 4.675;
+  else targetTick = deg * 4.65;
+  */
+  if (deg <= 90) targetTick = deg * 4.085;//4.0935;//4.0925;//4.09L;//4.085L;//4.08L;//4.0775L;
+  //4.076L;//4.078M;//4.075L;//4.08M;//4.07L;//4.09;
+  //4.102;//4.11;//4.121;M//4.122M;//4.1224M;
+  //4.1225M;//4.1145L;//4.11L;//4.1L;//4.115M;
+  //4.12;//4.125M;//4.15M;//4.195M;//4.2;//4.205;//4.21;//4.258;
+  else if (deg <= 180 ) targetTick = deg * 4.38;//4.62;
+  else if (deg <= 360 ) targetTick = deg * 4.62;
+  else targetTick = deg * 4.62;
+
+  while ( encoderLeftCounter < min(50, targetTick)) {
+    pid = computePID();
+    md.setSpeeds(
+      ((0.5 * SPEED_SPIN) + pid), 
+      -((0.5 * SPEED_SPIN) - pid)
+      );
+  }
+  while ( encoderLeftCounter < targetTick - 50) {
+    pid = computePID();
+    md.setSpeeds(
+      ((1.0 * SPEED_SPIN) + pid), 
+      -((1.0 * SPEED_SPIN) - pid)
+      );
+  }
+  while ( encoderLeftCounter < targetTick) {
+    pid = computePID();
+    md.setSpeeds(
+      ((0.5 * SPEED_SPIN) + pid), 
+      -((0.5 * SPEED_SPIN) - pid));
+  }
+  
+  md.setM2Brake(400);
+  delayMicroseconds(500);
+  md.setM1Brake(400);
+  
+  delay(100);
+
+  Serial.print("OK\r\n");
+}
+
+void turnRight(double deg){
+  double pid;
+  float targetTick;
+  integral = 0;
+  encoderLeftCounter = encoderRightCounter = prevTick = 0;
+
+  if (deg <= 90) targetTick = deg * 4.158;//4.175M;//4.186M;//4.19M;//4.185;//4.175L;
+  //4.148L;//4.15M;//4.170M;//4.175M;//4.21M;//4.205;//4.185;//4.175; 
+  //4.2;//4.185;//4.175L;//4.17L;
+  //4.165;//4.1545L;//4.154L;//4.153L;
+  //4.155M;//4.165M;//4.1655M;//4.166M;//4.167M;
+  //4.168;//4.1695;//4.171M;//4.168L;//4.165L;//4.15L;//4.18M;//4.19M;//4.192M;
+  //4.187L;//4.185;//4.1825;//4.175L;//4.17225L;//4.1715L;//4.17L;//4.165L;//4.1725M;
+  //4.17L;//4.185M;//4.19M;//4.2;//4.22M;z//4.24M;//4.25;//4.335; //24/10/17
+  
+  else if (deg <= 180 ) targetTick = deg * 4.33;//4.333M;//4.335M;//4.336M;//4.338M;//4.342M;//4.335;
+  //4.32L;//4.35M;
+  //4.34;//4.33;
+  //4.34;//4.35M;//4.36;//4.415;//4.63; 
+  else if (deg <= 360 ) targetTick = deg * 4.63;
+  else targetTick = deg * 4.63;
+  
+  while ( encoderLeftCounter < min(50, targetTick)) {
+    pid = computePID();
+    md.setSpeeds(
+      -((0.5 * SPEED_SPIN) + pid), 
+      ((0.5 * SPEED_SPIN) - pid)
+      );
+  }
+  
+  while ( encoderLeftCounter < targetTick - 50) {
+    pid = computePID();
+    md.setSpeeds(
+      -((1.0 * SPEED_SPIN) + pid), 
+      ((1.0 * SPEED_SPIN) - pid)
+      );
+  }
+  while ( encoderLeftCounter < targetTick) {
+    pid = computePID();
+    md.setSpeeds(
+      -((0.5 * SPEED_SPIN) + pid), 
+      ((0.5 * SPEED_SPIN) - pid)
+      );
+  }
+  
+  md.setM2Brake(400);
+  delayMicroseconds(500);
+  md.setM1Brake(400);
+  
+  delay(100);
+
+  Serial.print("OK\r\n");
+}
+
 
 /*
      ********************************************************************************************************************************
@@ -653,8 +759,8 @@ void loop() {
     newData = false;
   }
   */
-  moveForward(100);
-
+  moveForward(30);
+  turnLeft(90);
   delay(3000);
 
 }

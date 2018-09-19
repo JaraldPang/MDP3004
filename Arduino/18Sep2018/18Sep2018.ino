@@ -392,7 +392,7 @@ void moveForward(double cm) {
     }
     //turnRight_sil(3.5);
   }
-  Serial.println(encoderLeftCounter);
+  //Serial.println(encoderLeftCounter);
   md.setM1Brake(400);
   delayMicroseconds(500);
   md.setM2Brake(400);
@@ -452,14 +452,14 @@ void turnLeft(double deg){
   else if (deg <= 360 ) targetTick = deg * 4.675;
   else targetTick = deg * 4.65;
   */
-  if (deg <= 90) targetTick = deg * 4.085/4.0935;//4.0925;//4.09L;//4.085L;//4.08L;//4.0775L;
+  if (deg <= 90) targetTick = deg * 4.17;//4.17(test)//4.095(on maze)//4.0935;//4.0925;//4.09L;//4.085L;//4.08L;//4.0775L;
   //4.076L;//4.078M;//4.075L;//4.08M;//4.07L;//4.09;
   //4.102;//4.11;//4.121;M//4.122M;//4.1224M;
   //4.1225M;//4.1145L;//4.11L;//4.1L;//4.115M;
   //4.12;//4.125M;//4.15M;//4.195M;//4.2;//4.205;//4.21;//4.258;
-  else if (deg <= 180 ) targetTick = deg * 4.38;//4.62;
-  else if (deg <= 360 ) targetTick = deg * 4.62;
-  else targetTick = deg * 4.62;
+  else if (deg <= 180 ) targetTick = deg * 4.322;//4.322(test)//4.62;
+  else if (deg <= 360 ) targetTick = deg * 4.41;
+  else targetTick = deg * 4.45;
 
   while ( encoderLeftCounter < min(50, targetTick)) {
     pid = computePID();
@@ -482,9 +482,9 @@ void turnLeft(double deg){
       -((0.5 * SPEED_SPIN) - pid));
   }
   
-  md.setM2Brake(400);
+  md.setM2Brake(400);//400(test)//380(on maze)
   delayMicroseconds(500);
-  md.setM1Brake(400);
+  md.setM1Brake(400);//400(test)//380(on maze)
   
   delay(100);
 
@@ -497,7 +497,7 @@ void turnRight(double deg){
   integral = 0;
   encoderLeftCounter = encoderRightCounter = prevTick = 0;
 
-  if (deg <= 90) targetTick = deg * 4.158;//4.175M;//4.186M;//4.19M;//4.185;//4.175L;
+  if (deg <= 90) targetTick = deg * 4.155;//4.155(on maze)//4.175M;//4.186M;//4.19M;//4.185;//4.175L;
   //4.148L;//4.15M;//4.170M;//4.175M;//4.21M;//4.205;//4.185;//4.175; 
   //4.2;//4.185;//4.175L;//4.17L;
   //4.165;//4.1545L;//4.154L;//4.153L;
@@ -536,9 +536,9 @@ void turnRight(double deg){
       );
   }
   
-  md.setM2Brake(400);
+  md.setM2Brake(400);//400(test, on maze)
   delayMicroseconds(500);
-  md.setM1Brake(400);
+  md.setM1Brake(400);//400(test, on maze)
   
   delay(100);
 
@@ -759,14 +759,14 @@ void loop() {
     newData = false;
   }
   */
-  moveForward(20);
+  //moveForward(20);
   //moveBack(10);
-  delay(500);
+  //delay(500);
   turnLeft(90);
   //delay(500);
   //moveForward(20);
   //delay(500);
   //turnRight(90);
-  delay(3000);
+  delay(1000);
 
 }

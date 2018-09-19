@@ -2,7 +2,9 @@
 #include <EnableInterrupt.h>
 #include <RunningMedian.h>
 
-
+/*
+     ********************************************************************************************************************************
+*/
 /**
  * Everything About Sensor
  *
@@ -29,31 +31,33 @@
 #define pinSensor3 3
 #define pinSensor5 5
 
-// 10-80 cm (Short)
-#define MODEL_SHORT 1080
-// 20-150 cm (Long)
-#define MODEL_LONG 20150
+
+#define MODEL_SHORT 1080 // 10-80 cm (Short)
+#define MODEL_LONG 20150 // 20-150 cm (Long)
 
 #define SampleSize 50
 
 #define Eq0x 0.041755
 #define Eq0off 0.00375
+
 #define Eq2x 0.420821
 #define Eq2off 0.012706
+
 #define Eq4x 0.043097
 #define Eq4off 0.00477
 
 #define Eq1x 0.045623
 #define Eq1off 0.00493
+
 #define Eq3x 0.046427
 #define Eq3off 0.00891
+
 #define Eq5x 0.041436
 #define Eq5off 0.00574
 
 long ps1, ps2, ps4;
 double sensorVal1, sensorVal2, sensorVal3;
 float voltage1, voltage2, voltage3, dis1, dis2, dis4;
-
 
 RunningMedian sample0 = RunningMedian(SampleSize);
 RunningMedian sample1 = RunningMedian(SampleSize);
@@ -62,6 +66,9 @@ RunningMedian sample3 = RunningMedian(SampleSize);
 RunningMedian sample4 = RunningMedian(SampleSize);
 RunningMedian sample5 = RunningMedian(SampleSize);
 
+/*
+     ********************************************************************************************************************************
+*/
 
 /**
  * Everything About Motor
@@ -74,31 +81,36 @@ RunningMedian sample5 = RunningMedian(SampleSize);
  * md.setSpeeds(R,L) / (E1,E2)
  */
 
+#define kpValue -20 //adjustment later > 50 wheel no spin
+#define kiValue 0 //error rate > 0.5 turn circle, cannot go higher than 0.1
+#define kdValue -10 //post adjustment
+
 // Moving speed.
-#define SPEED_MOVE 390//305//355//305
+#define SPEED_MOVE 380 //305//355//305
 
 // Turning speed
-#define SPEED_SPIN 385//295//345//295
+#define SPEED_SPIN 385 //295//345//295
 
 #define SPEED_CALIBRATE 100
-
-DualVNH5019MotorShield md;
-int motorStatus;
-double integral;
-long prevTick, prevMillis = 0;
-volatile long encoderLeftCounter, encoderRightCounter;
-
-//E1 Right Side
-#define M1A 3
-#define M1B 5
-// Ping 5 is faulty
 
 //E2 Left Side
 #define M2A 11
 #define M2B 13
 
+//E1 Right Side
+#define M1A 3
+#define M1B 5
 
+DualVNH5019MotorShield md;
 
+int motorStatus;
+double integral;
+long prevTick, prevMillis = 0;
+volatile long encoderLeftCounter, encoderRightCounter;
+
+String robotRead;
+bool newData = false, isStarted = false;
+bool robotReady = false;
 
 /**
  * Interrupt pins functions
@@ -121,9 +133,9 @@ double computePID() {
   //Serial.println(String(encoderLeftCounter) + ", " + String(encoderRightCounter) + ", " + String(encoderLeftCounter - encoderRightCounter));
   double kp, ki, kd, p, i, d, error, pid;
 
-  kp = -22; //adjustment later > 50 wheel no spin
-  ki = 0; //error rate > 0.5 turn circle, cannot go higher than 0.1
-  kd = 0; //post adjustment
+  kp = kpValue;
+  ki = kiValue;
+  kd = kdValue;
 
   error = encoderLeftCounter - encoderRightCounter;
   integral += error;
@@ -146,29 +158,44 @@ void testMotors() {
     if (millis() - prevMillis > 3000) {
       switch (motorStatus) {
 
-      case 0 : {
+      case 0:
+      {
         //md.setSpeeds(R,L)
         md.setSpeeds(50, 50);
         break;
-      } case 1 : {
+      }
+      case 1:
+      {
         md.setSpeeds(100, 100);
         break;
-      } case 2 : {
+      }
+      case 2:
+      {
         md.setSpeeds(150, 150);
         break;
-      } case 3 : {
+      }
+      case 3:
+      {
         md.setSpeeds(200, 200);
         break;
-      } case 4 : {
+      }
+      case 4:
+      {
         md.setSpeeds(250, 250);
         break;
-      } case 5 : {
+      }
+      case 5:
+      {
         md.setSpeeds(300, 300);
         break;
-      } case 6 : {
+      }
+      case 6:
+      {
         md.setSpeeds(350, 350);
         break;
-      } case 7 : {
+      }
+      case 7:
+      {
         md.setSpeeds(400, 400);
         break;
       }
@@ -179,8 +206,6 @@ void testMotors() {
   }
 }
 
-
-
 void moveForward(double cm) {
   //Serial.print("Moving Forward by : ");
   //Serial.println(value);
@@ -190,7 +215,7 @@ void moveForward(double cm) {
   integral = 0;
   encoderLeftCounter = encoderRightCounter = prevTick = 0;
 
-  targetTick = cm * 29.5;//29.2;//29.3;
+  targetTick = cm * 29.5; //29.2;//29.3;
   //29.35;
   //29.38;//29.4;//29;//29.5;//29.85;//30.05;//30.15;//30.20;//30.35; // Caliberated to 30.25 ticks per cm
 
@@ -206,10 +231,10 @@ void moveForward(double cm) {
         ((0.6 * SPEED_MOVE) - pid)
       );
     }
-    while (encoderLeftCounter < targetTick  - 50) {
+    while (encoderLeftCounter < targetTick - 50) {
       pid = computePID();
       md.setSpeeds(
-        ((1.0 * SPEED_MOVE ) + pid),
+        ((1.0 * SPEED_MOVE) + pid),
         ((1.0 * SPEED_MOVE) - pid)
       );
     }
@@ -243,21 +268,21 @@ void moveForward(double cm) {
     while (encoderLeftCounter < targetTick) {
       pid = computePID();
       md.setSpeeds(
-        ((SPEED_MOVE * 0.86) + pid),
-        ((SPEED_MOVE * 0.86) - pid)
+        ((0.86 * SPEED_MOVE) + pid),
+        ((0.86 * SPEED_MOVE) - pid)
       );
     }
     //turnRight_sil(1);
   }
   // Move Forward 5 grids
   else if (cm <= 50) {
-    targetTick = cm * 29.052;//28.75;//29M;//28.5; //29.2
-    while (encoderLeftCounter < targetTick  - 50) {
+    targetTick = cm * 29.052; //28.75;//29M;//28.5; //29.2
+    while (encoderLeftCounter < targetTick - 50) {
       pid = computePID();
       //0.885
       md.setSpeeds(
-        ((SPEED_MOVE * 2) + pid),
-        ((SPEED_MOVE) - pid)
+        ((1.0 * SPEED_MOVE) + pid),
+        ((1.0 * SPEED_MOVE) - pid)
       );
     }
 
@@ -288,33 +313,33 @@ void moveForward(double cm) {
   // Move Forward 6 grids
   else if (cm <= 60) {
     //targetTick = cm * 29;//28.5; //29.2
-    while (encoderLeftCounter < targetTick  - 50) {
+    while (encoderLeftCounter < targetTick - 50) {
       pid = computePID();
       md.setSpeeds(
-        ((SPEED_MOVE * 0.82) + pid),
-        ((SPEED_MOVE) - pid)
+        ((1.0 * SPEED_MOVE) + pid),
+        ((1.0 * SPEED_MOVE) - pid)
       );
     }
 
     while (encoderLeftCounter < targetTick - 25) {
       pid = computePID();
       md.setSpeeds(
-        ((0.8 * SPEED_MOVE) + pid),
-        ((0.85 * SPEED_MOVE) - pid)
+        ((0.6 * SPEED_MOVE) + pid),
+        ((0.6 * SPEED_MOVE) - pid)
       );
     }
     while (encoderLeftCounter < targetTick - 15) {
       pid = computePID();
       md.setSpeeds(
-        ((0.6 * SPEED_MOVE) + pid),
-        ((0.65 * SPEED_MOVE) - pid)
+        ((0.5 * SPEED_MOVE) + pid),
+        ((0.5 * SPEED_MOVE) - pid)
       );
     }
     while (encoderLeftCounter < targetTick) {
       pid = computePID();
       md.setSpeeds(
-        ((0.5 * SPEED_MOVE) + pid),
-        ((0.55 * SPEED_MOVE) - pid)
+        ((0.4 * SPEED_MOVE) + pid),
+        ((0.4 * SPEED_MOVE) - pid)
       );
     }
     //to bypass the curve motion movement
@@ -322,22 +347,24 @@ void moveForward(double cm) {
   }
   // Just Move Forward
   else {
-    while (encoderLeftCounter < targetTick  - 50) {
+    while (encoderLeftCounter < targetTick - 50) {
       pid = computePID();
       //md.setSpeeds(-((SPEED_MOVE ) - pid), SPEED_MOVE + pid);
       //md.setSpeeds(-((SPEED_MOVE * 0.86) - pid), SPEED_MOVE + pid);
       //md.setSpeeds(-((SPEED_MOVE * 0.845) - pid), SPEED_MOVE + pid);
       md.setSpeeds(
-        ((SPEED_MOVE * 0.7) + pid),
-        ((SPEED_MOVE * 0.85) - pid)
+        ((0.7 * SPEED_MOVE) + pid),
+        ((0.7 * SPEED_MOVE) - pid)
       );
+
     }
-    while (encoderLeftCounter < targetTick - 25) {
+    while (encoderLeftCounter < targetTick - 20) {
       pid = computePID();
       md.setSpeeds(
-        ((0.7 * SPEED_MOVE) + pid),
+        ((0.8 * SPEED_MOVE) + pid),
         ((0.8 * SPEED_MOVE) - pid)
       );
+
     }
     while (encoderLeftCounter < targetTick - 15) {
       pid = computePID();
@@ -345,27 +372,31 @@ void moveForward(double cm) {
         ((0.6 * SPEED_MOVE) + pid),
         ((0.6 * SPEED_MOVE) - pid)
       );
+
     }
     while (encoderLeftCounter < targetTick) {
       pid = computePID();
       md.setSpeeds(
-        ((0.5 * SPEED_MOVE) + pid),
-        ((0.5 * SPEED_MOVE) - pid)
+        ((0.4 * SPEED_MOVE) + pid),
+        ((0.4 * SPEED_MOVE) - pid)
       );
+
     }
     //to bypass the curve motion movement
     //rotate back by 5% of the distance
     //100 * 5% = 5
     if (cm <= 80) {
       //turnRight_sil(2.7);
-    }
-    else {
+    } else {
       //turnRight_sil(3.5);
     }
     //turnRight_sil(3.5);
   }
 
-  md.setBrakes(SPEED_MOVE, SPEED_MOVE);
+  md.setM1Brake(400);
+  delayMicroseconds(1700);
+  md.setM2Brake(400);
+  
   //Serial.print("OK\r\n");
 }
 
@@ -375,7 +406,7 @@ void moveBack(int cm) {
   integral = 0;
   encoderLeftCounter = encoderRightCounter = prevTick = 0;
 
-  targetTick = cm * 30.20;//30.35; // Caliberated to 30.25 ticks per cm
+  targetTick = cm * 30.20; //30.35; // Caliberated to 30.25 ticks per cm
 
   while (encoderLeftCounter < min(50, targetTick)) {
     pid = computePID();
@@ -385,7 +416,7 @@ void moveBack(int cm) {
     );
   }
 
-  while (encoderLeftCounter < targetTick  - 50) {
+  while (encoderLeftCounter < targetTick - 50) {
     pid = computePID();
     md.setSpeeds(
       ((SPEED_MOVE) + pid),
@@ -401,36 +432,37 @@ void moveBack(int cm) {
     );
   }
 
-  md.setBrakes(400, 400);
+  md.setM1Brake(400);
+  delayMicroseconds(1700);
+  md.setM2Brake(400);
+  
   delay(100);
   Serial.print("OK\r\n");
 }
 
-void rotate90right() {
-  md.setSpeeds(0, SPEED_MOVE);
-  delay(1000);
-}
+/*
+     ********************************************************************************************************************************
+*/
 
 void sensordata() {
 
-  uint32_t lastTime = 0 ;
+  uint32_t lastTime = 0;
 
-//avoidBurstRead causes a delay of 20ms
-  while (millis() <= lastTime + 20 )
-  {
+  //avoidBurstRead causes a delay of 20ms
+  while (millis() <= lastTime + 20) {
     //wait for sensor's sampling time
   }
 
   lastTime = millis();
 
   for (int i = 0; i < SampleSize; i++) {
-    sample0.add((long)analogRead(A0));
-    sample2.add((long)analogRead(A2));
-    sample4.add((long)analogRead(A4));
+    sample0.add((long) analogRead(A0));
+    sample2.add((long) analogRead(A2));
+    sample4.add((long) analogRead(A4));
 
-    sample1.add((long)analogRead(A1));
-    sample3.add((long)analogRead(A3));
-    sample5.add((long)analogRead(A5));
+    sample1.add((long) analogRead(A1));
+    sample3.add((long) analogRead(A3));
+    sample5.add((long) analogRead(A5));
   }
 
   //Get Median Value
@@ -454,8 +486,8 @@ void sensordata() {
   float dis3 = 1 / (Eq3x * (sensorValue3 * (0.0048875855327468)) - Eq3off) - 0.42;
   float dis5 = 1 / (Eq5x * (sensorValue5 * (0.0048875855327468)) - Eq5off) - 0.42;
 
-  Serial.print(String(dis0) + " , " + String(dis2) + " , " + String(dis4 - 2.0) + " , "
-               + String(dis1) + " , " + String(dis3 - 1.0) + " , " + String(dis5) + "\r\n");
+  Serial.print(String(dis0) + " , " + String(dis2) + " , " + String(dis4 - 2.0) + " , " +
+               String(dis1) + " , " + String(dis3 - 1.0) + " , " + String(dis5) + "\r\n");
 
   sample0.clear();
   sample1.clear();
@@ -465,23 +497,164 @@ void sensordata() {
   //sample5.clear();
 }
 
+/**
+ * This function is the processing of any serial data coming in to arduino into a string
+ * https://goo.gl/gfVUR4
+ */
+
+void serialEvent() {
+  while (Serial.available()) {
+    // get the new byte:
+    char inChar = (char) Serial.read();
+
+    if (inChar == '\n') {
+      newData = true;
+      break;
+    }
+    // add it to the inputString:
+    robotRead += inChar;
+  }
+}
+
+String getValue(String data, char separator, int index)
+{
+  int found = 0;
+  int strIndex[] = {0, -1};
+  int maxIndex = data.length() - 1;
+
+  for (int i = 0; i <= maxIndex && found <= index ; i++) {
+    if (data.charAt(i) == separator || i == maxIndex) {
+      found ++;
+      strIndex[0] = strIndex[1] + 1;
+      strIndex[1] = (i == maxIndex) ? i + 1 : i;
+    }
+  }
+  return found > index ? data.substring(strIndex[0], strIndex[1]) : "";
+}
+
+
+
+/*
+     ********************************************************************************************************************************
+*/
 
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
+
   pinMode(M1A, INPUT);
   pinMode(M2A, INPUT);
-  digitalWrite(3, LOW);
-  digitalWrite(11, LOW);
-
+  digitalWrite(M1A, LOW);
+  digitalWrite(M2A, LOW);
   enableInterrupt(M1A, showEncode1, FALLING);
   enableInterrupt(M2A, showEncode2, FALLING);
   md.init();
 }
 
 void loop() {
-  //sensordata();
-  moveForward(150);
-  delay(5000);
-  //rotate90right();
+  /*
+  if (robotRead == "start") {
+    if (robotReady == false) {
+      //delay(5000);
+      //moveForward(150);
+      //delay(5000);
+      //turnRight(180);
+      //moveForward(150);
+      //turnRight(180);
+      robotReady = true;
+    }
+  }
+
+  if (newData) {
+    //char buffer[20];
+    //userRead.toCharArray(buffer,20);
+    //char* token = strtok(buffer,",");
+    //Serial.print(token);=
+    double movementValue = getValue(robotRead, ',', 1).toInt();
+    char condition = robotRead.charAt(0);
+    if (robotRead == "motor") {
+      isStarted = !isStarted;
+    }
+    switch (condition) {
+    case 'W':
+    case 'w':
+      {
+        if (movementValue == 0)
+          //moveForward(10);
+        else
+          //moveForward(movementValue);
+          break;
+      }
+
+    case 'A':
+    case 'a':
+      {
+        if (movementValue == 0)
+          //turnLeft(90);
+        else
+          //turnLeft(movementValue);
+          break;
+      }
+
+    case 'D':
+    case 'd':
+      {
+        if (movementValue == 0)
+          //turnRight(90);
+        else
+          //turnRight(movementValue);
+          break;
+      }
+
+    case 'S':
+    case 's':
+      {
+        if (movementValue == 0)
+          //moveBack(10);
+        else
+          //moveBack(movementValue);
+          break;
+      }
+    case 'Z':
+    case 'z':
+      {
+        //sensorData(userRead.charAt(2));
+        break;
+      }
+    case 'O': case'o':{
+        obstacleAvoid();
+        break;
+      }
+    case 'C':
+    case 'c':
+      {
+        //caliberate();
+        break;
+      }
+    case 'A': case'a':{
+        addOne();
+        break;
+      }
+
+    case 'X':
+    case 'x':
+      {
+        //updateSensorData();
+        break;
+      }
+    default:
+      {
+        //defaultResponse();
+        break;
+      }
+    }
+
+    userRead = "";
+    newData = false;
+  }
+  */
+  moveForward(100);
+
+  delay(3000);
+
 }

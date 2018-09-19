@@ -215,7 +215,7 @@ void moveForward(double cm) {
   integral = 0;
   encoderLeftCounter = encoderRightCounter = prevTick = 0;
 
-  targetTick = cm * 29.5; //29.2;//29.3;
+  targetTick = cm * 29.65; //29.2;//29.3;
   //29.35;
   //29.38;//29.4;//29;//29.5;//29.85;//30.05;//30.15;//30.20;//30.35; // Caliberated to 30.25 ticks per cm
 
@@ -262,7 +262,7 @@ void moveForward(double cm) {
   }
   // Move Forward 2 grids
   else if (cm <= 30) {
-    targetTick = cm * 28.5;
+    targetTick = cm * 29;
     //28.25;//28.5;
     //29.2
     while (encoderLeftCounter < targetTick) {
@@ -276,7 +276,7 @@ void moveForward(double cm) {
   }
   // Move Forward 5 grids
   else if (cm <= 50) {
-    targetTick = cm * 29.052; //28.75;//29M;//28.5; //29.2
+    targetTick = cm * 29.5; //28.75;//29M;//28.5; //29.2
     while (encoderLeftCounter < targetTick - 50) {
       pid = computePID();
       //0.885
@@ -392,7 +392,7 @@ void moveForward(double cm) {
     }
     //turnRight_sil(3.5);
   }
-
+  Serial.println(encoderLeftCounter);
   md.setM1Brake(400);
   delayMicroseconds(500);
   md.setM2Brake(400);
@@ -452,7 +452,7 @@ void turnLeft(double deg){
   else if (deg <= 360 ) targetTick = deg * 4.675;
   else targetTick = deg * 4.65;
   */
-  if (deg <= 90) targetTick = deg * 4.085;//4.0935;//4.0925;//4.09L;//4.085L;//4.08L;//4.0775L;
+  if (deg <= 90) targetTick = deg * 4.085/4.0935;//4.0925;//4.09L;//4.085L;//4.08L;//4.0775L;
   //4.076L;//4.078M;//4.075L;//4.08M;//4.07L;//4.09;
   //4.102;//4.11;//4.121;M//4.122M;//4.1224M;
   //4.1225M;//4.1145L;//4.11L;//4.1L;//4.115M;
@@ -759,8 +759,14 @@ void loop() {
     newData = false;
   }
   */
-  moveForward(30);
+  moveForward(20);
+  //moveBack(10);
+  delay(500);
   turnLeft(90);
+  //delay(500);
+  //moveForward(20);
+  //delay(500);
+  //turnRight(90);
   delay(3000);
 
 }

@@ -506,12 +506,12 @@ void turnRight(double deg){
   //4.187L;//4.185;//4.1825;//4.175L;//4.17225L;//4.1715L;//4.17L;//4.165L;//4.1725M;
   //4.17L;//4.185M;//4.19M;//4.2;//4.22M;z//4.24M;//4.25;//4.335; //24/10/17
   
-  else if (deg <= 180 ) targetTick = deg * 4.33;//4.333M;//4.335M;//4.336M;//4.338M;//4.342M;//4.335;
+  else if (deg <= 180 ) targetTick = deg * 4.33;//4.33(test)//4.333M;//4.335M;//4.336M;//4.338M;//4.342M;//4.335;
   //4.32L;//4.35M;
   //4.34;//4.33;
   //4.34;//4.35M;//4.36;//4.415;//4.63; 
-  else if (deg <= 360 ) targetTick = deg * 4.63;
-  else targetTick = deg * 4.63;
+  else if (deg <= 360 ) targetTick = deg * 4.4;//4.4(test)
+  else targetTick = deg * 4.43;
   
   while ( encoderLeftCounter < min(50, targetTick)) {
     pid = computePID();
@@ -762,7 +762,7 @@ void loop() {
   //moveForward(20);
   //moveBack(10);
   //delay(500);
-  turnLeft(90);
+  turnRight(720);
   //delay(500);
   //moveForward(20);
   //delay(500);

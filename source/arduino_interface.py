@@ -1,31 +1,18 @@
-#import serial
-import os.path
+import os
+import serial
+#import time
 
-class ArduinoInterface:
 
-    #minimize method calls to reduce stack overhead for function initialization
-
-    #constructor method which initializes instance variables
-    def __init__(self):
-        arduino_path = "";
-
-        #check which device node is the arduino on
-        if(os.path.exist("/dev/ttyACM0")):
-            arduino_path = "/dev/ttyACM0"
-        else
-            arduino_path = "/dev/ttyACM1"
-
-        self.serial = serial.Serial(arduino_path, 115200)
-        pass
-
-    #writes to the serial interface
-    def write(msg):
-        pass
-
-    #reads a newline terminated string from the serial interface
-    #serial.readline() is blocking, meaning that the execution will not continue until it receives a newline
-    def read(self):
-        try:
-            return self.serial.readline()
-        except(Exception):
-            return False
+class ArduinoComms():
+	def __init__(self):
+		if os.path.exists('/dev/ttyACM0') == True:
+			ser = serial.Serial('/dev/ttyACM0', 115200)
+		else
+			ser = serial.Serial('/dev/ttyACM1', 115200)
+	
+	def writeToArduino(self, msg):
+		ser.write((str(msg).encode('UTF-8'))) #serial comms need to encode then can send
+		
+	def readFromArduino(self):
+		read_serial=ser.readline().decode('UTF-8').rstrip('\r\n') #aruino using println to send so need remove \r\n
+		return read_serial

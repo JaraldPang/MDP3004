@@ -81,19 +81,19 @@ RunningMedian sample5 = RunningMedian(SampleSize);
  * md.setSpeeds(R,L) / (E1,E2)
  */
 
-#define kpValue -20 //adjustment later > 50 wheel no spin
-#define kiValue 0 //error rate > 0.5 turn circle, cannot go higher than 0.1
-#define kdValue -10 //post adjustment
+#define kpValue -60 
+#define kiValue 0 
+#define kdValue -6 
 
 // Moving speed.
-#define Speed_Move 380 //305//355//305
+#define Speed_Move 325 //305//355//305
 
 // Turning speed
-#define Speed_Spin 385 //295//345//295
+#define Speed_Spin 325 //295//345//295
 
 #define Speed_Calibrate 100
 
-#define Speed_Brake 350
+#define Speed_Brake 325
 
 //E2 Left Side
 #define M2A 11
@@ -396,7 +396,7 @@ void moveForward(double cm) {
 
   md.setBrakes(400,400);
   
-  //Serial.print("OK\r\n");
+  Serial.print("forward OK\r\n");
 }
 
 void moveBack(int cm) {
@@ -407,7 +407,7 @@ void moveBack(int cm) {
 
   // Calibrated to 30.25 ticks per cm
   //30.35;
-  targetTick = cm * 30.20;  
+  targetTick = cm * 28.2;  
 
   while (encoderLeftCounter < min(50, targetTick)) {
     pid = computePID();
@@ -436,7 +436,7 @@ void moveBack(int cm) {
   md.setBrakes(400,400);
   
   delay(100);
-  Serial.print("OK\r\n");
+  Serial.print("backward OK\r\n");
 }
 
 void turnLeft(double deg){
@@ -485,7 +485,7 @@ void turnLeft(double deg){
   
   delay(100);
 
-  Serial.print("OK\r\n");
+  Serial.print("left OK\r\n");
 }
 
 void turnRight(double deg){
@@ -537,7 +537,7 @@ void turnRight(double deg){
   
   delay(100);
 
-  Serial.print("OK\r\n");
+  Serial.print("right OK\r\n");
 }
 
 
@@ -663,11 +663,12 @@ void loop() {
       //moveForward(150);
       //turnRight(180);
       robotReady = true;
+      Serial.print("Ready");
     }
   }
 
   if (newData) {
-    double movementValue = getValue(robotRead, ',', 1).toInt();
+    double movementValue = getValue(robotRead, ';', 1).toInt();
     char condition = robotRead.charAt(0);
     if (robotRead == "motor") {
       isStarted = !isStarted;
@@ -703,18 +704,18 @@ void loop() {
     case 'Z':
     case 'z':
       {
-        sensorData(userRead.charAt(2));
+        //sensorData(userRead.charAt(2));
         break;
       }
     case 'X': 
     case'x':{
-        obstacleAvoid();
+        //obstacleAvoid();
         break;
       }
     case 'C':
     case 'c':
       {
-        caliberate();
+        //caliberate();
         break;
       }
     case 'V':
@@ -730,7 +731,7 @@ void loop() {
       }
     }
 
-    userRead = "";
+    robotRead = "";
     newData = false;
   }
 

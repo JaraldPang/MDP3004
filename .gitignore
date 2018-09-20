@@ -5,7 +5,7 @@ mdpenv
 .idea/
 
 ### Java ###
-.class
+*.class
 
 ### Python ###
 # Byte-compiled / optimized / DLL files

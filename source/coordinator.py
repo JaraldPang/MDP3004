@@ -1,26 +1,21 @@
 import threading,multiprocessing
 from pc_interface import PcWrapper
+from bluetooth_interface import BluetoothWrapper
 from socket import SHUT_RDWR,timeout
 
 #The main method
 def main():
     pc_wrapper = PcWrapper()
-    listen_to_pc(pc_wrapper) #to spawn as thread, then test with process-based
+    bt_wrapper = BluetoothWrapper()
+    #listen_to_pc(pc_wrapper) #to spawn as thread, then test with process-based
 
 def listen_to_pc(pc_wrapper,arduino_wrapper=None,bt_wrapper=None):
-    server_socket = pc_wrapper.get_socket()
-    print("Listening for connections...")
-    server_socket.listen(0)
-    #gets the connection object, the client's ip address and outbound port
-    conn, addr =server_socket.accept()
-    print("Got a connection from %s" % str(addr))
-    conn.sendall(b"HELLO FROM SERVER!\n")
-    server_socket.shutdown(SHUT_RDWR)
-    server_socket.close()
-    server_socket.listen(0)
-    conn, addr =server_socket.accept()
 
-    while(True):
+    #gets the connection object, the client's ip address and outbound port
+    conn = pc_wrapper.accept_connection()
+    #handshake with client
+    conn.sendall(b"HELLO FROM SERVER!\n")
+    while(1):
         try:
             # encoding scheme is ASCII
             data = conn.recv(1024)
@@ -32,16 +27,37 @@ def listen_to_pc(pc_wrapper,arduino_wrapper=None,bt_wrapper=None):
                 send = "ACK-{}\n".format(msg)
                 conn.sendall(send.encode())
             print("--START NEXT RECV--")
-        except timeout:
+        except (timeout,ConnectionResetError):
+            conn.shutdown(SHUT_RDWR)
+            conn.close()
+            conn = pc_wrapper.accept_connection()
             pass
-            #server_socket.shutdown(SHUT_RDWR)
-            #server_socket.close()
 
-    server_socket.shutdown(SHUT_RDWR)
-    server_socket.close()
+    conn.shutdown(SHUT_RDWR)
+    conn.close()
 
-def listen_to_bluetooth():
-    pass
+def listen_to_bluetooth(bt_wrapper,pc_wrapper=None,arduino_wrapper=None,):
+    conn = bt_wrapper.accept_connection()
+    #handshake with client
+    conn.sendall("HELLO FROM BT SERVER!")
+    while(1):
+        try:
+            # encoding scheme is ASCII
+            msg = conn.recv(1024)
+            print("RECEIVED FROM CLIENT: {}".format(msg))
+            if (msg == "END" or not msg):
+                break
+            else:
+                send = "ACK-{}\n".format(msg)
+                conn.sendall(send)
+            print("--START NEXT RECV--")
+        except (timeout,ConnectionResetError,BluetoothError):
+            conn.shutdown(SHUT_RDWR)
+            conn.close()
+            conn = bt_wrapper.accept_connection()
+            pass
+
+    bt_wrapper.close_bt_socket()
 
 def listen_to_arduino():
     pass

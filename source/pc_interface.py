@@ -26,7 +26,7 @@ class PcWrapper:
             self.server_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
             #bind accepts a tuple containing the host interface to bind to, as well as port
             self.server_socket.bind((host,port))
-            print("Listening for connections...")
+            print("Listening for connections for PC interface...")
             # set socket to listen to interface
             self.server_socket.listen(0)
         except socket.error:

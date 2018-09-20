@@ -2,7 +2,7 @@ from bluetooth import *
 
 
 class BluetoothWrapper(object):
-    def __init__(self):
+    def __init__(self,btport=4):
         self.server_socket = None
         self.client_socket = None
         self.bt_is_connected = False
@@ -20,6 +20,7 @@ class BluetoothWrapper(object):
                 service_classes=[uuid, SERIAL_PORT_CLASS],
                 profiles=[SERIAL_PORT_PROFILE]
                 )
+            print("Listening for BT connections on RFCOMM channel %d" % self.port)
         except Exception as e:
             print("\nError: %s" % str(e))
 
@@ -43,8 +44,6 @@ class BluetoothWrapper(object):
         # Creating the server socket and bind to port
         try:
             self.client_socket = None
-            print("Waiting for BT connection on RFCOMM channel %d" % self.port)
-            # Accept requests
             self.client_socket, client_address = self.server_socket.accept()
             print("Accepted connection from ", client_address)
             return self.client_socket

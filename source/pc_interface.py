@@ -41,13 +41,16 @@ class PcWrapper:
             return False
 
     def accept_connection(self):
-        self.conn = None
-        # gets the connection object, the client's ip address and outbound port
-        conn, addr = self.server_socket.accept()
-        # output to console
-        self.conn = conn
-        print("Got a connection from %s" % str(addr))
-        return conn
+        try:
+            self.conn = None
+            # gets the connection object, the client's ip address and outbound port
+            conn, addr = self.server_socket.accept()
+            # output to console
+            self.conn = conn
+            print("Accepted PC Connection from %s" % str(addr))
+            return conn
+        except Exception as e:
+            print("\nError: %s" % str(e))
 
     #returns the socket for external handling
     def get_socket(self):

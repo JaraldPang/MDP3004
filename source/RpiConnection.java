@@ -69,7 +69,7 @@ public class RpiConnection
          Scanner scn = new Scanner(System.in);
          String input = "";
          System.out.println("HANDSHAKE FROM SERVER: " + conn.read());
-         conn.write("HELLO FROM SERVER");
+         conn.write("HELLO FROM CLIENT");
          do
          {
             try
@@ -78,6 +78,7 @@ public class RpiConnection
                System.out.print("ENTER MSG TO SEND: ");
                input = scn.nextLine();
                System.out.println("");
+               conn.write(input);
             }
             catch(SocketTimeoutException ste)
             {

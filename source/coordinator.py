@@ -39,6 +39,7 @@ def listen_to_pc(pc_wrapper,arduino_wrapper=None,bt_wrapper=None):
 
     conn.shutdown(SHUT_RDWR)
     conn.close()
+    print("Closing PC Listener")
 
 def listen_to_bluetooth(bt_wrapper,pc_wrapper=None,arduino_wrapper=None,):
     conn = bt_wrapper.accept_connection()
@@ -63,6 +64,7 @@ def listen_to_bluetooth(bt_wrapper,pc_wrapper=None,arduino_wrapper=None,):
             pass
 
     bt_wrapper.close_bt_socket()
+    print("Closing Bluetooth Listener")
 
 def listen_to_arduino(ar_wrapper,pc_wrapper=None,bt_wrapper=None):
     ser = ar_wrapper.get_connection()
@@ -80,6 +82,7 @@ def listen_to_arduino(ar_wrapper,pc_wrapper=None,bt_wrapper=None):
             print("Unexpected Disconnect occured from arduino, trying to reconnect...")
             ar_wrapper.reconnect()
 
+    print("Closing Arduino Listener")
 
 
 #required

@@ -40,8 +40,8 @@
 #define Eq0x 0.041755
 #define Eq0off 0.00375
 
-#define Eq2x 0.000929161027590632
-#define Eq2off 0.0125019329224067
+#define Eq2x 0.420821
+#define Eq2off 0.012706
 
 #define Eq4x 0.043097
 #define Eq4off 0.00477
@@ -451,7 +451,7 @@ void turnLeft(double deg){
   else if (deg <= 360 ) targetTick = deg * 4.675;
   else targetTick = deg * 4.65;
   */
-  if (deg <= 90) targetTick = deg * 4.17;//4.17(test)//4.095(on maze)//4.0935;//4.0925;//4.09L;//4.085L;//4.08L;//4.0775L;
+  if (deg <= 90) targetTick = deg * 4.2;//4.17(test)//4.095(on maze)//4.0935;//4.0925;//4.09L;//4.085L;//4.08L;//4.0775L;
   //4.076L;//4.078M;//4.075L;//4.08M;//4.07L;//4.09;
   //4.102;//4.11;//4.121;M//4.122M;//4.1224M;
   //4.1225M;//4.1145L;//4.11L;//4.1L;//4.115M;
@@ -540,10 +540,21 @@ void turnRight(double deg){
   Serial.print("right OK\r\n");
 }
 
+int rounding(int n) 
+{ 
+    // Smaller multiple 
+    int a = (n / 10) * 10; 
+      
+    // Larger multiple 
+    int b = a + 10; 
+  
+    // Return of closest of two 
+    return (n - a > b - n)? b : a; 
+} 
+
 void obstacleAvoid(){
   int count = 0;
   bool avoided = false;
-  delay(3000);
   while(count!=10){
     for(int i=0;i<100;i++){
       long ps1 = analogRead(A0);
@@ -573,13 +584,13 @@ void obstacleAvoid(){
     float voltage4 = sensorValue4 * (5.0 / 1023.0);
     //float voltage5 = sensorValue5 * (5.0 / 1023.0);
 
-    float dis0=(1/(0.0444*voltage1 - 0.0061)) - 0.42;
+    float dis0=(1/(0.0444*voltage0 - 0.0061)) - 0.42;
     //float dis1=(1/(0.0444*voltage1 - 0.0061)) - 0.42;
     //float dis2=(1/(0.0417*voltage2 - 0.004)) - 0.42;
     //float dis3=(1/(0.0421*voltage3 - 0.0057)) - 0.42;
     float dis4=(1/(0.0428*voltage4 - 0.0048)) - 0.42;
     //float dis5=(1/(0.044*voltage5 - 0.009)) - 0.42;
-
+    
     //front Left sensor has obstacle
     if(avoided==false){
       /*if(dis1<=15 && dis1 > 0){
@@ -614,12 +625,36 @@ void obstacleAvoid(){
         turnLeft(45);
         avoided=true;
       } */
-      if(dis0<=15 && dis0>0 || dis4<=15 && dis4>0){
+      if(dis0<=15 && dis0>0){
         turnRight(90);
-        moveForward(30);
+        delay(500);
+        moveForward(10);
+        delay(500);
         turnLeft(90);
-        moveForward(30);
+        delay(500);
+        moveForward(50);
+        delay(500);
         turnLeft(90);
+        delay(500);
+        moveForward(10);
+        delay(500);
+        turnRight(90);
+        avoided=true;
+      }
+      if(dis4<=15 && dis4>0) {
+        turnRight(90);
+        delay(500);
+        moveForward(20);
+        delay(500);
+        turnLeft(90);
+        delay(500);
+        moveForward(50);
+        delay(500);
+        turnLeft(90);
+        delay(500);
+        moveForward(20);
+        delay(500);
+        turnRight(90);
         avoided=true;
       }
       else{
@@ -668,7 +703,6 @@ void sensordata() {
   float sensorValue1 = sample1.getMedian();
   float sensorValue3 = sample3.getMedian();
   float sensorValue5 = sample5.getMedian();
-  Serial.println(sensorValue2);
 
   //Analog value to voltage
   //0.0048875855327468 = 5/1023
@@ -830,7 +864,7 @@ void loop() {
     robotRead = "";
     newData = false;
   }
-  sensordata();
+  //sensordata();
   //moveForward(20);
   //moveBack(10);
   //delay(500);
@@ -841,4 +875,4 @@ void loop() {
   //turnRight(90);
   delay(1000);
 
-} 
+}

@@ -40,8 +40,8 @@
 #define Eq0x 0.041755
 #define Eq0off 0.00375
 
-#define Eq2x 0.420821
-#define Eq2off 0.012706
+#define Eq2x 0.000929161027590632
+#define Eq2off 0.0125019329224067
 
 #define Eq4x 0.043097
 #define Eq4off 0.00477
@@ -574,6 +574,7 @@ void sensordata() {
   float sensorValue1 = sample1.getMedian();
   float sensorValue3 = sample3.getMedian();
   float sensorValue5 = sample5.getMedian();
+  Serial.println(sensorValue2);
 
   //Analog value to voltage
   //0.0048875855327468 = 5/1023
@@ -734,7 +735,7 @@ void loop() {
     robotRead = "";
     newData = false;
   }
-
+  sensordata();
   //moveForward(20);
   //moveBack(10);
   //delay(500);
@@ -745,4 +746,4 @@ void loop() {
   //turnRight(90);
   delay(1000);
 
-}
+} 

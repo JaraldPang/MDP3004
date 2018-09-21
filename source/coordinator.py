@@ -2,12 +2,14 @@ import threading,multiprocessing
 from pc_interface import PcWrapper
 from bluetooth_interface import BluetoothWrapper
 from socket import SHUT_RDWR,timeout
+from bluetooth.btcommon import BluetoothError
 
 #The main method
 def main():
     pc_wrapper = PcWrapper()
     bt_wrapper = BluetoothWrapper()
-    #listen_to_pc(pc_wrapper) #to spawn as thread, then test with process-based
+    listen_to_pc(pc_wrapper) #to spawn as thread, then test with process-based
+    #listen_to_bluetooth(bt_wrapper)
 
 def listen_to_pc(pc_wrapper,arduino_wrapper=None,bt_wrapper=None):
 
@@ -28,7 +30,7 @@ def listen_to_pc(pc_wrapper,arduino_wrapper=None,bt_wrapper=None):
                 conn.sendall(send.encode())
             print("--START NEXT RECV--")
         except (timeout,ConnectionResetError):
-            conn.shutdown(SHUT_RDWR)
+            print("Unexpected Disconnect occured. Awaiting reconnection...")
             conn.close()
             conn = pc_wrapper.accept_connection()
             pass
@@ -43,15 +45,16 @@ def listen_to_bluetooth(bt_wrapper,pc_wrapper=None,arduino_wrapper=None,):
     while(1):
         try:
             # encoding scheme is ASCII
-            msg = conn.recv(1024)
+            msg = conn.recv(1024).decode('utf-8')
             print("RECEIVED FROM CLIENT: {}".format(msg))
             if (msg == "END" or not msg):
                 break
             else:
                 send = "ACK-{}\n".format(msg)
-                conn.sendall(send)
+                conn.sendall(send.encode('utf-8'))
             print("--START NEXT RECV--")
-        except (timeout,ConnectionResetError,BluetoothError):
+        except (timeout,BluetoothError):
+            print("Unexpected Disconnect occured. Awaiting reconnection...")
             conn.shutdown(SHUT_RDWR)
             conn.close()
             conn = bt_wrapper.accept_connection()

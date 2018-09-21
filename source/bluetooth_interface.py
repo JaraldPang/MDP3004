@@ -11,9 +11,10 @@ class BluetoothWrapper(object):
             self.server_socket.bind(("", btport))
             self.server_socket.listen(1)  # Listen for requests
             self.port = self.server_socket.getsockname()[1]
-            #assign a UUID of the application, in theory for receiving side to connect
+            #assign the UUID of the application; the UUID used here is UUID for an application
+            #requiring Serial Port Services
             uuid = "00001101-0000-1000-8000-00805F9B34FB"
-            #advertise the application
+            #advertise the application on the SDP server
             advertise_service(
                 self.server_socket, "SampleServer",
                 service_id=uuid,

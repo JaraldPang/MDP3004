@@ -1,7 +1,7 @@
 import threading,multiprocessing
-from .pc_interface import PcWrapper
-from .bluetooth_interface import BluetoothWrapper
-from .arduino_interface import ArduinoWrapper
+from pc_interface import PcWrapper
+from bluetooth_interface import BluetoothWrapper
+from arduino_interface import ArduinoWrapper
 from socket import SHUT_RDWR,timeout
 from bluetooth.btcommon import BluetoothError
 

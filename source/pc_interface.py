@@ -7,7 +7,7 @@ import socket
 class PcWrapper:
 
     '''
-        Creates a wrapper around the scoket for message passing between threads/processes
+        Creates a wrapper around the socket for message passing between threads/processes
         parameters
             host - a ip address/interface on the local machine to bind to
             port - port to bind
@@ -32,6 +32,15 @@ class PcWrapper:
         except socket.error:
             print("Failed to create socket: " + str(socket.error))
 
+	def accept_connection(self):
+		self.conn = None
+		# gets the connection object, the client's ip address and outbound port
+		conn, addr = self.server_socket.accept()
+		# output to console
+		self.conn = conn
+		print("Got a connection from %s" % str(addr))
+		return conn
+	
     #we delegate read jobs to the external user
     def write_to_pc(self,msg):
         try:
@@ -39,15 +48,6 @@ class PcWrapper:
             return True
         except socket.error:
             return False
-
-    def accept_connection(self):
-        self.conn = None
-        # gets the connection object, the client's ip address and outbound port
-        conn, addr = self.server_socket.accept()
-        # output to console
-        self.conn = conn
-        print("Got a connection from %s" % str(addr))
-        return conn
 
     #returns the socket for external handling
     def get_socket(self):

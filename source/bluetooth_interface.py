@@ -1,6 +1,5 @@
 from bluetooth import *
 
-
 class BluetoothWrapper(object):
     def __init__(self,btport=4):
         self.server_socket = None

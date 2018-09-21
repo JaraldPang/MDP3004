@@ -508,7 +508,7 @@ void turnRight(double deg){
   //4.34;//4.33;
   //4.34;//4.35M;//4.36;//4.415;//4.63; 
   else if (deg <= 360) targetTick = deg * 4.4;//4.4(test)
-  else targetTick = deg * 4.43;
+  else targetTick = deg * 4.48;
   
   while ( encoderLeftCounter < min(50, targetTick)) {
     pid = computePID();
@@ -704,6 +704,7 @@ void loop() {
     case 'Z':
     case 'z':
       {
+        
         //sensorData(userRead.charAt(2));
         break;
       }
@@ -734,7 +735,7 @@ void loop() {
     robotRead = "";
     newData = false;
   }
-
+  sensordata();
   //moveForward(20);
   //moveBack(10);
   //delay(500);

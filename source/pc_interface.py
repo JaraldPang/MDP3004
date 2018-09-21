@@ -19,12 +19,13 @@ class PcWrapper:
         self.server_socket = None
         self.conn = None
         try:
-            socket.setdefaulttimeout(10)
             self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             #set the socket to reuse IP addresses to prevent "Address in use error"
             self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             #disable Nagle's Algorithm to force sending of packets as soon as possible to minimize latency
             self.server_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+            #set all new sockets created to have a default timeout of 10, excluding server socket
+            socket.setdefaulttimeout(10)
             #bind accepts a tuple containing the host interface to bind to, as well as port
             self.server_socket.bind((host,port))
             print("Listening for connections for PC interface...")
@@ -40,7 +41,6 @@ class PcWrapper:
         # output to console
         self.conn = conn
         print("Got a connection from %s" % str(addr))
-        print("Note - timeout is {}".format(conn.gettimeout()))
         return conn
 
     #we delegate read jobs to the external user

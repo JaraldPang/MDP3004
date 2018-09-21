@@ -1,7 +1,7 @@
 import threading,multiprocessing
-from pc_interface import PcWrapper
-from bluetooth_interface import BluetoothWrapper
-from arduino_interface import ArduinoWrapper
+from .pc_interface import PcWrapper
+from .bluetooth_interface import BluetoothWrapper
+from .arduino_interface import ArduinoWrapper
 from socket import SHUT_RDWR,timeout
 from bluetooth.btcommon import BluetoothError
 
@@ -9,7 +9,7 @@ from bluetooth.btcommon import BluetoothError
 def main():
     pc_wrapper = PcWrapper()
     bt_wrapper = BluetoothWrapper()
-	ar_wrapper = ArduinoWrapper()
+    ar_wrapper = ArduinoWrapper()
     listen_to_pc(pc_wrapper) #to spawn as thread, then test with process-based
     #listen_to_bluetooth(bt_wrapper)
 
@@ -65,20 +65,20 @@ def listen_to_bluetooth(bt_wrapper,pc_wrapper=None,arduino_wrapper=None,):
     bt_wrapper.close_bt_socket()
 
 def listen_to_arduino(ar_wrapper,pc_wrapper=None,bt_wrapper=None):
-	while(1):
-		try:
-			msg = readFromArduino()
-			print("RECEIVED FROM CLIENT: {}".format(msg))
-			if (msg == "END"):
+    ser = ar_wrapper.get_connection()
+    while(1):
+        try:
+            msg = ser.readline().decode('UTF-8').rstrip('\r\n') #aruino using println to send so need remove \r\n
+            print("RECEIVED FROM CLIENT: {}".format(msg))
+            if (msg == "END"):
                 break
             else:
                 send = "ACK-{}\n".format(msg)
-				writeToArduino(send)
-				print("Arduino has received this from rpi: {}" .format(readFromArduino()))
-				print("--START NEXT RECV--")
-		except exception:
-			print("Unexpected Disconnect occured from arduino, trying to reconnect...")
-			ar_wrapper.reconnect()
+                ar_wrapper.writeToArduino(send)
+                print("--START NEXT RECV--")
+        except Exception:
+            print("Unexpected Disconnect occured from arduino, trying to reconnect...")
+            ar_wrapper.reconnect()
 
 
 

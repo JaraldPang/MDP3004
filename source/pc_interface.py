@@ -19,6 +19,7 @@ class PcWrapper:
         self.server_socket = None
         self.conn = None
         try:
+            socket.setdefaulttimeout(10)
             self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             #set the socket to reuse IP addresses to prevent "Address in use error"
             self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -32,15 +33,16 @@ class PcWrapper:
         except socket.error:
             print("Failed to create socket: " + str(socket.error))
 
-	def accept_connection(self):
-		self.conn = None
-		# gets the connection object, the client's ip address and outbound port
-		conn, addr = self.server_socket.accept()
-		# output to console
-		self.conn = conn
-		print("Got a connection from %s" % str(addr))
-		return conn
-	
+    def accept_connection(self):
+        self.conn = None
+        # gets the connection object, the client's ip address and outbound port
+        conn, addr = self.server_socket.accept()
+        # output to console
+        self.conn = conn
+        print("Got a connection from %s" % str(addr))
+        print("Note - timeout is {}".format(conn.gettimeout()))
+        return conn
+
     #we delegate read jobs to the external user
     def write_to_pc(self,msg):
         try:

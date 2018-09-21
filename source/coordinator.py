@@ -32,7 +32,7 @@ def listen_to_pc(pc_wrapper,arduino_wrapper=None,bt_wrapper=None):
                 conn.sendall(send.encode())
             print("--START NEXT RECV--")
         except (timeout,ConnectionResetError):
-            print("Unexpected Disconnect occured. Awaiting reconnection...")
+            print("Unexpected Disconnect for PC occurred. Awaiting reconnection...")
             conn.close()
             conn = pc_wrapper.accept_connection()
             pass
@@ -56,7 +56,7 @@ def listen_to_bluetooth(bt_wrapper,pc_wrapper=None,arduino_wrapper=None,):
                 conn.sendall(send.encode('utf-8'))
             print("--START NEXT RECV--")
         except (timeout,BluetoothError):
-            print("Unexpected Disconnect occured. Awaiting reconnection...")
+            print("Unexpected Disconnect for Bluetooth occurred. Awaiting reconnection...")
             conn.shutdown(SHUT_RDWR)
             conn.close()
             conn = bt_wrapper.accept_connection()

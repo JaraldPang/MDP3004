@@ -45,7 +45,7 @@ class BluetoothWrapper(object):
         try:
             self.client_socket = None
             self.client_socket, client_address = self.server_socket.accept()
-            print("Accepted connection from ", client_address)
+            print("Accepted BlueTooth Connection from ", client_address)
             return self.client_socket
         except Exception as e:
             print("\nError: %s" % str(e))

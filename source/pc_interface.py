@@ -24,8 +24,8 @@ class PcWrapper:
             self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             #disable Nagle's Algorithm to force sending of packets as soon as possible to minimize latency
             self.server_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-            #set all new sockets created to have a default timeout of 10, excluding server socket
-            socket.setdefaulttimeout(10)
+            #set all new sockets created to have a default timeout of 60 seconds, excluding server socket
+            #socket.setdefaulttimeout(60)
             #bind accepts a tuple containing the host interface to bind to, as well as port
             self.server_socket.bind((host,port))
             print("Listening for connections for PC interface...")

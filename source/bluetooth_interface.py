@@ -50,7 +50,7 @@ class BluetoothWrapper(object):
         except Exception as e:
             print("\nError: %s" % str(e))
 
-    def blueSend(self, message):
+    def write(self, message):
         """
         Write message to Nexus
         """
@@ -58,8 +58,6 @@ class BluetoothWrapper(object):
             self.client_socket.send(str(message))
             return True
         except BluetoothError:
-            print("\nBluetooth Write Error. Connection lost")
-            self.close_bt_socket()
-            self.connect_bluetooth()  # Reestablish connection
+            return False
 
 

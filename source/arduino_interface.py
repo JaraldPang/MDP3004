@@ -19,7 +19,7 @@ class ArduinoWrapper():
 				self.ser = serial.Serial('/dev/ttyACM1', 115200)
 				break
 	
-	def writeToArduino(self, msg):
+	def write(self, msg):
 		self.ser.write((str(msg).encode('UTF-8'))) #serial comms need to encode then can send
 		
 	def get_connection(self):

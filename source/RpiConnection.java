@@ -42,6 +42,18 @@ public class RpiConnection
          socketOut.flush();   
    }
    
+   public void writeToArduino(String s)
+   {
+         socketOut.write("AR" + s);
+         socketOut.flush();   
+   }
+   
+   public void writeToAndroid(String s)
+   {      
+         socketOut.write("AN" + s);
+         socketOut.flush();      
+   }
+   
    public void close() throws IOException
    {
       conn.close();
@@ -65,20 +77,18 @@ public class RpiConnection
    {
       try
       {
-         RpiConnection conn = new RpiConnection("192.168.17.1", 45000);
+         RpiConnection conn = new RpiConnection("192.168.1.11", 45000);
          Scanner scn = new Scanner(System.in);
          String input = "";
-         System.out.println("HANDSHAKE FROM SERVER: " + conn.read());
-         conn.write("HELLO FROM CLIENT");
          do
          {
             try
             {
-               System.out.println("RECEIVED FROM SERVER: " + conn.read());
                System.out.print("ENTER MSG TO SEND: ");
                input = scn.nextLine();
                System.out.println("");
                conn.write(input);
+               System.out.println("RECEIVED: " + conn.read());
             }
             catch(SocketTimeoutException ste)
             {

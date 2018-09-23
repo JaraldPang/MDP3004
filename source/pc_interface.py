@@ -44,7 +44,7 @@ class PcWrapper:
         return conn
 
     #we delegate read jobs to the external user
-    def write_to_pc(self,msg):
+    def write(self,msg):
         try:
             self.conn.sendall("{}\n".format(msg).encode())
             return True

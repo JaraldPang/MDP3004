@@ -10,27 +10,32 @@ def main():
     pc_wrapper = PcWrapper()
     bt_wrapper = BluetoothWrapper()
     ar_wrapper = ArduinoWrapper()
-    listen_to_pc(pc_wrapper) #to spawn as thread, then test with process-based
-    #listen_to_bluetooth(bt_wrapper)
+    pc_thread = threading.Thread(target=listen_to_pc,args=(pc_wrapper,ar_wrapper,bt_wrapper))
+    bt_thread = threading.Thread(target=listen_to_bluetooth,args=(bt_wrapper,pc_wrapper,ar_wrapper))
+    ar_thread = threading.Thread(target=listen_to_arduino,args=(ar_wrapper,pc_wrapper,bt_wrapper))
+
+    pc_thread.start()
+    ar_thread.start()
+    bt_thread.start()
+
+    pc_thread.join()
+    ar_thread.join()
+    bt_thread.join()
 
 def listen_to_pc(pc_wrapper,arduino_wrapper=None,bt_wrapper=None):
 
     #gets the connection object, the client's ip address and outbound port
     conn = pc_wrapper.accept_connection()
     #handshake with client
-    conn.sendall(b"HELLO FROM SERVER!\n")
     while(1):
         try:
             # encoding scheme is ASCII
-            data = conn.recv(1024)
-            msg = data.decode()
-            print("RECEIVED FROM CLIENT: {}".format(msg))
-            if (msg == "END" or not msg):
-                break
-            else:
-                send = "ACK-{}\n".format(msg)
-                conn.sendall(send.encode())
-            print("--START NEXT RECV--")
+            msg = conn.recv(1024).decode()
+            print("RECEIVED FROM PC INTERFACE: {}".format(msg))
+            if(msg.startswith("AR")):
+                arduino_wrapper.write(msg[2:])
+            elif(msg.startswith("AN")):
+                bt_wrapper.write(msg[2:])
         except (timeout,ConnectionResetError):
             print("Unexpected Disconnect for PC occurred. Awaiting reconnection...")
             conn.close()
@@ -43,19 +48,15 @@ def listen_to_pc(pc_wrapper,arduino_wrapper=None,bt_wrapper=None):
 
 def listen_to_bluetooth(bt_wrapper,pc_wrapper=None,arduino_wrapper=None,):
     conn = bt_wrapper.accept_connection()
-    #handshake with client
-    conn.sendall("HELLO FROM BT SERVER!")
     while(1):
         try:
             # encoding scheme is ASCII
             msg = conn.recv(1024).decode('utf-8')
-            print("RECEIVED FROM CLIENT: {}".format(msg))
-            if (msg == "END" or not msg):
-                break
-            else:
-                send = "ACK-{}\n".format(msg)
-                conn.sendall(send.encode('utf-8'))
-            print("--START NEXT RECV--")
+            print("RECEIVED FROM BT INTERFACE: {}".format(msg))
+            if(msg.startswith("AL")):
+                pc_wrapper.write(msg[2:])
+            elif(msg.startswith("AR")):
+                arduino_wrapper.write(msg[2:])
         except (timeout,BluetoothError):
             print("Unexpected Disconnect for Bluetooth occurred. Awaiting reconnection...")
             conn.shutdown(SHUT_RDWR)
@@ -71,15 +72,13 @@ def listen_to_arduino(ar_wrapper,pc_wrapper=None,bt_wrapper=None):
     while(1):
         try:
             msg = ser.readline().decode('UTF-8').rstrip('\r\n') #aruino using println to send so need remove \r\n
-            print("RECEIVED FROM CLIENT: {}".format(msg))
-            if (msg == "END"):
-                break
-            else:
-                send = "ACK-{}\n".format(msg)
-                ar_wrapper.writeToArduino(send)
-                print("--START NEXT RECV--")
+            print("RECEIVED FROM ARDUINO INTERFACE: {}".format(msg))
+            if(msg.startswith("AL")):
+                pc_wrapper.write(msg[2:])
+            elif(msg.startswith("AN")):
+                bt_wrapper.write(msg[2:])
         except Exception:
-            print("Unexpected Disconnect occured from arduino, trying to reconnect...")
+            print("Unexpected Disconnect occurred from arduino, trying to reconnect...")
             ar_wrapper.reconnect()
 
     print("Closing Arduino Listener")

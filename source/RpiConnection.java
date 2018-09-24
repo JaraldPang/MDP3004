@@ -19,7 +19,7 @@ public class RpiConnection
       this.conn = new Socket(host,port);
       this.connected = true;
       this.socketOut = new PrintWriter(conn.getOutputStream());
-		this.socketIn = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+      this.socketIn = new BufferedReader(new InputStreamReader(conn.getInputStream()));
    }
    
    public String read() throws SocketTimeoutException, IOException
@@ -38,20 +38,20 @@ public class RpiConnection
    
    public void write(String s)
    {
-         socketOut.write(s);
-         socketOut.flush();   
+      socketOut.write(s);
+      socketOut.flush();   
    }
    
    public void writeToArduino(String s)
    {
-         socketOut.write("AR" + s);
-         socketOut.flush();   
+      socketOut.write("AR" + s);
+      socketOut.flush();   
    }
    
    public void writeToAndroid(String s)
    {      
-         socketOut.write("AN" + s);
-         socketOut.flush();      
+      socketOut.write("AN" + s);
+      socketOut.flush();      
    }
    
    public void close() throws IOException
@@ -59,17 +59,44 @@ public class RpiConnection
       conn.close();
    }
    
-   public boolean connected()
+   public boolean getConnected()
    {
       return connected;
    }
-
-   public void reconnect() throws UnknownHostException, IOException, SocketException
+   
+   public void setConnected(boolean connect)
    {
-      conn.close();
-      conn = new Socket(host,port);
-      conn.setSoTimeout(10000);
-      connected = true;
+      this.connected = connect;
+   }
+
+   public void reconnect() throws IOException
+   {
+      connected = false;
+      while(true)
+      {
+         try
+         {
+            System.out.println("Reconnecting...");
+            Thread.sleep(1000);
+            conn.close();
+            conn = new Socket(host,port);
+            conn.setSoTimeout(10000);
+            this.socketOut = new PrintWriter(conn.getOutputStream());
+            this.socketIn = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            connected = true;
+            break;
+         }
+         catch(SocketTimeoutException ste_reconnect){
+            continue;}            
+         catch(UnknownHostException uhe){ 
+            continue; }
+         catch(NoRouteToHostException nrthe){ 
+            continue;}
+         catch(SocketException se){ 
+            continue; }
+         catch(InterruptedException ie){ 
+            continue; }
+      }      
    }
 
    //basic connection program
@@ -94,9 +121,10 @@ public class RpiConnection
             {
                conn.reconnect();
             }
-
-         }while(input != "END" || conn.connected() == false);
-
+         
+         }while(input != "END" || conn.getConnected() == false);
+         
+         conn.close();
       }
       catch(IOException ioe)
       {

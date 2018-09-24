@@ -14,6 +14,7 @@ def main():
     bt_thread = threading.Thread(target=listen_to_bluetooth,args=(bt_wrapper,pc_wrapper,ar_wrapper))
     ar_thread = threading.Thread(target=listen_to_arduino,args=(ar_wrapper,pc_wrapper,bt_wrapper))
 
+    #we utilize 3 threads due to GIL contention. Any more than 3 will incur context and lock switch overheads
     pc_thread.start()
     ar_thread.start()
     bt_thread.start()
@@ -44,7 +45,7 @@ def listen_to_pc(pc_wrapper,arduino_wrapper=None,bt_wrapper=None):
         except (timeout,ConnectionResetError):
             print("Unexpected Disconnect for PC occurred. Awaiting reconnection...")
             conn.close()
-            conn = pc_wrapper.accept_connection()
+            conn = pc_wrapper.accept_connection_and_flush()
             pass
 
     conn.shutdown(SHUT_RDWR)
@@ -69,7 +70,7 @@ def listen_to_bluetooth(bt_wrapper,pc_wrapper=None,arduino_wrapper=None,):
             print("Unexpected Disconnect for Bluetooth occurred. Awaiting reconnection...")
             conn.shutdown(SHUT_RDWR)
             conn.close()
-            conn = bt_wrapper.accept_connection()
+            conn = bt_wrapper.accept_connection_and_flush()
             
 
     bt_wrapper.close_bt_socket()

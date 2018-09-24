@@ -1,9 +1,12 @@
 from bluetooth import *
+from socket import timeout
+import queue
 
 class BluetoothWrapper(object):
     def __init__(self,btport=4):
         self.server_socket = None
         self.client_socket = None
+        self.queue = queue.Queue()
         try:
             self.server_socket = BluetoothSocket(RFCOMM)
             self.server_socket.bind(("", btport))
@@ -49,14 +52,35 @@ class BluetoothWrapper(object):
         except Exception as e:
             print("\nError: %s" % str(e))
 
-    def write(self, message):
-        """
-        Write message to Nexus
-        """
+    def accept_connection_and_flush(self):
+        conn = self.accept_connection()
+        #no peek method makes this unnecessarily harder
+        next_msg = None
+        while(self.queue.empty() is False):
+            try:
+                if(next_msg is None):
+                    next_msg = self.queue.get()
+                print("Flushing...")
+                self.conn.sendall("{}\n".format(next_msg).encode())
+                next_msg = None
+            except(timeout,BluetoothError):
+                conn = self.accept_connection()
+        return conn
+
+
+    #we delegate read jobs to the read thread
+    #we also delegate flushing of the queue to the reader thread
+    def write(self,msg):
         try:
-            self.client_socket.send(str(message))
+            #if the queue is not empty there was a disconnect and the reader thread is flushing, enqueue this msg
+            if(self.queue.empty() is False):
+                self.queue.put(msg)
+            else:
+                self.client_socket.send(str(msg))
             return True
         except BluetoothError:
+            self.queue.put(msg)
             return False
+
 
 

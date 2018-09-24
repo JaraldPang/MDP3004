@@ -1,5 +1,5 @@
 import socket
-
+import queue
 '''
     Class PCWrapper wraps the PC connection interface
 '''
@@ -18,6 +18,8 @@ class PcWrapper:
         #sets the socket as streaming
         self.server_socket = None
         self.conn = None
+        #used deque as Queue.queue did not provide easy way to peek the head of queue
+        self.queue = queue.Queue()
         try:
             self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             #set the socket to reuse IP addresses to prevent "Address in use error"
@@ -34,6 +36,7 @@ class PcWrapper:
         except socket.error:
             print("Failed to create socket: " + str(socket.error))
 
+    #accept_connection returns the connection or client socket
     def accept_connection(self):
         self.conn = None
         # gets the connection object, the client's ip address and outbound port
@@ -43,14 +46,34 @@ class PcWrapper:
         print("Got a connection from %s" % str(addr))
         return conn
 
-    #we delegate read jobs to the external user
+    def accept_connection_and_flush(self):
+        conn = self.accept_connection()
+        #no peek method makes this unnecessarily harder
+        next_msg = None
+        while(self.queue.empty() is False):
+            try:
+                if(next_msg is None):
+                    next_msg = self.queue.get()
+                print("Flushing...")
+                self.conn.sendall("{}\n".format(next_msg).encode())
+                next_msg = None
+            except(socket.timeout,socket.error,ConnectionResetError):
+                conn = self.accept_connection()
+        return conn
+
+    #we delegate read jobs to the read thread
+    #we also delegate flushing of the queue to the reader thread
     def write(self,msg):
         try:
-            self.conn.sendall("{}\n".format(msg).encode())
+            #if the queue is not empty there was a disconnect and the reader thread is flushing, enqueue this msg
+            if(self.queue.empty() is False):
+                self.queue.put(msg)
+            else:
+                self.conn.sendall("{}\n".format(msg).encode())
             return True
         except socket.error:
+            self.queue.put(msg)
             return False
-
 
     #returns the socket for external handling
     def get_socket(self):

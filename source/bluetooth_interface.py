@@ -4,7 +4,6 @@ class BluetoothWrapper(object):
     def __init__(self,btport=4):
         self.server_socket = None
         self.client_socket = None
-        self.bt_is_connected = False
         try:
             self.server_socket = BluetoothSocket(RFCOMM)
             self.server_socket.bind(("", btport))
@@ -20,7 +19,7 @@ class BluetoothWrapper(object):
                 service_classes=[uuid, SERIAL_PORT_CLASS],
                 profiles=[SERIAL_PORT_PROFILE]
                 )
-            print("Listening for BT connections on RFCOMM channel %d" % self.port)
+            print("Listening for BT connections on RFCOMM channel %d..." % self.port)
         except Exception as e:
             print("\nError: %s" % str(e))
 
@@ -36,8 +35,8 @@ class BluetoothWrapper(object):
             print("Closing server socket")
         self.bt_is_connected = False
 
-    def bt_is_connect(self):
-        return self.bt_is_connected
+    def is_connected(self):
+        return self.client_socket is not None
 
     def accept_connection(self,btport=4):
 

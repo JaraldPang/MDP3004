@@ -35,7 +35,12 @@ def listen_to_pc(pc_wrapper,arduino_wrapper=None,bt_wrapper=None):
             if(msg.startswith("AR")):
                 arduino_wrapper.write(msg[2:])
             elif(msg.startswith("AN")):
-                bt_wrapper.write(msg[2:])
+                if(bt_wrapper.is_connected()):
+                    bt_wrapper.write(msg[2:])
+                else:
+                    print("BT NOT CONNECTED")
+            else:
+                raise ConnectionResetError
         except (timeout,ConnectionResetError):
             print("Unexpected Disconnect for PC occurred. Awaiting reconnection...")
             conn.close()
@@ -54,7 +59,10 @@ def listen_to_bluetooth(bt_wrapper,pc_wrapper=None,arduino_wrapper=None,):
             msg = conn.recv(1024).decode('utf-8')
             print("RECEIVED FROM BT INTERFACE: {}".format(msg))
             if(msg.startswith("AL")):
-                pc_wrapper.write(msg[2:])
+                if(pc_wrapper.is_connected()):
+                    pc_wrapper.write(msg[2:])
+                else:
+                    print("PC NOT CONNECTED")
             elif(msg.startswith("AR")):
                 arduino_wrapper.write(msg[2:])
         except (timeout,BluetoothError):
@@ -62,7 +70,7 @@ def listen_to_bluetooth(bt_wrapper,pc_wrapper=None,arduino_wrapper=None,):
             conn.shutdown(SHUT_RDWR)
             conn.close()
             conn = bt_wrapper.accept_connection()
-            pass
+            
 
     bt_wrapper.close_bt_socket()
     print("Closing Bluetooth Listener")

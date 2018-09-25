@@ -9,24 +9,24 @@ from bluetooth.btcommon import BluetoothError
 def main():
     pc_wrapper = PcWrapper()
     bt_wrapper = BluetoothWrapper()
-    ar_wrapper = ArduinoWrapper()
+    ar_wrapper = None
     pc_thread = threading.Thread(target=listen_to_pc,args=(pc_wrapper,ar_wrapper,bt_wrapper))
     bt_thread = threading.Thread(target=listen_to_bluetooth,args=(bt_wrapper,pc_wrapper,ar_wrapper))
     ar_thread = threading.Thread(target=listen_to_arduino,args=(ar_wrapper,pc_wrapper,bt_wrapper))
 
     #we utilize 3 threads due to GIL contention. Any more than 3 will incur context and lock switch overheads
     pc_thread.start()
-    ar_thread.start()
+    #ar_thread.start()
     bt_thread.start()
 
     pc_thread.join()
-    ar_thread.join()
+    #ar_thread.join()
     bt_thread.join()
 
 def listen_to_pc(pc_wrapper,arduino_wrapper=None,bt_wrapper=None):
 
     #gets the connection object, the client's ip address and outbound port
-    conn = pc_wrapper.accept_connection()
+    conn = pc_wrapper.accept_connection_and_flush()
     #handshake with client
     while(1):
         try:
@@ -40,9 +40,11 @@ def listen_to_pc(pc_wrapper,arduino_wrapper=None,bt_wrapper=None):
                     bt_wrapper.write(msg[2:])
                 else:
                     print("BT NOT CONNECTED")
+            #DISCARD THIS AFTER TESTING, ELSE IT WILL CAUSE SCREWUPS IF YOU SEND
+            #A MSG FROM PC WITH NO DIRECTION
             else:
-                raise ConnectionResetError
-        except (timeout,ConnectionResetError):
+               raise ConnectionResetError
+        except (timeout,ConnectionResetError) as e:
             print("Unexpected Disconnect for PC occurred. Awaiting reconnection...")
             conn.close()
             conn = pc_wrapper.accept_connection_and_flush()
@@ -53,7 +55,7 @@ def listen_to_pc(pc_wrapper,arduino_wrapper=None,bt_wrapper=None):
     print("Closing PC Listener")
 
 def listen_to_bluetooth(bt_wrapper,pc_wrapper=None,arduino_wrapper=None,):
-    conn = bt_wrapper.accept_connection()
+    conn = bt_wrapper.accept_connection_and_flush()
     while(1):
         try:
             # encoding scheme is ASCII

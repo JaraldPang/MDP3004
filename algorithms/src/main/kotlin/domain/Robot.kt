@@ -1,12 +1,16 @@
-class Robot {
-    var centerCell = CellInfo(1, 1, Direction.UP)
-        private set
+package domain
 
-    val isAtStartZone get() = centerCell.row == 1 && centerCell.col == 1
+import kotlinx.coroutines.experimental.delay
+import model.CellInfoModel
+import model.MazeModel
+import model.MovementInfo
 
-    val explorationMaze = Maze().apply { initExploration() }
-
-    var speed = 0
+class Robot(
+    val centerCell: CellInfoModel,
+    val explorationMaze: MazeModel,
+    private val speed: Int?
+) {
+    val isAtStartZone get() = centerCell.row == 1 && centerCell.col == 1 && centerCell.direction == Direction.UP
 
     private var sensors = listOf<Sensor>()
 
@@ -26,7 +30,7 @@ class Robot {
                 for (i in sensor.senseRange) {
                     val row = centerRow + rowDiff + rowInc * i
                     val col = centerCol + colDiff + colInc * i
-                    if (!Maze.isOutsideOfMaze(row, col) && explorationMaze[row][col] == CELL_UNKNOWN) {
+                    if (!MazeModel.isOutsideOfMaze(row, col) && explorationMaze[row][col] == CELL_UNKNOWN) {
                         explorationMaze[row][col] = CELL_SENSED
                     }
                 }
@@ -34,7 +38,7 @@ class Robot {
                 for (i in sensor.senseRange.first..sensedDistance) {
                     val row = centerRow + rowDiff + rowInc * i
                     val col = centerCol + colDiff + colInc * i
-                    if (!Maze.isOutsideOfMaze(row, col) && explorationMaze[row][col] == CELL_UNKNOWN) {
+                    if (!MazeModel.isOutsideOfMaze(row, col) && explorationMaze[row][col] == CELL_UNKNOWN) {
                         if (i == sensedDistance) {
                             explorationMaze[row][col] = CELL_OBSTACLE
                         } else {
@@ -46,53 +50,41 @@ class Robot {
         }
     }
 
-    fun turnLeft() {
-        centerCell = CellInfo(centerCell.row, centerCell.col, centerCell.direction.turnLeft())
-//        println("Turn left")
-//        explorationMaze.prettyPrintWithRobot(this)
+    suspend fun turnLeft() {
+        delay(1000L / (speed ?: 3))
+        centerCell.direction = centerCell.direction.turnLeft()
         movementCount++
-        if (speed != 0) {
-            Thread.sleep(1000L / speed)
-        }
     }
 
-    fun turnRight() {
-        centerCell = CellInfo(centerCell.row, centerCell.col, centerCell.direction.turnRight())
-//        println("Turn right")
-//        explorationMaze.prettyPrintWithRobot(this)
+    suspend fun turnRight() {
+        delay(1000L / (speed ?: 3))
+        centerCell.direction = centerCell.direction.turnRight()
         movementCount++
-        if (speed != 0) {
-            Thread.sleep(1000L / speed)
-        }
     }
 
-    fun moveForward() {
+    suspend fun moveForward() {
+        delay(1000L / (speed ?: 3))
         val (centerRow, centerCol, currentDirection) = centerCell
         val (rowDiff, colDiff) = NEXT_CELL[MovementInfo(Movement.MOVE_FORWARD, currentDirection)]
             ?: throw IllegalStateException()
-        centerCell = if (rowDiff != 0) {
+        if (rowDiff != 0) {
             val frontRow = centerRow + rowDiff + rowDiff
             for (col in centerCol - 1..centerCol + 1) {
                 explorationMaze[frontRow][col]++
             }
-            CellInfo(centerRow + rowDiff, centerCol, currentDirection)
+            centerCell.row += rowDiff
         } else {
             check(colDiff != 0)
             val frontCol = centerCol + colDiff + colDiff
             for (row in centerRow - 1..centerRow + 1) {
                 explorationMaze[row][frontCol]++
             }
-            CellInfo(centerRow, centerCol + colDiff, currentDirection)
+            centerCell.col += colDiff
         }
-//        println("Move forward")
-//        explorationMaze.prettyPrintWithRobot(this)
         movementCount++
-        if (speed != 0) {
-            Thread.sleep(1000L / speed)
-        }
     }
 
-    fun goToStartZone() {
+    suspend fun goToStartZone() {
         val fastestPathMaze = explorationMaze.copy()
         val path = findFastestPathToDestination(fastestPathMaze, centerCell, 1 to 1)
             .asSequence()
@@ -102,10 +94,10 @@ class Robot {
                 when (direction) {
                     Direction.UP -> it
                     Direction.DOWN -> it +
-                            CellInfo(row, col, direction.turnLeft()) +
-                            CellInfo(row, col, direction.turnLeft().turnLeft())
-                    Direction.LEFT -> it + CellInfo(row, col, direction.turnRight())
-                    Direction.RIGHT -> it + CellInfo(row, col, direction.turnLeft())
+                            CellInfoModel(row, col, direction.turnLeft()) +
+                            CellInfoModel(row, col, direction.turnLeft().turnLeft())
+                    Direction.LEFT -> it + CellInfoModel(row, col, direction.turnRight())
+                    Direction.RIGHT -> it + CellInfoModel(row, col, direction.turnLeft())
                 }
             }
             .minBy { it.size } ?: throw IllegalStateException("Unable to find way to go home")
@@ -113,17 +105,17 @@ class Robot {
         moveFollowingMovements(movements)
     }
 
-    inline fun coversRow(row: Int): Boolean {
+    fun coversRow(row: Int): Boolean {
         val rowDiff = row - centerCell.row
         return rowDiff >= -1 && rowDiff <= 1
     }
 
-    inline fun coversColumn(col: Int): Boolean {
+    fun coversColumn(col: Int): Boolean {
         val colDiff = col - centerCell.col
         return colDiff >= -1 && colDiff <= 1
     }
 
-    fun turnToFaceUp() {
+    suspend fun turnToFaceUp() {
         when (centerCell.direction) {
             Direction.DOWN -> {
                 turnLeft()
@@ -136,7 +128,7 @@ class Robot {
         }
     }
 
-    fun moveFollowingMovements(movements: List<Movement>) {
+    suspend fun moveFollowingMovements(movements: List<Movement>) {
         for (movement in movements) {
             when (movement) {
                 Movement.TURN_RIGHT -> turnRight()

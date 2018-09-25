@@ -1,3 +1,7 @@
+package domain
+
+import model.MazeModel
+
 /**
  *  345
  * 2xxx6
@@ -18,7 +22,7 @@ class SimulatedSensor(
     position: Int,
     senseRange: IntRange,
     private val robot: Robot,
-    private val realMaze: Maze
+    private val realMaze: MazeModel
 ) : Sensor(position, senseRange) {
 
     override fun sense(): Int {
@@ -27,7 +31,7 @@ class SimulatedSensor(
         for (i in senseRange) {
             val row = centerRow + rowDiff + rowInc * i
             val col = centerCol + colDiff + colInc * i
-            if (Maze.isOutsideOfMaze(row, col) || realMaze[row][col] == CELL_OBSTACLE) {
+            if (MazeModel.isOutsideOfMaze(row, col) || realMaze[row][col] == CELL_OBSTACLE) {
                 return i
             }
         }

@@ -1,18 +1,34 @@
+package model
+
+import domain.*
+import javafx.beans.property.SimpleIntegerProperty
+import javafx.beans.property.SimpleObjectProperty
+import tornadofx.ViewModel
+import tornadofx.getValue
+import tornadofx.setValue
 import java.io.FileInputStream
-import kotlin.math.max
 import kotlin.math.min
 
-class Maze() {
+class MazeModel() : ViewModel() {
     companion object {
         fun isOutsideOfMaze(row: Int, col: Int) = row < 0 || row >= MAZE_ROWS || col < 0 || col >= MAZE_COLUMNS
     }
 
-    private val map = Array(MAZE_ROWS) { IntArray(MAZE_COLUMNS) }
+    val mazeProperties = Array(MAZE_ROWS) { _ -> Array(MAZE_COLUMNS) { SimpleIntegerProperty(0) } }
 
-    private constructor(maze: Maze) : this() {
+    class PropertyArrayWrapper(private val row: Array<SimpleIntegerProperty>) {
+        operator fun get(col: Int): Int = row[col].value
+        operator fun set(col: Int, value: Int) {
+            row[col].value = value
+        }
+    }
+
+    operator fun get(row: Int) = PropertyArrayWrapper(mazeProperties[row])
+
+    private constructor(maze: MazeModel) : this() {
         for (row in 0 until MAZE_ROWS) {
             for (col in 0 until MAZE_COLUMNS) {
-                map[row][col] = maze.map[row][col]
+                this[row][col] = maze[row][col]
             }
         }
     }
@@ -22,25 +38,25 @@ class Maze() {
         get() {
             for (row in 0 until MAZE_ROWS) {
                 for (col in 0 until MAZE_COLUMNS) {
-                    if (map[row][col] == CELL_UNKNOWN) {
+                    if (this[row][col] == CELL_UNKNOWN) {
                         return false
                     }
                 }
             }
-            println("Maze is fully explored!")
+            println("MazeModel is fully explored!")
             return true
         }
 
-    fun copy() = Maze(this)
+    fun copy() = MazeModel(this)
 
     fun prettyPrint() {
         for (row in MAZE_ROWS - 1 downTo 0) {
             for (col in 0 until MAZE_COLUMNS) {
-                val toPrint = when (map[row][col]) {
+                val toPrint = when (this[row][col]) {
                     CELL_UNKNOWN -> '?'
                     CELL_OBSTACLE -> 'X'
                     CELL_SENSED -> '.'
-                    else -> '0' + map[row][col]
+                    else -> '0' + this[row][col]
                 }
                 print(toPrint)
             }
@@ -55,10 +71,10 @@ class Maze() {
                 if (col != 0) {
                     print(' ')
                 }
-                when (map[row][col]) {
+                when (this[row][col]) {
                     CELL_UNKNOWN -> print('?')
                     CELL_OBSTACLE -> print('X')
-                    else -> print(map[row][col])
+                    else -> print(this[row][col])
                 }
             }
         }
@@ -67,7 +83,7 @@ class Maze() {
     fun prettyPrintWithRobot(robot: Robot) {
         for (row in MAZE_ROWS - 1 downTo 0) {
             for (col in 0 until MAZE_COLUMNS) {
-                val toPrint = when (map[row][col]) {
+                val toPrint = when (this[row][col]) {
                     CELL_UNKNOWN -> '?'
                     CELL_OBSTACLE -> 'X'
                     CELL_SENSED -> '.'
@@ -79,10 +95,10 @@ class Maze() {
                                 direction == Direction.DOWN && row == centerRow - 1 && col == centerCol -> 'v'
                                 direction == Direction.LEFT && row == centerRow && col == centerCol - 1 -> '<'
                                 direction == Direction.RIGHT && row == centerRow && col == centerCol + 1 -> '>'
-                                else -> 'a' - 1 + map[row][col]
+                                else -> 'a' - 1 + this[row][col]
                             }
                         } else {
-                            '0' + map[row][col]
+                            '0' + this[row][col]
                         }
                     }
                 }
@@ -97,9 +113,9 @@ class Maze() {
         for (row in 0 until MAZE_ROWS) {
             for (col in 0 until MAZE_COLUMNS) {
                 if (row < ROBOT_SIZE && col < ROBOT_SIZE) {
-                    map[row][col] = 1
+                    this[row][col] = 1
                 } else {
-                    map[row][col] = CELL_UNKNOWN
+                    this[row][col] = CELL_UNKNOWN
                 }
             }
         }
@@ -108,10 +124,10 @@ class Maze() {
     fun resetForFastestPath() {
         for (row in 0 until MAZE_ROWS) {
             for (col in 0 until MAZE_COLUMNS) {
-                if (map[row][col] < 0) {
-                    map[row][col] = CELL_OBSTACLE
+                if (this[row][col] < 0) {
+                    this[row][col] = CELL_OBSTACLE
                 } else {
-                    map[row][col] = CELL_SENSED
+                    this[row][col] = CELL_SENSED
                 }
             }
         }
@@ -124,18 +140,16 @@ class Maze() {
             .forEachIndexed { row, line ->
                 for (col in 0 until line.length) {
                     if (line[col] == '0') {
-                        map[MAZE_ROWS - row - 1][col] = CELL_SENSED
+                        this[MAZE_ROWS - row - 1][col] = CELL_SENSED
                     } else {
-                        map[MAZE_ROWS - row - 1][col] = CELL_OBSTACLE
+                        this[MAZE_ROWS - row - 1][col] = CELL_OBSTACLE
                     }
                 }
             }
     }
 
-    operator fun get(row: Int) = map[row]
-
-    fun getEnvironmentOnSides(cellInfo: CellInfo): IntArray {
-        val (centerRow, centerCol, direction) = cellInfo
+    fun getEnvironmentOnSides(cellInfoModel: CellInfoModel): IntArray {
+        val (centerRow, centerCol, direction) = cellInfoModel
         val minSides = IntArray(3)
         val sides = SIDES[direction.ordinal]
         for (movement in Movement.values()) {
@@ -145,9 +159,9 @@ class Maze() {
                 if (rowOfSide < 0 || rowOfSide >= MAZE_ROWS) {
                     minSides[movement.ordinal] = CELL_OBSTACLE
                 } else {
-                    val state1 = map[rowOfSide][centerCol - 1]
-                    val state2 = map[rowOfSide][centerCol]
-                    val state3 = map[rowOfSide][centerCol + 1]
+                    val state1 = this[rowOfSide][centerCol - 1]
+                    val state2 = this[rowOfSide][centerCol]
+                    val state3 = this[rowOfSide][centerCol + 1]
                     minSides[movement.ordinal] = min3(state1, state2, state3)
                 }
             } else {
@@ -156,9 +170,9 @@ class Maze() {
                 if (columnOfSide < 0 || columnOfSide >= MAZE_COLUMNS) {
                     minSides[movement.ordinal] = CELL_OBSTACLE
                 } else {
-                    val state1 = map[centerRow - 1][columnOfSide]
-                    val state2 = map[centerRow][columnOfSide]
-                    val state3 = map[centerRow + 1][columnOfSide]
+                    val state1 = this[centerRow - 1][columnOfSide]
+                    val state2 = this[centerRow][columnOfSide]
+                    val state3 = this[centerRow + 1][columnOfSide]
                     minSides[movement.ordinal] = min3(state1, state2, state3)
                 }
             }
@@ -166,48 +180,11 @@ class Maze() {
         return minSides
     }
 
-//    fun getEnvironmentOnSides(cellInfo: CellInfo): Pair<IntArray, IntArray> {
-//        val (centerRow, centerCol, direction) = cellInfo
-//        val minSides = IntArray(3)
-//        val maxSides = IntArray(3)
-//        val sides = SIDES[direction.ordinal]
-//        for (movement in Movement.values()) {
-//            val (rowDiff, colDiff) = sides[movement.ordinal]
-//            if (rowDiff != 0) {
-//                val rowOfSide = centerRow + rowDiff
-//                if (rowOfSide < 0 || rowOfSide >= MAZE_ROWS) {
-//                    minSides[movement.ordinal] = CELL_OBSTACLE
-//                    maxSides[movement.ordinal] = CELL_OBSTACLE
-//                } else {
-//                    val state1 = map[rowOfSide][centerCol - 1]
-//                    val state2 = map[rowOfSide][centerCol]
-//                    val state3 = map[rowOfSide][centerCol + 1]
-//                    minSides[movement.ordinal] = min3(state1, state2, state3)
-//                    maxSides[movement.ordinal] = max3(state1, state2, state3)
-//                }
-//            } else {
-//                check(colDiff != 0)
-//                val columnOfSide = centerCol + colDiff
-//                if (columnOfSide < 0 || columnOfSide >= MAZE_COLUMNS) {
-//                    minSides[movement.ordinal] = CELL_OBSTACLE
-//                    maxSides[movement.ordinal] = CELL_OBSTACLE
-//                } else {
-//                    val state1 = map[centerRow - 1][columnOfSide]
-//                    val state2 = map[centerRow][columnOfSide]
-//                    val state3 = map[centerRow + 1][columnOfSide]
-//                    minSides[movement.ordinal] = min3(state1, state2, state3)
-//                    maxSides[movement.ordinal] = max3(state1, state2, state3)
-//                }
-//            }
-//        }
-//        return minSides to maxSides
-//    }
-
     fun calculateCoverage(): Double {
         var sum = 0
         for (row in 0 until MAZE_ROWS) {
             for (col in 0 until MAZE_COLUMNS) {
-                if (map[row][col] != CELL_UNKNOWN) {
+                if (this[row][col] != CELL_UNKNOWN) {
                     sum++
                 }
             }
@@ -216,42 +193,94 @@ class Maze() {
     }
 
     fun outputExploredUnexploredString(): String {
-        val stringBuilder = StringBuilder()
-        stringBuilder.append("11")
+        val result = StringBuilder()
+        val binary = StringBuilder()
+
+        binary.append("11")
         for (row in 0 until MAZE_ROWS) {
             for (col in 0 until MAZE_COLUMNS) {
-                if (map[row][col] == CELL_UNKNOWN) {
-                    stringBuilder.append('0')
+                if (this[row][col] == CELL_UNKNOWN) {
+                    binary.append('0')
                 } else {
-                    stringBuilder.append('1')
+                    binary.append('1')
+                }
+                if (binary.length == 4) {
+                    result.append(binary.toString().binToHex())
+                    binary.setLength(0)
                 }
             }
         }
-        stringBuilder.append("11")
-        val bigInteger = stringBuilder.toString().toBigInteger(2)
-        return bigInteger.toString(16)
+        binary.append("11")
+        result.append(binary.toString().binToHex())
+        return result.toString()
     }
 
     fun outputEmptyObstacleString(): String {
-        val stringBuilder = StringBuilder()
+        val result = StringBuilder()
+        val binary = StringBuilder()
         for (row in 0 until MAZE_ROWS) {
             for (col in 0 until MAZE_COLUMNS) {
-                if (map[row][col] != CELL_UNKNOWN) {
-                    if (map[row][col] == CELL_OBSTACLE) {
-                        stringBuilder.append('1')
+                if (this[row][col] != CELL_UNKNOWN) {
+                    if (this[row][col] == CELL_OBSTACLE) {
+                        binary.append('1')
                     } else {
-                        stringBuilder.append('0')
+                        binary.append('0')
+                    }
+                    if (binary.length == 4) {
+                        result.append(binary.toString().binToHex())
+                        binary.setLength(0)
                     }
                 }
             }
         }
-        val bigInteger = stringBuilder.toString().toBigInteger(2)
-        return bigInteger.toString(16)
+        if (binary.isNotEmpty()) {
+            result.append(binary.toString().binToHex())
+        }
+        return result.toString()
     }
 }
 
-data class CellInfo(val row: Int, val col: Int, val direction: Direction) {
-    operator fun plus(movement: Movement): CellInfo {
+private fun String.binToHex() = toInt(2).toString(16)
+
+class CellInfoModel(row: Int = 1, col: Int = 1, direction: Direction = Direction.UP) : ViewModel() {
+    val rowProperty = SimpleIntegerProperty(row)
+    var row by rowProperty
+
+    val colProperty = SimpleIntegerProperty(col)
+    var col by colProperty
+
+    val directionProperty = SimpleObjectProperty(direction)
+    var direction: Direction by directionProperty
+
+    operator fun component1() = row
+    operator fun component2() = col
+    operator fun component3() = direction
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as CellInfoModel
+
+        if (row != other.row) return false
+        if (col != other.col) return false
+        if (direction != other.direction) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = row.hashCode()
+        result = 31 * result + col.hashCode()
+        result = 31 * result + direction.hashCode()
+        return result
+    }
+
+    override fun toString(): String {
+        return "CellInfoModel(row=$row, col=$col, direction=$direction)"
+    }
+
+    operator fun plus(movement: Movement): CellInfoModel {
         if (movement == Movement.MOVE_FORWARD) {
             val (rowDiff, colDiff) = when (direction) {
                 Direction.UP -> 1 to 0
@@ -259,18 +288,38 @@ data class CellInfo(val row: Int, val col: Int, val direction: Direction) {
                 Direction.LEFT -> 0 to -1
                 Direction.RIGHT -> 0 to 1
             }
-            return CellInfo(row + rowDiff, col + colDiff, direction)
+            return CellInfoModel(row + rowDiff, col + colDiff, direction)
         } else {
             val newDirection = when (movement) {
                 Movement.TURN_RIGHT -> direction.turnRight()
                 Movement.MOVE_FORWARD -> direction
                 Movement.TURN_LEFT -> direction.turnLeft()
             }
-            return CellInfo(row, col, newDirection)
+            return CellInfoModel(row, col, newDirection)
         }
     }
 
-    operator fun minus(other: CellInfo): Movement {
+    operator fun plusAssign(movement: Movement) {
+        if (movement == Movement.MOVE_FORWARD) {
+            val (rowDiff, colDiff) = when (direction) {
+                Direction.UP -> 1 to 0
+                Direction.DOWN -> -1 to 0
+                Direction.LEFT -> 0 to -1
+                Direction.RIGHT -> 0 to 1
+            }
+            row += rowDiff
+            col += colDiff
+        } else {
+            val newDirection = when (movement) {
+                Movement.TURN_RIGHT -> direction.turnRight()
+                Movement.MOVE_FORWARD -> direction
+                Movement.TURN_LEFT -> direction.turnLeft()
+            }
+            direction = newDirection
+        }
+    }
+
+    operator fun minus(other: CellInfoModel): Movement {
         val rowDiff = row - other.row
         val colDiff = col - other.col
         if (other.direction == direction) {
@@ -292,10 +341,11 @@ data class CellInfo(val row: Int, val col: Int, val direction: Direction) {
             }
         }
     }
+
+    fun copy(row: Int = this.row, col: Int = this.col, direction: Direction = this.direction) =
+        CellInfoModel(row, col, direction)
 }
 
 data class MovementInfo(val movement: Movement, val direction: Direction)
 
-inline fun min3(a: Int, b: Int, c: Int) = min(min(a, b), c)
-
-inline fun max3(a: Int, b: Int, c: Int) = max(max(a, b), c)
+fun min3(a: Int, b: Int, c: Int) = min(min(a, b), c)

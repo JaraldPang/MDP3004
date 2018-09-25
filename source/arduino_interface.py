@@ -24,7 +24,7 @@ class ArduinoWrapper():
                     self.ser = serial.Serial('/dev/ttyACM1', 115200)
                     break
                 time.sleep(1)
-            except Exception
+            except Exception:
                 continue
         print("Reconnected...")
         return self.sef

@@ -81,12 +81,12 @@ RunningMedian sample5 = RunningMedian(SampleSize);
  * md.setSpeeds(R,L) / (E1,E2)
  */
 
-#define kpValue -60 
+#define kpValue -0.2
 #define kiValue 0 
-#define kdValue -6 
+#define kdValue 0
 
 // Moving speed.
-#define Speed_Move 325 //305//355//305
+#define Speed_Move 300 //305//355//305
 
 // Turning speed
 #define Speed_Spin 325 //295//345//295
@@ -120,19 +120,19 @@ bool robotReady = false;
 //E1
 void showEncode1() {
   encoderLeftCounter++;
-  enableInterrupt(M1A, showEncode1, FALLING);
+  enableInterrupt(M1B, showEncode1, RISING);
 }
 //E2
 void showEncode2() {
   encoderRightCounter++;
-  enableInterrupt(M2A, showEncode2, FALLING);
+  enableInterrupt(M2B, showEncode2, RISING);
 }
 
 /**
  * This function is to get encoder values
  */
 double computePID() {
-  //Serial.println(String(encoderLeftCounter) + ", " + String(encoderRightCounter) + ", " + String(encoderLeftCounter - encoderRightCounter));
+  Serial.println(String(encoderLeftCounter) + ", " + String(encoderRightCounter) + ", " + String(encoderLeftCounter - encoderRightCounter));
   double kp, ki, kd, p, i, d, error, pid;
 
   kp = kpValue;
@@ -229,36 +229,36 @@ void moveForward(double cm) {
     while (encoderLeftCounter < min(50, targetTick)) {
       pid = computePID();
       md.setSpeeds(
-        ((0.6 * Speed_Move) + pid),
-        ((0.6 * Speed_Move) - pid)
+        ((0.6 * Speed_Move) - pid),
+        ((0.6 * Speed_Move) + pid)
       );
     }
     while (encoderLeftCounter < targetTick - 50) {
       pid = computePID();
       md.setSpeeds(
-        ((1.0 * Speed_Move) + pid),
-        ((1.0 * Speed_Move) - pid)
+        ((1.0 * Speed_Move) - pid),
+        ((1.0 * Speed_Move) + pid)
       );
     }
     while (encoderLeftCounter < targetTick - 25) {
       pid = computePID();
       md.setSpeeds(
-        ((0.8 * Speed_Move) + pid),
-        ((0.8 * Speed_Move) - pid)
+        ((0.8 * Speed_Move) - pid),
+        ((0.8 * Speed_Move) + pid)
       );
     }
     while (encoderLeftCounter < targetTick - 15) {
       pid = computePID();
       md.setSpeeds(
-        ((0.6 * Speed_Move) + pid),
-        ((0.6 * Speed_Move) - pid)
+        ((0.6 * Speed_Move) - pid),
+        ((0.6 * Speed_Move) + pid)
       );
     }
     while (encoderLeftCounter < targetTick) {
       pid = computePID();
       md.setSpeeds(
-        ((0.5 * Speed_Move) + pid),
-        ((0.5 * Speed_Move) - pid)
+        ((0.5 * Speed_Move) - pid),
+        ((0.5 * Speed_Move) + pid)
       );
     }
   }
@@ -864,6 +864,7 @@ void loop() {
     robotRead = "";
     newData = false;
   }
+  //md.setSpeeds(-325,-325);
   //sensordata();
   //moveForward(20);
   //moveBack(10);

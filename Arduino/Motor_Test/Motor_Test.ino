@@ -18,12 +18,12 @@ unsigned long rpm;
 void showEncode1(){
     change1=true;
     encoderLeftCounter++;
-    enableInterrupt(M1B, showEncode1, FALLING);
+    enableInterrupt(M1B, showEncode1, RISING);
 }
 void showEncode2(){
     change2=true;
     encoderRightCounter++;
-    enableInterrupt(M2A, showEncode2, FALLING);
+    enableInterrupt(M2A, showEncode2, RISING);
 }
 
 void setup()
@@ -55,9 +55,9 @@ void loop()
   //   enableInterrupt(M1A,showEncode1, FALLING);
   //}
   
-  md.setM1Speed(400);
-  md.setM2Speed(400);
-
+  //md.setM1Speed(400);
+  //md.setM2Speed(400);
+  md.setSpeeds(0,0);
   
   //md.setM2Speed(400); // single-channel motor full-speed "forward"
   //pulse_duration = pulseIn(M1A, HIGH);

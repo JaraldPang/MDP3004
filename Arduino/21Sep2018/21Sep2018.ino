@@ -1,9 +1,11 @@
+//No Sharp
 #include <DualVNH5019MotorShield.h>
 #include <EnableInterrupt.h>
 #include <RunningMedian.h>
+#include <SharpIR.h>
 
 /*
-     ********************************************************************************************************************************
+     ******************************************************************************************************************************
 */
 /**
  * Everything About Sensor
@@ -23,51 +25,46 @@
  * Sensor Variables Declaration
  */
 
-#define pinSensor0 0
-#define pinSensor2 2
-#define pinSensor4 4
+#define TL 0
+#define TM 2
+#define TR 4
+#define BRT 1
+#define BRB 3
+#define BLT 5
 
-#define pinSensor1 1
-#define pinSensor3 3
-#define pinSensor5 5
+#define irTL A0
+#define irTM A2
+#define irTR A4
+#define irBRT A1
+#define irBRB A3
+#define irBLT A5
+
+#define toleranceValue 50
+
+#define sampleSize 15
+
+SharpIR sensorTL(irTL, sampleSize, toleranceValue, TL);
+SharpIR sensorTM(irTM, sampleSize, toleranceValue, TM);
+SharpIR sensorTR(irTR, sampleSize, toleranceValue, TR);
+
+SharpIR sensorBRT(irBRT, sampleSize, toleranceValue, BRT);
+SharpIR sensorBRB(irBRB, sampleSize, toleranceValue, BRB);
+SharpIR sensorBLT(irBLT, sampleSize, toleranceValue, BLT);
 
 
-#define MODEL_SHORT 1080 // 10-80 cm (Short)
-#define MODEL_LONG 20150 // 20-150 cm (Long)
+//long ps1, ps2, ps4;
+//double sensorVal1, sensorVal2, sensorVal3;
+//float voltage1, voltage2, voltage3, dis1, dis2, dis4;
 
-#define SampleSize 50
-
-#define Eq0x 0.041755
-#define Eq0off 0.00375
-
-#define Eq2x 0.420821
-#define Eq2off 0.012706
-
-#define Eq4x 0.043097
-#define Eq4off 0.00477
-
-#define Eq1x 0.045623
-#define Eq1off 0.00493
-
-#define Eq3x 0.046427
-#define Eq3off 0.00891
-
-#define Eq5x 0.041436
-#define Eq5off 0.00574
-
-long ps1, ps2, ps4;
-double sensorVal1, sensorVal2, sensorVal3;
-float voltage1, voltage2, voltage3, dis1, dis2, dis4;
-
-RunningMedian sample0 = RunningMedian(SampleSize);
-RunningMedian sample1 = RunningMedian(SampleSize);
-RunningMedian sample2 = RunningMedian(SampleSize);
-RunningMedian sample3 = RunningMedian(SampleSize);
-RunningMedian sample4 = RunningMedian(SampleSize);
-RunningMedian sample5 = RunningMedian(SampleSize);
+//RunningMedian sample0 = RunningMedian(sampleSize);
+//RunningMedian sample1 = RunningMedian(sampleSize);
+//RunningMedian sample2 = RunningMedian(sampleSize);
+//RunningMedian sample3 = RunningMedian(sampleSize);
+//RunningMedian sample4 = RunningMedian(sampleSize);
+//RunningMedian sample5 = RunningMedian(sampleSize);
 
 /*
-     ********************************************************************************************************************************
+     ******************************************************************************************************************************
 */
 
 /**
@@ -81,17 +78,15 @@ RunningMedian sample5 = RunningMedian(SampleSize);
  * md.setSpeeds(R,L) / (E1,E2)
  */
 
-#define kpValue -60 
-#define kiValue 0 
-#define kdValue -6 
+#define kpValue 6
+#define kiValue 0
+#define kdValue 0
 
 // Moving speed.
 #define Speed_Move 325 //305//355//305
 
 // Turning speed
 #define Speed_Spin 325 //295//345//295
-
-#define Speed_Calibrate 100
 
 #define Speed_Brake 325
 
@@ -120,12 +115,12 @@ bool robotReady = false;
 //E1
 void showEncode1() {
   encoderLeftCounter++;
-  enableInterrupt(M1A, showEncode1, FALLING);
+  enableInterrupt(M1B, showEncode1, RISING);
 }
 //E2
 void showEncode2() {
   encoderRightCounter++;
-  enableInterrupt(M2A, showEncode2, FALLING);
+  enableInterrupt(M2B, showEncode2, RISING);
 }
 
 /**
@@ -152,13 +147,13 @@ double computePID() {
   return pid;
 }
 
-void testMotors() {
+void testMotors(int speedMode) {
   if (true) {
     //Serial.print(millis()-prevMillis);
     //Serial.print('\t');
     //Serial.println(motorStatus);
     if (millis() - prevMillis > 3000) {
-      switch (motorStatus) {
+      switch (speedMode) {
 
       case 0:
       {
@@ -206,6 +201,7 @@ void testMotors() {
       prevMillis = millis();
     }
   }
+  
 }
 
 void moveForward(double cm) {
@@ -228,6 +224,7 @@ void moveForward(double cm) {
     //27; //27.5; //28.15; //28.65;
     while (encoderLeftCounter < min(50, targetTick)) {
       pid = computePID();
+      Serial.println("R/E1 : " + String((0.6 * Speed_Move) + pid) + " L/E2 : " + String((0.6 * Speed_Move) - pid));
       md.setSpeeds(
         ((0.6 * Speed_Move) + pid),
         ((0.6 * Speed_Move) - pid)
@@ -235,6 +232,7 @@ void moveForward(double cm) {
     }
     while (encoderLeftCounter < targetTick - 50) {
       pid = computePID();
+      Serial.println("R/E1 : " + String((1.0 * Speed_Move) + pid) + " L/E2 : " + String((1.0 * Speed_Move) - pid));
       md.setSpeeds(
         ((1.0 * Speed_Move) + pid),
         ((1.0 * Speed_Move) - pid)
@@ -242,6 +240,7 @@ void moveForward(double cm) {
     }
     while (encoderLeftCounter < targetTick - 25) {
       pid = computePID();
+      Serial.println("R/E1 : " + String((0.8 * Speed_Move) + pid) + " L/E2 : " + String((0.8 * Speed_Move) - pid));
       md.setSpeeds(
         ((0.8 * Speed_Move) + pid),
         ((0.8 * Speed_Move) - pid)
@@ -249,6 +248,7 @@ void moveForward(double cm) {
     }
     while (encoderLeftCounter < targetTick - 15) {
       pid = computePID();
+      Serial.println("R/E1 : " + String((0.6 * Speed_Move) + pid) + " L/E2 : " + String((0.6 * Speed_Move) - pid));
       md.setSpeeds(
         ((0.6 * Speed_Move) + pid),
         ((0.6 * Speed_Move) - pid)
@@ -256,6 +256,7 @@ void moveForward(double cm) {
     }
     while (encoderLeftCounter < targetTick) {
       pid = computePID();
+      Serial.println("R/E1 : " + String((0.5 * Speed_Move) + pid) + " L/E2 : " + String((0.5 * Speed_Move) - pid));
       md.setSpeeds(
         ((0.5 * Speed_Move) + pid),
         ((0.5 * Speed_Move) - pid)
@@ -352,6 +353,7 @@ void moveForward(double cm) {
   else {
     while (encoderLeftCounter < targetTick - 50) {
       pid = computePID();
+      Serial.println("R/E1 : " + String((0.8 * Speed_Move) + pid) + " L/E2 : " + String((0.8 * Speed_Move) - pid));
       md.setSpeeds(
         ((0.8 * Speed_Move) + pid),
         ((0.8 * Speed_Move) - pid)
@@ -360,6 +362,7 @@ void moveForward(double cm) {
     }
     while (encoderLeftCounter < targetTick - 20) {
       pid = computePID();
+      Serial.println("R/E1 : " + String((0.9 * Speed_Move) + pid) + " L/E2 : " + String((0.9 * Speed_Move) - pid));
       md.setSpeeds(
         ((0.9 * Speed_Move) + pid),
         ((0.9 * Speed_Move) - pid)
@@ -368,6 +371,7 @@ void moveForward(double cm) {
     }
     while (encoderLeftCounter < targetTick - 15) {
       pid = computePID();
+      Serial.println("R/E1 : " + String((0.6 * Speed_Move) + pid) + " L/E2 : " + String((0.6 * Speed_Move) - pid));
       md.setSpeeds(
         ((0.6 * Speed_Move) + pid),
         ((0.6 * Speed_Move) - pid)
@@ -376,6 +380,7 @@ void moveForward(double cm) {
     }
     while (encoderLeftCounter < targetTick) {
       pid = computePID();
+      Serial.println("R/E1 : " + String((0.5 * Speed_Move) + pid) + " L/E2 : " + String((0.5 * Speed_Move) - pid));
       md.setSpeeds(
         ((0.5 * Speed_Move) + pid),
         ((0.5 * Speed_Move) - pid)
@@ -394,7 +399,7 @@ void moveForward(double cm) {
   }
   //Serial.println(encoderLeftCounter);
 
-  md.setBrakes(400,400);
+  md.setBrakes(Speed_Brake,Speed_Brake);
   
   Serial.print("forward OK\r\n");
 }
@@ -435,7 +440,6 @@ void moveBack(int cm) {
 
   md.setBrakes(400,400);
   
-  delay(100);
   Serial.print("backward OK\r\n");
 }
 
@@ -451,7 +455,7 @@ void turnLeft(double deg){
   else if (deg <= 360 ) targetTick = deg * 4.675;
   else targetTick = deg * 4.65;
   */
-  if (deg <= 90) targetTick = deg * 4.2;//4.17(test)//4.095(on maze)//4.0935;//4.0925;//4.09L;//4.085L;//4.08L;//4.0775L;
+  if (deg <= 90) targetTick = deg * 4.17;//4.17(test)//4.095(on maze)//4.0935;//4.0925;//4.09L;//4.085L;//4.08L;//4.0775L;
   //4.076L;//4.078M;//4.075L;//4.08M;//4.07L;//4.09;
   //4.102;//4.11;//4.121;M//4.122M;//4.1224M;
   //4.1225M;//4.1145L;//4.11L;//4.1L;//4.115M;
@@ -483,8 +487,6 @@ void turnLeft(double deg){
   
   md.setBrakes(400,400);
   
-  delay(100);
-
   Serial.print("left OK\r\n");
 }
 
@@ -534,122 +536,104 @@ void turnRight(double deg){
   }
   
   md.setBrakes(400,400);
-  
-  delay(100);
 
   Serial.print("right OK\r\n");
 }
 
-int rounding(int n) 
-{ 
-    // Smaller multiple 
-    int a = (n / 10) * 10; 
-      
-    // Larger multiple 
-    int b = a + 10; 
-  
-    // Return of closest of two 
-    return (n - a > b - n)? b : a; 
-} 
-
 void obstacleAvoid(){
+  /*
+  int count = 0;
   bool avoided = false;
-  for(int i=0;i<100;i++){
-    long ps1 = analogRead(A0); 
-    long ps2 = analogRead(A1);
-    long ps3 = analogRead(A2);
-    long ps4 = analogRead(A3);
-    long ps5 = analogRead(A4);
-    long ps6 = analogRead(A5);
-    sample0.add(ps1);
-    sample1.add(ps2);
-    sample2.add(ps3);
-    sample3.add(ps4); 
-    sample4.add(ps5);
-    sample5.add(ps6);
-  }
-  float sensorValue0 = sample0.getMedian();
-  float sensorValue1 = sample1.getMedian();
-  float sensorValue2 = sample2.getMedian();
-  float sensorValue3 = sample3.getMedian();
-  float sensorValue4 = sample4.getMedian();
-  float sensorValue5 = sample5.getMedian();
-      
-  float voltage0 = sensorValue0 * (5.0 / 1023.0);
-  float voltage1 = sensorValue1 * (5.0 / 1023.0);
-  float voltage2 = sensorValue2 * (5.0 / 1023.0);
-  float voltage3 = sensorValue3 * (5.0 / 1023.0);
-  float voltage4 = sensorValue4 * (5.0 / 1023.0);
-  float voltage5 = sensorValue5 * (5.0 / 1023.0);
+  delay(3000);
+  while(count!=10){
+    for(int i=0;i<100;i++){
+      long ps1 = analogRead(A0);
+      //long ps2 = analogRead(A1);
+      //long ps3 = analogRead(A2);
+      //long ps4 = analogRead(A3);
+      long ps5 = analogRead(A4);
+      //long ps6 = analogRead(A5);
+      sample0.add(ps1);
+      //sample1.add(ps2);
+      //sample2.add(ps3);
+      //sample3.add(ps4); 
+      sample4.add(ps5);
+      //sample5.add(ps6);
+    }
+    float sensorValue0 = sample0.getMedian();
+    //float sensorValue1 = sample1.getMedian();
+    //float sensorValue2 = sample2.getMedian();
+    //float sensorValue3 = sample3.getMedian();
+    float sensorValue4 = sample4.getMedian();
+    //float sensorValue5 = sample5.getMedian();
+        
+    float voltage0 = sensorValue0 * (5.0 / 1023.0);
+    //float voltage1 = sensorValue1 * (5.0 / 1023.0);
+    //float voltage2 = sensorValue2 * (5.0 / 1023.0);
+    //float voltage3 = sensorValue3 * (5.0 / 1023.0);
+    float voltage4 = sensorValue4 * (5.0 / 1023.0);
+    //float voltage5 = sensorValue5 * (5.0 / 1023.0);
 
-  float dis0=(1/(0.0444*voltage0 - 0.0061)) - 0.42;
-  float dis1=(1/(0.0444*voltage1 - 0.0061)) - 0.42;
-  float dis2=(1/(0.0417*voltage2 - 0.004)) - 0.42;
-  float dis3=(1/(0.0421*voltage3 - 0.0057)) - 0.42;
-  float dis4=(1/(0.0428*voltage4 - 0.0048)) - 0.42;
-  float dis5=(1/(0.044*voltage5 - 0.009)) - 0.42;
-  
-  if(avoided==false){
-    //Front left sensor has obstacle
-    if(dis0<=15 && dis0>0){
-      //Right front sensor has wall
-      if(dis1<=15 && dis1>0){
-        turnLeft(45);
-        delay(500);
-        moveForward(30);
-        delay(500);
-        turnRight(45);
-        delay(500);
+    float dis0=(1/(0.0444*voltage1 - 0.0061)) - 0.42;
+    //float dis1=(1/(0.0444*voltage1 - 0.0061)) - 0.42;
+    //float dis2=(1/(0.0417*voltage2 - 0.004)) - 0.42;
+    //float dis3=(1/(0.0421*voltage3 - 0.0057)) - 0.42;
+    float dis4=(1/(0.0428*voltage4 - 0.0048)) - 0.42;
+    //float dis5=(1/(0.044*voltage5 - 0.009)) - 0.42;
+
+    //front Left sensor has obstacle
+    if(avoided==false){
+      /*if(dis1<=15 && dis1 > 0){
+        turnRight(90);
+        /*
         moveForward(20);
-        delay(500);
-        turnRight(45);
-        delay(500);
-        moveForward(30);
-        delay(500);
         turnLeft(45);
+        moveForward(20);
+        turnLeft(45);
+        moveForward(20);
+        turnRight(45);
+        */
+        /*moveForward(30);
+        turnLeft(90);
+        moveForward(30);
+        turnLeft(90);
         avoided=true;
-      } 
-      else {
-        turnRight(45);
-        delay(500);
-        moveForward(30);
-        delay(500);
+      } else if(dis2<=15 && dis2 > 0){
+        //front right sensor has obstacle
         turnLeft(45);
-        delay(500);
-        moveForward(20);
-        delay(500);
-        turnLeft(45);
-        delay(500);
+        /*
+        //moveForward(20);
+        //turnRight(45);
+        //moveForward(20);
+        //turnRight(45);
+        //moveForward(20);
+        //turnLeft(45);
+        //
+        //moveForward(30);
+        //turnRight(90);
+        //moveForward(30);
+        //turnLeft(45);
+        //avoided=true;
+      } //***
+      if(dis0<=15 && dis0>0 || dis4<=15 && dis4>0){
+        turnRight(90);
         moveForward(30);
-        delay(500);
-        turnRight(45);
+        turnLeft(90);
+        moveForward(30);
+        turnLeft(90);
         avoided=true;
       }
-    }
-    //Front right sensor has obstacle
-    if(dis4<=15 && dis4>0) {
-      turnRight(90);
-      delay(500);
-      moveForward(20);
-      delay(500);
-      turnLeft(90);
-      delay(500);
-      moveForward(50);
-      delay(500);
-      turnLeft(90);
-      delay(500);
-      moveForward(20);
-      delay(500);
-      turnRight(90);
-      avoided=true;
-    }
-    else{
+      else{
+        moveForward(10);
+        count++;
+      }
+    }else{
       moveForward(10);
+      count++;
     }
-  }else{
-    moveForward(10);
+    delay(500);
   }
-  delay(500);
+  */
 }
 
 
@@ -657,63 +641,130 @@ void obstacleAvoid(){
      ********************************************************************************************************************************
 */
 
-void sensordata() {
 
-  uint32_t lastTime = 0;
+void sensordata(char c) {
+  String execute = String("");
 
-  //avoidBurstRead causes a delay of 20ms
-  while (millis() <= lastTime + 20) {
-    //wait for sensor's sampling time
+
+  if (c == 'g') {
+    execute += String(c);
+    Serial.println(execute);
   }
-
-  lastTime = millis();
-
-  for (int i = 0; i < SampleSize; i++) {
-    sample0.add((long) analogRead(A0));
-    sample2.add((long) analogRead(A2));
-    sample4.add((long) analogRead(A4));
-
-    sample1.add((long) analogRead(A1));
-    sample3.add((long) analogRead(A3));
-    sample5.add((long) analogRead(A5));
+  else {
+    if (c == 'e') {
+      execute += String("");
+    }
+    else {
+      execute += String(c);
+    }
+    String resultTL = String(final_MedianRead(irTL)) + String("\t");
+    String resultTM = String(final_MedianRead(irTM)) + String("\t");
+    String resultTR = String(final_MedianRead(irTR)) + String("\t");
+    String resultBRT = String(final_MedianRead(irBRT)) + String("\t");
+    String resultBRB = String(final_MedianRead(irBRB)) + String("\t");
+    String resultBLT = String(final_MedianRead(irBLT));
+    Serial.println(execute + resultTL + resultTM + resultTR + resultBRT + resultBRB + resultBLT);
   }
-
-  //Get Median Value
-  float sensorValue0 = sample0.getMedian();
-  float sensorValue2 = sample2.getMedian();
-  float sensorValue4 = sample4.getMedian();
-
-  float sensorValue1 = sample1.getMedian();
-  float sensorValue3 = sample3.getMedian();
-  float sensorValue5 = sample5.getMedian();
-
-  //Analog value to voltage
-  //0.0048875855327468 = 5/1023
-  //Reciprocal Value = 1/(DistanceReflective + 0.42)
-  //Distance Reflective = Analog * 5/1023
-  float dis0 = 1 / (Eq0x * (sensorValue0 * (0.0048875855327468)) - Eq0off) - 0.42;
-  float dis2 = 1 / (Eq2x * (sensorValue2 * (0.0048875855327468)) - Eq2off) - 0.42;
-  float dis4 = 1 / (Eq4x * (sensorValue4 * (0.0048875855327468)) - Eq4off) - 0.42;
-
-  float dis1 = 1 / (Eq1x * (sensorValue1 * (0.0048875855327468)) - Eq1off) - 0.42;
-  float dis3 = 1 / (Eq3x * (sensorValue3 * (0.0048875855327468)) - Eq3off) - 0.42;
-  float dis5 = 1 / (Eq5x * (sensorValue5 * (0.0048875855327468)) - Eq5off) - 0.42;
-
-  Serial.print(String(dis0) + " , " + String(dis2) + " , " + String(dis4) + " , " +
-               String(dis1) + " , " + String(dis3) + " , " + String(dis5) + "\r\n");
-
-  sample0.clear();
-  sample1.clear();
-  sample2.clear();
-  sample3.clear();
-  sample4.clear();
-  sample5.clear();
 }
 
-/**
- * This function is the processing of any serial data coming in to arduino into a string
- * https://goo.gl/gfVUR4
- */
+double final_MedianRead(int tpin) {
+  double x[9];
+
+
+
+
+
+
+
+  for (int i = 0; i < 9; i ++) {
+    x[i] = distanceEvaluate(tpin);
+  }
+
+
+
+
+  insertionsort(x, 9);
+
+  return x[4];
+
+
+
+}
+
+
+
+
+
+double distanceEvaluate(int pin)
+{
+  double distanceReturn = 0.0;
+  switch (pin)
+  {
+  case irTL:
+    distanceReturn = sensorTL.distance();
+    break;
+  case irTM:
+    distanceReturn = sensorTM.distance();
+    break;
+  case irTR:
+    distanceReturn = sensorTR.distance();
+    break;
+  case irBRT:
+    distanceReturn = sensorBRT.distance();
+    break;
+  case irBRB:
+    distanceReturn = sensorBRB.distance();
+    break;
+  case irBLT:
+    distanceReturn = sensorBLT.distance();
+    break;
+  default:
+    distanceReturn = 0.0;
+    break;
+  }
+  return distanceReturn;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+void insertionsort(double array[], int length) {
+  double temp;
+  for (int i = 1; i < length; i++) {
+    for (int j = i; j > 0; j--) {
+      if (array[j] < array[j - 1])
+      {
+        temp = array[j];
+        array[j] = array[j - 1];
+        array[j - 1] = temp;
+      }
+      else
+        break;
+    }
+  }
+}
+
+/*
+     ********************************************************************************************************************************
+*/
+
+
+
+
+
+
+/*
+     ******************************************************************************************************************************
+*/
 
 void serialEvent() {
   while (Serial.available()) {
@@ -745,12 +796,6 @@ String getValue(String data, char separator, int index)
   return found > index ? data.substring(strIndex[0], strIndex[1]) : "";
 }
 
-
-
-/*
-     ********************************************************************************************************************************
-*/
-
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
@@ -761,12 +806,28 @@ void setup() {
   digitalWrite(M2A, LOW);
   enableInterrupt(M1A, showEncode1, FALLING);
   enableInterrupt(M2A, showEncode2, FALLING);
+
+
+  pinMode(irTL, INPUT);
+  pinMode(irTM, INPUT);
+  pinMode(irTR, INPUT);
+  pinMode(irBRT, INPUT);
+  pinMode(irBRB, INPUT);
+  pinMode(irBLT, INPUT);
+
+  digitalWrite(irTL, LOW);
+  digitalWrite(irTM, LOW);
+  digitalWrite(irTR, LOW);
+  digitalWrite(irBRT, LOW);
+  digitalWrite(irBRB, LOW);
+  digitalWrite(irBLT, LOW);
+
   md.init();
 }
 
 void loop() {
   
-  if (robotRead == "start") {
+  if (robotRead == "ok") {
     if (robotReady == false) {
       //delay(5000);
       //moveForward(150);
@@ -816,12 +877,11 @@ void loop() {
     case 'Z':
     case 'z':
       {
-        
         //sensorData(userRead.charAt(2));
         break;
       }
     case 'X': 
-    case'x':{
+    case 'x':{
         obstacleAvoid();
         break;
       }
@@ -837,6 +897,12 @@ void loop() {
         //updateSensorData();
         break;
       }
+    case 'T':
+    case 't':
+      {
+        (movementValue == 0) ? testMotors(0) : testMotors(movementValue);
+        break;
+      }
     default:
       {
         //defaultResponse();
@@ -847,8 +913,10 @@ void loop() {
     robotRead = "";
     newData = false;
   }
+  
+  //md.setSpeeds(325,325);
   //sensordata();
-  //moveForward(20);
+  //moveForward(150);
   //moveBack(10);
   //delay(500);
   //turnRight(720);
@@ -856,6 +924,7 @@ void loop() {
   //moveForward(20);
   //delay(500);
   //turnRight(90);
+  
   delay(1000);
 
 }

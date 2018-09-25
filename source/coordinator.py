@@ -88,7 +88,7 @@ def listen_to_arduino(ar_wrapper,pc_wrapper=None,bt_wrapper=None):
                 bt_wrapper.write(msg[2:])
         except Exception:
             print("Unexpected Disconnect occurred from arduino, trying to reconnect...")
-            ar_wrapper.reconnect()
+            ser = ar_wrapper.reconnect()
 
     print("Closing Arduino Listener")
 

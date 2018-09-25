@@ -27,7 +27,7 @@ class ArduinoWrapper():
             except Exception:
                 continue
         print("Reconnected...")
-        return self.sef
+        return self.ser
 
     def write(self, msg):
         print("Writing: {}".format(msg))

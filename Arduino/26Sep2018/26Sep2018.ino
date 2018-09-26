@@ -78,9 +78,9 @@ SharpIR sensorBLT(irBLT, sampleSize, toleranceValue, BLT);
  * md.setSpeeds(R,L) / (E1,E2)
  */
 
-#define kpValue -0.015
+#define kpValue 40
 #define kiValue 0
-#define kdValue -0.0005
+#define kdValue 0
 
 // Moving speed.
 #define Speed_Move 325 //305//355//305
@@ -127,23 +127,21 @@ void showEncode2() {
  * This function is to get encoder values
  */
 double computePID() {
-  //Serial.println(String(encoderLeftCounter) + ", " + String(encoderRightCounter) + ", " + String(encoderLeftCounter - encoderRightCounter));
-  double kp, ki, kd, p, i, d, error, pid;
+  //Serial.println("[PID] M1Ticks(" + String(M1Ticks) + ") - M2Ticks(" + String(M2Ticks) + ") = " + String(M1Ticks-M2Ticks));
+  double kp, ki, kd, p, i, d, pid, error, integral;
+ //M1 Left, M2 Right
+  kp = 40;
+  ki = 0;
+  kd = 0;
 
-  kp = kpValue;
-  ki = kiValue;
-  kd = kdValue;
-
-  error = encoderLeftCounter - encoderRightCounter;
+  error = encoderRightCounter - encoderLeftCounter;
   integral += error;
-
   p = kp * error;
-  i = ki * integral;
-  d = kd * (prevTick - encoderLeftCounter);
+  i = ki*integral;
+  d = kd * (prevTick - encoderRightCounter);
   pid = p + i + d;
-
-  prevTick = encoderLeftCounter;
-
+  Serial.println("PID: " + String(pid));
+  
   return pid;
 }
 
@@ -351,51 +349,16 @@ void moveForward(double cm) {
   }
   // Just Move Forward
   else {
-    while (encoderLeftCounter < targetTick - 50) {
-      pid = computePID();
-      Serial.println("R/E1 : " + String((0.8 * Speed_Move) + pid) + " L/E2 : " + String((0.8 * Speed_Move) - pid));
-      md.setSpeeds(
-        ((0.8 * Speed_Move) - pid),
-        ((0.8 * Speed_Move) + pid)
+    while (encoderRightCounter < targetTick) {
+    pid = computePID();
+    int M1SS = (Speed_Move - pid);
+    int M2SS = (Speed_Move + pid);
+    md.setSpeeds(
+        M1SS,
+        M2SS
       );
-
+    Serial.println("M1setSpeed: " + String(int(M1SS)) + ", M2setSpeed: " + String(int(M2SS)));
     }
-    while (encoderLeftCounter < targetTick - 20) {
-      pid = computePID();
-      Serial.println("R/E1 : " + String((0.9 * Speed_Move) + pid) + " L/E2 : " + String((0.9 * Speed_Move) - pid));
-      md.setSpeeds(
-        ((0.9 * Speed_Move) - pid),
-        ((0.9 * Speed_Move) + pid)
-      );
-
-    }
-    while (encoderLeftCounter < targetTick - 15) {
-      pid = computePID();
-      Serial.println("R/E1 : " + String((0.6 * Speed_Move) + pid) + " L/E2 : " + String((0.6 * Speed_Move) - pid));
-      md.setSpeeds(
-        ((0.6 * Speed_Move) - pid),
-        ((0.6 * Speed_Move) + pid)
-      );
-
-    }
-    while (encoderLeftCounter < targetTick) {
-      pid = computePID();
-      Serial.println("R/E1 : " + String((0.5 * Speed_Move) + pid) + " L/E2 : " + String((0.5 * Speed_Move) - pid));
-      md.setSpeeds(
-        ((0.5 * Speed_Move) - pid),
-        ((0.5 * Speed_Move) + pid)
-      );
-
-    }
-    //to bypass the curve motion movement
-    //rotate back by 5% of the distance
-    //100 * 5% = 5
-    if (cm <= 80) {
-      //turnRight_sil(2.7);
-    } else {
-      //turnRight_sil(3.5);
-    }
-    //turnRight_sil(3.5);
   }
   //Serial.println(encoderLeftCounter);
 

@@ -10,7 +10,7 @@ class Robot(
     val explorationMaze: MazeModel,
     private val speed: Int?
 ) {
-    val isAtStartZone get() = centerCell.row == 1 && centerCell.col == 1 && centerCell.direction == Direction.UP
+    val isAtStartZone get() = centerCell.row == 1 && centerCell.col == 1
 
     private var sensors = listOf<Sensor>()
 

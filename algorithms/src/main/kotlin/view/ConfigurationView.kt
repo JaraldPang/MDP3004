@@ -2,7 +2,6 @@ package view
 
 import controller.MainController
 import javafx.geometry.Pos
-import javafx.geometry.VPos
 import javafx.util.converter.DoubleStringConverter
 import javafx.util.converter.IntegerStringConverter
 import javafx.util.converter.LongStringConverter
@@ -70,38 +69,32 @@ class ConfigurationView : View() {
             }
         }
         label("Map Descriptor")
-        gridpane {
-            useMaxWidth = true
-            hgap = 8.0
-            vgap = 8.0
-            row {
-                label("Part 1") {
-                    gridpaneConstraints { vAlignment = VPos.TOP }
-                }
-                textarea {
-                    bind(controller.configurationModel.mapDescriptorPart1Property)
-                    prefRowCount = 2
-                    prefColumnCount = 30
-                }
+        hbox {
+            spacing = 8.0
+            label("Part 1")
+            textarea(controller.configurationModel.mapDescriptorPart1Property) {
+                prefRowCount = 2
+                prefColumnCount = 30
+                isWrapText = true
             }
-            row {
-                label("Part 2") {
-                    gridpaneConstraints { vAlignment = VPos.TOP }
-                }
-                val part2TextArea = textarea {
-                    bind(controller.configurationModel.mapDescriptorPart2Property)
-                    prefRowCount = 2
-                    prefColumnCount = 30
-                }
-                button("Load") {
-                    enableWhen(part2TextArea.textProperty().isNotEmpty)
-                    gridpaneConstraints { vAlignment = VPos.BOTTOM }
-                    action {
-                        println("Part 1: ${controller.configurationModel.mapDescriptorPart1}")
-                        println("Part 2: ${controller.configurationModel.mapDescriptorPart2}")
-                    }
-                }
+        }
+        hbox {
+            spacing = 8.0
+            label("Part 2")
+            textarea(controller.configurationModel.mapDescriptorPart2Property) {
+                prefRowCount = 2
+                prefColumnCount = 30
+                isWrapText = true
             }
+        }
+        hbox {
+            alignment = Pos.CENTER_LEFT
+            spacing = 8.0
+            button("Load") {
+                action { controller.loadMapDescriptor() }
+            }
+            label("File: ./mazes/")
+            textfield(controller.configurationModel.filenameProperty)
         }
         hbox {
             alignment = Pos.CENTER_LEFT

@@ -28,7 +28,10 @@ class ConfigurationModel : ViewModel() {
     val mapDescriptorPart2Property = SimpleStringProperty(null)
     var mapDescriptorPart2: String? by mapDescriptorPart2Property
 
+    val filenameProperty = SimpleStringProperty(null)
+    var filename: String? by filenameProperty
+
     override fun toString(): String {
-        return "ConfigurationModel(speed=$speed, time=$time, coverage=$coverage, wayPointX=$wayPointX, wayPointY=$wayPointY, mapDescriptorPart1=$mapDescriptorPart1, mapDescriptorPart2=$mapDescriptorPart2)"
+        return "ConfigurationModel(speed=$speed, time=$time, coverage=$coverage, wayPointX=$wayPointX, wayPointY=$wayPointY, mapDescriptorPart1=$mapDescriptorPart1, mapDescriptorPart2=$mapDescriptorPart2, filename=$filename)"
     }
 }

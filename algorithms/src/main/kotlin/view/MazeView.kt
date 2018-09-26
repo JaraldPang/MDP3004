@@ -28,7 +28,14 @@ class MazeView : View() {
                         fillProperty().bind(controller.realMaze.mazeProperties[row][col].objectBinding {
                             when (it) {
                                 CELL_OBSTACLE -> Color.BLACK
-                                else -> Color.WHITE
+                                CELL_UNKNOWN -> Color.GRAY
+                                else -> if ((row in 0..2 && col in 0..2)
+                                    || (row in MAZE_ROWS - 3 until MAZE_ROWS && col in MAZE_COLUMNS - 3 until MAZE_COLUMNS)
+                                ) {
+                                    Color.YELLOW
+                                } else {
+                                    Color.WHITE
+                                }
                             }
                         })
                         controller.displayRealMaze.onChange { value ->
@@ -37,7 +44,14 @@ class MazeView : View() {
                                 fillProperty().bind(controller.realMaze.mazeProperties[row][col].objectBinding {
                                     when (it) {
                                         CELL_OBSTACLE -> Color.BLACK
-                                        else -> Color.WHITE
+                                        CELL_UNKNOWN -> Color.GRAY
+                                        else -> if ((row in 0..2 && col in 0..2)
+                                            || (row in MAZE_ROWS - 3 until MAZE_ROWS && col in MAZE_COLUMNS - 3 until MAZE_COLUMNS)
+                                        ) {
+                                            Color.YELLOW
+                                        } else {
+                                            Color.WHITE
+                                        }
                                     }
                                 })
                             } else {
@@ -49,7 +63,6 @@ class MazeView : View() {
                                             when (cell) {
                                                 CELL_UNKNOWN -> Color.GRAY
                                                 CELL_OBSTACLE -> Color.BLACK
-                                                CELL_SENSED -> Color.WHITE
                                                 else -> {
                                                     if (row in centerRow - 1..centerRow + 1 && col in centerCol - 1..centerCol + 1) {
                                                         when {
@@ -59,6 +72,10 @@ class MazeView : View() {
                                                             direction == Direction.RIGHT && row == centerRow && col == centerCol + 1 -> Color.RED
                                                             else -> Color.GREEN
                                                         }
+                                                    } else if ((row in 0..2 && col in 0..2)
+                                                        || (row in MAZE_ROWS - 3 until MAZE_ROWS && col in MAZE_COLUMNS - 3 until MAZE_COLUMNS)
+                                                    ) {
+                                                        Color.YELLOW
                                                     } else {
                                                         Color.WHITE
                                                     }

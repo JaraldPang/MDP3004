@@ -10,6 +10,7 @@ import model.CellInfoModel
 import model.ConfigurationModel
 import model.MazeModel
 import tornadofx.Controller
+import java.io.FileInputStream
 
 class MainController : Controller() {
     val centerCell: CellInfoModel by inject()
@@ -70,6 +71,16 @@ class MainController : Controller() {
             } else {
                 val fastedPath = FastestPath(robot)
                 fastedPath.runFastestPath()
+            }
+        }
+    }
+
+    fun loadMapDescriptor() {
+        val filename = configurationModel.filename
+        if (filename != null) {
+            val lines = FileInputStream("mazes/$filename").bufferedReader().readLines()
+            if (lines.size == 2) {
+                realMaze.parseFromMapDescriptors(lines[0], lines[1])
             }
         }
     }

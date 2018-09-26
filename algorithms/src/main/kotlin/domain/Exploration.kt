@@ -32,6 +32,7 @@ open class Exploration(private val robot: Robot) {
                 while (stack.isNotEmpty()) {
                     val cell = stack.pop()
                     val sides = robot.explorationMaze.getEnvironmentOnSides(cell)
+                    println("Checking $cell, sides=${sides.joinToString()}")
                     if (sides.any { it == CELL_UNKNOWN || it == CELL_SENSED }) {
                         val pathsToCell = findFastestPathToDestination(
                             robot.explorationMaze.copy(),

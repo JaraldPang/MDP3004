@@ -6,7 +6,6 @@ import javafx.beans.property.SimpleObjectProperty
 import tornadofx.ViewModel
 import tornadofx.getValue
 import tornadofx.setValue
-import java.io.FileInputStream
 import kotlin.math.min
 
 class MazeModel() : ViewModel() {
@@ -49,66 +48,6 @@ class MazeModel() : ViewModel() {
 
     fun copy() = MazeModel(this)
 
-    fun prettyPrint() {
-        for (row in MAZE_ROWS - 1 downTo 0) {
-            for (col in 0 until MAZE_COLUMNS) {
-                val toPrint = when (this[row][col]) {
-                    CELL_UNKNOWN -> '?'
-                    CELL_OBSTACLE -> 'X'
-                    CELL_SENSED -> '.'
-                    else -> '0' + this[row][col]
-                }
-                print(toPrint)
-            }
-            println()
-        }
-        println()
-    }
-
-    fun prettyPrintDistance() {
-        for (row in MAZE_ROWS - 1 downTo 0) {
-            for (col in 0 until MAZE_COLUMNS) {
-                if (col != 0) {
-                    print(' ')
-                }
-                when (this[row][col]) {
-                    CELL_UNKNOWN -> print('?')
-                    CELL_OBSTACLE -> print('X')
-                    else -> print(this[row][col])
-                }
-            }
-        }
-    }
-
-    fun prettyPrintWithRobot(robot: Robot) {
-        for (row in MAZE_ROWS - 1 downTo 0) {
-            for (col in 0 until MAZE_COLUMNS) {
-                val toPrint = when (this[row][col]) {
-                    CELL_UNKNOWN -> '?'
-                    CELL_OBSTACLE -> 'X'
-                    CELL_SENSED -> '.'
-                    else -> {
-                        if (robot.coversRow(row) && robot.coversColumn(col)) {
-                            val (centerRow, centerCol, direction) = robot.centerCell
-                            when {
-                                direction == Direction.UP && row == centerRow + 1 && col == centerCol -> '^'
-                                direction == Direction.DOWN && row == centerRow - 1 && col == centerCol -> 'v'
-                                direction == Direction.LEFT && row == centerRow && col == centerCol - 1 -> '<'
-                                direction == Direction.RIGHT && row == centerRow && col == centerCol + 1 -> '>'
-                                else -> 'a' - 1 + this[row][col]
-                            }
-                        } else {
-                            '0' + this[row][col]
-                        }
-                    }
-                }
-                print(toPrint)
-            }
-            println()
-        }
-        println()
-    }
-
     fun initExploration() {
         for (row in 0 until MAZE_ROWS) {
             for (col in 0 until MAZE_COLUMNS) {
@@ -131,21 +70,6 @@ class MazeModel() : ViewModel() {
                 }
             }
         }
-    }
-
-    fun loadFromDisk(filename: String) {
-        FileInputStream(filename)
-            .bufferedReader()
-            .lineSequence()
-            .forEachIndexed { row, line ->
-                for (col in 0 until line.length) {
-                    if (line[col] == '0') {
-                        this[MAZE_ROWS - row - 1][col] = CELL_SENSED
-                    } else {
-                        this[MAZE_ROWS - row - 1][col] = CELL_OBSTACLE
-                    }
-                }
-            }
     }
 
     fun getEnvironmentOnSides(cellInfoModel: CellInfoModel): IntArray {
@@ -237,6 +161,52 @@ class MazeModel() : ViewModel() {
             result.append(binary.toString().binToHex())
         }
         return result.toString()
+    }
+
+    fun parseFromMapDescriptors(part1: String, part2: String) {
+        val newMaze = Array(MAZE_ROWS) { IntArray(MAZE_COLUMNS) }
+        val trimmedPart1 = part1.trim()
+        val trimmedPart2 = part2.trim()
+        val binaryPart1 = StringBuilder()
+        val firstHexDigitInBinary = trimmedPart1[0].toString().toInt(16).toString(2)
+        binaryPart1.append(firstHexDigitInBinary.replaceFirst("11", ""))
+        for (i in 1 until trimmedPart1.length) {
+            val hexDigitInBinary = trimmedPart1[i].toString().toInt(16).toString(2).padStart(4, '0')
+            binaryPart1.append(hexDigitInBinary)
+        }
+        for (row in 0 until MAZE_ROWS) {
+            for (col in 0 until MAZE_COLUMNS) {
+                val index = row * MAZE_COLUMNS + col
+                if (binaryPart1[index] == '0') {
+                    newMaze[row][col] = CELL_UNKNOWN
+                }
+            }
+        }
+
+        val binaryPart2 = StringBuilder()
+        for (hexDigit in trimmedPart2) {
+            val hexDigitInBinary = hexDigit.toString().toInt(16).toString(2).padStart(4, '0')
+            binaryPart2.append(hexDigitInBinary)
+        }
+        var index = 0
+        for (row in 0 until MAZE_ROWS) {
+            for (col in 0 until MAZE_COLUMNS) {
+                if (newMaze[row][col] != CELL_UNKNOWN) {
+                    if (binaryPart2[index] == '0') {
+                        newMaze[row][col] = CELL_SENSED
+                    } else {
+                        newMaze[row][col] = CELL_OBSTACLE
+                    }
+                    index++
+                }
+            }
+        }
+
+        for (row in 0 until MAZE_ROWS) {
+            for (col in 0 until MAZE_COLUMNS) {
+                this[row][col] = newMaze[row][col]
+            }
+        }
     }
 }
 

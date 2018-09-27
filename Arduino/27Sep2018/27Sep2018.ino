@@ -217,7 +217,7 @@ void moveForward(double cm) {
 
   // Move Forward 1 grid
   if (cm <= 10) {
-    targetTick = cm * 26.85;
+    targetTick = cm * 28.85;
     //27; //27.5; //28.15; //28.65;
     while (encoderLeftCounter < min(50, targetTick)) {
       pid = computePID();
@@ -262,7 +262,7 @@ void moveForward(double cm) {
   }
   // Move Forward 2 grids
   else if (cm <= 30) {
-    targetTick = cm * 29;
+    targetTick = cm * 29.5;
     //28.25;//28.5; //29.2
     while (encoderLeftCounter < targetTick) {
       pid = computePID();
@@ -277,7 +277,7 @@ void moveForward(double cm) {
   else if (cm <= 50) {
     //28.75; //29M; //28.5; //29.2
     while (encoderLeftCounter < targetTick - 50) {
-      targetTick = cm * 29.5;
+      targetTick = cm * 29.75;
       pid = computePID();
       //0.885
       md.setSpeeds(
@@ -313,7 +313,7 @@ void moveForward(double cm) {
   // Move Forward 6 grids
   else if (cm <= 60) {
     //28.5; //29.2
-    targetTick = cm * 29;
+    targetTick = cm * 29.75;
     while (encoderLeftCounter < targetTick - 50) {
       pid = computePID();
       md.setSpeeds(
@@ -371,7 +371,7 @@ void moveBack(int cm) {
 
   // Calibrated to 30.25 ticks per cm
   //30.35;
-  targetTick = cm * 28.2;
+  targetTick = cm * 29.5;
 
   while (encoderLeftCounter < min(50, targetTick)) {
     pid = computePID();
@@ -468,7 +468,7 @@ void turnRight(double deg) {
   //4.32L;//4.35M;
   //4.34;//4.33;
   //4.34;//4.35M;//4.36;//4.415;//4.63;
-  else if (deg <= 360) targetTick = deg * 4.4;//4.4(test)
+  else if (deg <= 360) targetTick = deg * 4.42;//4.4(test)
   else targetTick = deg * 4.48;
 
   while ( encoderLeftCounter < min(50, targetTick)) {
@@ -863,15 +863,15 @@ void loop() {
 
   //md.setSpeeds(325,325);
   //sensordata();
-  //moveForward(100);
+  //moveForward(10);
   //moveBack(10);
-  //delay(3000);
-  //turnRight(180);
-  //delay(500);
-  //moveForward(20);
-  //delay(500);
+  //delay(1000);
+  turnRight(180);
+  delay(1000);
+  //moveForward(10);
+  //delay(1000);
   //turnRight(90);
 
-  delay(3000);
+  //delay(10000);
 
 }

@@ -56,12 +56,12 @@ SharpIR sensorBLT(irBLT, sampleSize, toleranceValue, BLT);
 //double sensorVal1, sensorVal2, sensorVal3;
 //float voltage1, voltage2, voltage3, dis1, dis2, dis4;
 
-//RunningMedian sample0 = RunningMedian(sampleSize);
-//RunningMedian sample1 = RunningMedian(sampleSize);
-//RunningMedian sample2 = RunningMedian(sampleSize);
-//RunningMedian sample3 = RunningMedian(sampleSize);
-//RunningMedian sample4 = RunningMedian(sampleSize);
-//RunningMedian sample5 = RunningMedian(sampleSize);
+RunningMedian sample0 = RunningMedian(sampleSize);
+RunningMedian sample1 = RunningMedian(sampleSize);
+RunningMedian sample2 = RunningMedian(sampleSize);
+RunningMedian sample3 = RunningMedian(sampleSize);
+RunningMedian sample4 = RunningMedian(sampleSize);
+RunningMedian sample5 = RunningMedian(sampleSize);
 
 /*
      ******************************************************************************************************************************
@@ -499,100 +499,90 @@ void turnRight(double deg) {
   Serial.print("right OK\r\n");
 }
 
+void avoidLeft() {
+  turnLeft(45);
+  moveForward(20);
+  turnRight(45);
+  moveForward(20);
+  turnRight(45);
+  moveForward(20);
+  turnLeft(45);
+}
+
+void avoidRight() {
+  turnRight(45);
+  moveForward(20);
+  turnLeft(45);
+  moveForward(20);
+  turnLeft(45);
+  moveForward(20);
+  turnRight(45);
+}
+
 void obstacleAvoid() {
-  /*
+  
   int count = 0;
   bool avoided = false;
-  delay(3000);
-  while(count!=10){
     for(int i=0;i<100;i++){
       long ps1 = analogRead(A0);
-      //long ps2 = analogRead(A1);
-      //long ps3 = analogRead(A2);
-      //long ps4 = analogRead(A3);
+      long ps2 = analogRead(A1);
+      long ps3 = analogRead(A2);
+      long ps4 = analogRead(A3);
       long ps5 = analogRead(A4);
-      //long ps6 = analogRead(A5);
+      long ps6 = analogRead(A5);
       sample0.add(ps1);
-      //sample1.add(ps2);
-      //sample2.add(ps3);
-      //sample3.add(ps4);
+      sample1.add(ps2);
+      sample2.add(ps3);
+      sample3.add(ps4);
       sample4.add(ps5);
-      //sample5.add(ps6);
+      sample5.add(ps6);
     }
     float sensorValue0 = sample0.getMedian();
-    //float sensorValue1 = sample1.getMedian();
-    //float sensorValue2 = sample2.getMedian();
-    //float sensorValue3 = sample3.getMedian();
+    float sensorValue1 = sample1.getMedian();
+    float sensorValue2 = sample2.getMedian();
+    float sensorValue3 = sample3.getMedian();
     float sensorValue4 = sample4.getMedian();
-    //float sensorValue5 = sample5.getMedian();
+    float sensorValue5 = sample5.getMedian();
 
     float voltage0 = sensorValue0 * (5.0 / 1023.0);
-    //float voltage1 = sensorValue1 * (5.0 / 1023.0);
-    //float voltage2 = sensorValue2 * (5.0 / 1023.0);
-    //float voltage3 = sensorValue3 * (5.0 / 1023.0);
+    float voltage1 = sensorValue1 * (5.0 / 1023.0);
+    float voltage2 = sensorValue2 * (5.0 / 1023.0);
+    float voltage3 = sensorValue3 * (5.0 / 1023.0);
     float voltage4 = sensorValue4 * (5.0 / 1023.0);
-    //float voltage5 = sensorValue5 * (5.0 / 1023.0);
+    float voltage5 = sensorValue5 * (5.0 / 1023.0);
 
-    float dis0=(1/(0.0444*voltage1 - 0.0061)) - 0.42;
-    //float dis1=(1/(0.0444*voltage1 - 0.0061)) - 0.42;
-    //float dis2=(1/(0.0417*voltage2 - 0.004)) - 0.42;
-    //float dis3=(1/(0.0421*voltage3 - 0.0057)) - 0.42;
+    float dis0=(1/(0.0444*voltage0 - 0.0061)) - 0.42;
+    float dis1=(1/(0.0444*voltage1 - 0.0061)) - 0.42;
+    float dis2=(1/(0.0417*voltage2 - 0.004)) - 0.42;
+    float dis3=(1/(0.0421*voltage3 - 0.0057)) - 0.42;
     float dis4=(1/(0.0428*voltage4 - 0.0048)) - 0.42;
-    //float dis5=(1/(0.044*voltage5 - 0.009)) - 0.42;
+    float dis5=(1/(0.044*voltage5 - 0.009)) - 0.42;
 
     //front Left sensor has obstacle
     if(avoided==false){
-      /*if(dis1<=15 && dis1 > 0){
-        turnRight(90);
-        /*
-        moveForward(20);
-        turnLeft(45);
-        moveForward(20);
-        turnLeft(45);
-        moveForward(20);
-        turnRight(45);
-        */
-  /*moveForward(30);
-  turnLeft(90);
-  moveForward(30);
-  turnLeft(90);
-  avoided=true;
-  } else if(dis2<=15 && dis2 > 0){
-  //front right sensor has obstacle
-  turnLeft(45);
-  /*
-  //moveForward(20);
-  //turnRight(45);
-  //moveForward(20);
-  //turnRight(45);
-  //moveForward(20);
-  //turnLeft(45);
-  //
-  //moveForward(30);
-  //turnRight(90);
-  //moveForward(30);
-  //turnLeft(45);
-  //avoided=true;
-  } //***
-  if(dis0<=15 && dis0>0 || dis4<=15 && dis4>0){
-  turnRight(90);
-  moveForward(30);
-  turnLeft(90);
-  moveForward(30);
-  turnLeft(90);
-  avoided=true;
-  }
-  else{
-  moveForward(10);
-  count++;
-  }
-  }else{
-  moveForward(10);
-  count++;
-  }
-  delay(500);
-  }
-  */
+      if(dis0<=15 && dis0 > 0){
+        avoidRight();
+        avoided=true;
+      } 
+      else if(dis2<=15 && dis2 > 0){
+        //front right sensor has obstacle
+        avoidLeft();
+        avoided=true;
+      } //***
+      if(dis0<=15 && dis0>0 || dis4<=15 && dis4>0){
+          
+        avoided=true;
+      }
+      else{
+        moveForward(10);
+        count++;
+      }
+    }
+    else{
+        moveForward(10);
+        count++;
+    }
+    delay(500);
 }
 
 void brake() {
@@ -866,12 +856,12 @@ void loop() {
   //moveForward(10);
   //moveBack(10);
   //delay(1000);
-  turnRight(180);
-  delay(1000);
+  //turnRight(180);
+  //delay(1000);
   //moveForward(10);
   //delay(1000);
   //turnRight(90);
 
-  //delay(10000);
+  delay(1000);
 
 }

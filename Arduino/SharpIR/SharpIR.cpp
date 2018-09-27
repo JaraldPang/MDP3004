@@ -35,7 +35,7 @@
 // The distance is calculated from a formula extracted from the graphs on the sensors datasheets
 // After some tests, I think that a set of 20 to 25 readings is more than enough to get an accurate distance
 // Reading 25 times and return a mean distance takes 53 ms. For my application of the sensor is fast enough.
-// This library has the formulas to work with the GP2Y0A21Y and the GP2Y0A02YK sensors but exanding it for
+// This library has the formulas to work with the GP2Y0A21Y and the GP2Y0A02YK sensors but expanding it for
 // other sensors is easy enough.
 
 
@@ -81,27 +81,27 @@ double SharpIR::cm() {
 
     switch (_model) {
     case 0:
-        //TL
+        //TL (1080)
         puntualDistance = 27.728 * pow(v, -1.2045);
         break;
     case 1:
-        //BRT
+        //BRT (1080)
         puntualDistance = 27.728 * pow(v, -1.2045);
         break;
     case 2:
-        //TM
-        puntualDistance = 60.374 * pow(v, -1.16);
-        break;
-    case 3:
-        //BRB
+        //TM (1080)
         puntualDistance = 27.728 * pow(v, -1.2045);
         break;
+    case 3:
+        //BRB (20150)
+        puntualDistance = 60.374 * pow(v, -1.16);
+        break;
     case 4:
-        //TR
+        //TR (1080)
         puntualDistance = 27.728 * pow(v, -1.2045);
         break;
     case 5:
-        //BLT
+        //BLT (1080)
         puntualDistance = 27.728 * pow(v, -1.2045);
         break;
     default:
@@ -127,9 +127,7 @@ double SharpIR::distance() {
         double foo = cm();
 
         if (foo >= (_tol * _previousDistance)) {
-
             _previousDistance = foo;
-
             _sum = _sum + foo;
             _p++;
         }

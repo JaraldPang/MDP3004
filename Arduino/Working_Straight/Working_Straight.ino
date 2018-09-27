@@ -71,7 +71,8 @@ void moveFront(double distance){
     pid = computePID();
     int M1setSpeed = (MSpeed - pid);
     int M2setSpeed = (MSpeed + pid);
-    md.setSpeeds (M1setSpeed,M2setSpeed);
+    //md.setSpeeds (M1setSpeed,M2setSpeed);
+    md.setSpeeds (0,400);
     Serial.println("M1setSpeed: " + String(int(M1setSpeed)) + ", M2setSpeed: " + String(int(M2setSpeed)));
   }
   brake();

@@ -78,7 +78,7 @@ SharpIR sensorBLT(irBLT, sampleSize, toleranceValue, BLT);
  * md.setSpeeds(R,L) / (E1,E2)
  */
 
-#define kp 0
+#define kp 40
 #define ki 0
 #define kd 0
 
@@ -88,40 +88,41 @@ SharpIR sensorBLT(irBLT, sampleSize, toleranceValue, BLT);
 // Turning speed
 #define Speed_Spin 325 //295//345//295
 
-#define Speed_Brake 325
+#define Speed_Brake 400
 
-//E2 Left Side
-#define M2A 11
-#define M2B 13
 
 //E1 Right Side
-#define M1A 3
-#define M1B 5
+const int M1A = 3;
+const int M1B = 5;
+
+//E2 Left Side
+const int M2A = 11;
+const int M2B = 13;
+
+volatile long encoderLeftCounter, encoderRightCounter;
 
 DualVNH5019MotorShield md;
 
 int motorStatus;
 double integral;
 long prevTick, prevMillis = 0;
-volatile long encoderLeftCounter, encoderRightCounter;
 
 String robotRead;
 bool newData = false, isStarted = false;
 bool robotReady = false;
 
 /**
- * Interrupt pins functions
+ *
  */
 //E1
 void showEncode1() {
   encoderLeftCounter++;
-  //enableInterrupt(M1A, showEncode1, RISING);
 }
 //E2
 void showEncode2() {
   encoderRightCounter++;
-  //enableInterrupt(M2B, showEncode2, RISING);
 }
+
 
 /**
  * This function is to get encoder values
@@ -129,19 +130,18 @@ void showEncode2() {
 double computePID() {
   //Serial.println("[PID] M1Ticks(" + String(M1Ticks) + ") - M2Ticks(" + String(M2Ticks) + ") = " + String(M1Ticks-M2Ticks));
   double p, i, d, pid, error, integral;
- //M1 Left, M2 Right
-  //kp = 0;
+  //kp = 40;
   //ki = 0;
   //kd = 0;
 
-  error = encoderRightCounter - encoderLeftCounter;
+  error = encoderLeftCounter - encoderRightCounter;
   integral += error;
   p = kp * error;
-  i = ki*integral;
-  d = kd * (prevTick - encoderRightCounter);
+  i = ki * integral;
+  d = kd * (prevTick - encoderLeftCounter);
   pid = p + i + d;
   Serial.println("PID: " + String(pid));
-  
+
   return pid;
 }
 
@@ -199,7 +199,6 @@ void testMotors(int speedMode) {
       prevMillis = millis();
     }
   }
-  
 }
 
 void moveForward(double cm) {
@@ -215,7 +214,7 @@ void moveForward(double cm) {
   //29.2; //29.3; //29.35; //29.38; //29.4; //29; //29.5; //29.85; //30.05; //30.15; //30.20; //30.35;
   targetTick = cm * 29.65;
 
-  
+
   // Move Forward 1 grid
   if (cm <= 10) {
     targetTick = cm * 26.85;
@@ -224,24 +223,24 @@ void moveForward(double cm) {
       pid = computePID();
       Serial.println("R/E1 : " + String((0.6 * Speed_Move) + pid) + " L/E2 : " + String((0.6 * Speed_Move) - pid));
       md.setSpeeds(
-        ((0.6 * Speed_Move) - pid),
-        ((0.6 * Speed_Move) + pid)
+        ((Speed_Move) - pid),
+        ((Speed_Move) + pid)
       );
     }
     while (encoderLeftCounter < targetTick - 50) {
       pid = computePID();
       Serial.println("R/E1 : " + String((1.0 * Speed_Move) + pid) + " L/E2 : " + String((1.0 * Speed_Move) - pid));
       md.setSpeeds(
-        ((1.0 * Speed_Move) - pid),
-        ((1.0 * Speed_Move) + pid)
+        ((Speed_Move) - pid),
+        ((Speed_Move) + pid)
       );
     }
     while (encoderLeftCounter < targetTick - 25) {
       pid = computePID();
       Serial.println("R/E1 : " + String((0.8 * Speed_Move) + pid) + " L/E2 : " + String((0.8 * Speed_Move) - pid));
       md.setSpeeds(
-        ((0.8 * Speed_Move) - pid),
-        ((0.8 * Speed_Move) + pid)
+        ((Speed_Move) - pid),
+        ((Speed_Move) + pid)
       );
     }
     while (encoderLeftCounter < targetTick - 15) {
@@ -256,8 +255,8 @@ void moveForward(double cm) {
       pid = computePID();
       Serial.println("R/E1 : " + String((0.5 * Speed_Move) + pid) + " L/E2 : " + String((0.5 * Speed_Move) - pid));
       md.setSpeeds(
-        ((0.5 * Speed_Move) - pid),
-        ((0.5 * Speed_Move) + pid)
+        ((Speed_Move) - pid),
+        ((Speed_Move) + pid)
       );
     }
   }
@@ -278,12 +277,12 @@ void moveForward(double cm) {
   else if (cm <= 50) {
     //28.75; //29M; //28.5; //29.2
     while (encoderLeftCounter < targetTick - 50) {
-    targetTick = cm * 29.5; 
+      targetTick = cm * 29.5;
       pid = computePID();
       //0.885
       md.setSpeeds(
-        ((1.0 * Speed_Move) - pid),
-        ((1.0 * Speed_Move) + pid)
+        ((Speed_Move) - pid),
+        ((Speed_Move) + pid)
       );
     }
 
@@ -297,15 +296,15 @@ void moveForward(double cm) {
     while (encoderLeftCounter < targetTick - 15) {
       pid = computePID();
       md.setSpeeds(
-        ((0.6 * Speed_Move) - pid),
-        ((0.6 * Speed_Move) + pid)
+        ((Speed_Move) - pid),
+        ((Speed_Move) + pid)
       );
     }
     while (encoderLeftCounter < targetTick) {
       pid = computePID();
       md.setSpeeds(
-        ((0.5 * Speed_Move) - pid),
-        ((0.5 * Speed_Move) + pid)
+        ((Speed_Move) - pid),
+        ((Speed_Move) + pid)
       );
     }
     //to bypass the curve motion movement
@@ -318,30 +317,30 @@ void moveForward(double cm) {
     while (encoderLeftCounter < targetTick - 50) {
       pid = computePID();
       md.setSpeeds(
-        ((1.0 * Speed_Move) - pid),
-        ((1.0 * Speed_Move) + pid)
+        ((Speed_Move) - pid),
+        ((Speed_Move) + pid)
       );
     }
 
     while (encoderLeftCounter < targetTick - 25) {
       pid = computePID();
       md.setSpeeds(
-        ((0.8 * Speed_Move) - pid),
-        ((0.8 * Speed_Move) + pid)
+        ((Speed_Move) - pid),
+        ((Speed_Move) + pid)
       );
     }
     while (encoderLeftCounter < targetTick - 15) {
       pid = computePID();
       md.setSpeeds(
-        ((0.6 * Speed_Move) + pid),
-        ((0.6 * Speed_Move) - pid)
+        ((Speed_Move) - pid),
+        ((Speed_Move) + pid)
       );
     }
     while (encoderLeftCounter < targetTick) {
       pid = computePID();
       md.setSpeeds(
-        ((0.5 * Speed_Move) - pid),
-        ((0.5 * Speed_Move) + pid)
+        ((Speed_Move) - pid),
+        ((Speed_Move) + pid)
       );
     }
     //to bypass the curve motion movement
@@ -349,21 +348,18 @@ void moveForward(double cm) {
   }
   // Just Move Forward
   else {
-    while (encoderRightCounter < targetTick) {
-    pid = computePID();
-    int M1SS = (Speed_Move - pid);
-    int M2SS = (Speed_Move + pid);
-    md.setSpeeds(
-        M1SS,
-        M2SS
-      );
-    Serial.println("M1setSpeed: " + String(int(encoderRightCounter)) + ", M2setSpeed: " + String(int(encoderLeftCounter)));
+    while (encoderLeftCounter < targetTick) {
+      pid = computePID();
+      md.setSpeeds (
+        (Speed_Move - pid), 
+        (Speed_Move + pid)
+        );
+      Serial.println("M1setSpeed: " + String(int((Speed_Move - pid))) + ", M2setSpeed: " + String(int((Speed_Move + pid))));
+      Serial.println("M1Ticks: " + String(int((encoderRightCounter))) + ", M2Ticks: " + String(int((encoderLeftCounter))));
+      Serial.println();
     }
   }
-  //Serial.println(encoderLeftCounter);
-
-  md.setBrakes(Speed_Brake,Speed_Brake);
-  
+  brake();
   Serial.print("forward OK\r\n");
 }
 
@@ -375,49 +371,49 @@ void moveBack(int cm) {
 
   // Calibrated to 30.25 ticks per cm
   //30.35;
-  targetTick = cm * 28.2;  
+  targetTick = cm * 28.2;
 
   while (encoderLeftCounter < min(50, targetTick)) {
     pid = computePID();
     md.setSpeeds(
-      -((0.5 * Speed_Move) + pid),
-      -((0.5 * Speed_Move) - pid)
+      -((Speed_Move) - pid),
+      -((Speed_Move) + pid)
     );
   }
 
   while (encoderLeftCounter < targetTick - 50) {
     pid = computePID();
     md.setSpeeds(
-      -((0.8 * Speed_Move) + pid),
-      -((0.8 * Speed_Move) - pid)
+      -((Speed_Move) - pid),
+      -((Speed_Move) + pid)
     );
   }
 
   while (encoderLeftCounter < targetTick) {
     pid = computePID();
     md.setSpeeds(
-      -((0.5 * Speed_Move) + pid),
-      -((0.5 * Speed_Move) - pid)
+      -((Speed_Move) - pid),
+      -((Speed_Move) + pid)
     );
   }
 
-  md.setBrakes(400,400);
-  
+  md.setBrakes(400, 400);
+
   Serial.print("backward OK\r\n");
 }
 
-void turnLeft(double deg){
+void turnLeft(double deg) {
   double pid;
   float targetTick;
   integral = 0;
   encoderLeftCounter = encoderRightCounter = prevTick = 0;
 
-/*
-  if (deg <= 90) targetTick = deg * 4.39; //4.523
-  else if (deg <= 180 ) targetTick = deg * 4.62;
-  else if (deg <= 360 ) targetTick = deg * 4.675;
-  else targetTick = deg * 4.65;
-  */
+  /*
+    if (deg <= 90) targetTick = deg * 4.39; //4.523
+    else if (deg <= 180 ) targetTick = deg * 4.62;
+    else if (deg <= 360 ) targetTick = deg * 4.675;
+    else targetTick = deg * 4.65;
+    */
   if (deg <= 90) targetTick = deg * 4.17;//4.17(test)//4.095(on maze)//4.0935;//4.0925;//4.09L;//4.085L;//4.08L;//4.0775L;
   //4.076L;//4.078M;//4.075L;//4.08M;//4.07L;//4.09;
   //4.102;//4.11;//4.121;M//4.122M;//4.1224M;
@@ -430,80 +426,80 @@ void turnLeft(double deg){
   while ( encoderLeftCounter < min(50, targetTick)) {
     pid = computePID();
     md.setSpeeds(
-      ((0.5 * Speed_Spin) + pid), 
-      -((0.5 * Speed_Spin) - pid)
-      );
+      ((Speed_Spin) - pid),
+      -((Speed_Spin) + pid)
+    );
   }
   while ( encoderLeftCounter < targetTick - 50) {
     pid = computePID();
     md.setSpeeds(
-      ((1.0 * Speed_Spin) + pid), 
-      -((1.0 * Speed_Spin) - pid)
-      );
+      ((Speed_Spin) - pid),
+      -((Speed_Spin) + pid)
+    );
   }
   while ( encoderLeftCounter < targetTick) {
     pid = computePID();
     md.setSpeeds(
-      ((0.5 * Speed_Spin) + pid), 
-      -((0.5 * Speed_Spin) - pid));
+      ((Speed_Spin) - pid),
+      -((Speed_Spin) + pid));
   }
-  
-  md.setBrakes(400,400);
-  
+
+  md.setBrakes(400, 400);
+
   Serial.print("left OK\r\n");
 }
 
-void turnRight(double deg){
+void turnRight(double deg) {
   double pid;
   float targetTick;
   integral = 0;
   encoderLeftCounter = encoderRightCounter = prevTick = 0;
 
   if (deg <= 90) targetTick = deg * 4.155;//4.155(on maze)//4.175M;//4.186M;//4.19M;//4.185;//4.175L;
-  //4.148L;//4.15M;//4.170M;//4.175M;//4.21M;//4.205;//4.185;//4.175; 
+  //4.148L;//4.15M;//4.170M;//4.175M;//4.21M;//4.205;//4.185;//4.175;
   //4.2;//4.185;//4.175L;//4.17L;
   //4.165;//4.1545L;//4.154L;//4.153L;
   //4.155M;//4.165M;//4.1655M;//4.166M;//4.167M;
   //4.168;//4.1695;//4.171M;//4.168L;//4.165L;//4.15L;//4.18M;//4.19M;//4.192M;
   //4.187L;//4.185;//4.1825;//4.175L;//4.17225L;//4.1715L;//4.17L;//4.165L;//4.1725M;
   //4.17L;//4.185M;//4.19M;//4.2;//4.22M;z//4.24M;//4.25;//4.335; //24/10/17
-  
+
   else if (deg <= 180) targetTick = deg * 4.33;//4.33(test)//4.333M;//4.335M;//4.336M;//4.338M;//4.342M;//4.335;
   //4.32L;//4.35M;
   //4.34;//4.33;
-  //4.34;//4.35M;//4.36;//4.415;//4.63; 
+  //4.34;//4.35M;//4.36;//4.415;//4.63;
   else if (deg <= 360) targetTick = deg * 4.4;//4.4(test)
   else targetTick = deg * 4.48;
-  
+
   while ( encoderLeftCounter < min(50, targetTick)) {
     pid = computePID();
     md.setSpeeds(
-      -((0.5 * Speed_Spin) + pid), 
-      ((0.5 * Speed_Spin) - pid)
-      );
+      -((Speed_Spin) - pid),
+      ((Speed_Spin) + pid)
+    );
   }
-  
+
   while ( encoderLeftCounter < targetTick - 50) {
     pid = computePID();
     md.setSpeeds(
-      -((1.0 * Speed_Spin) + pid), 
-      ((1.0 * Speed_Spin) - pid)
-      );
+      -((Speed_Spin) - pid),
+      ((Speed_Spin) + pid)
+    );
   }
   while ( encoderLeftCounter < targetTick) {
     pid = computePID();
     md.setSpeeds(
-      -((0.5 * Speed_Spin) + pid), 
-      ((0.5 * Speed_Spin) - pid)
-      );
+      -((Speed_Spin) - pid),
+      ((Speed_Spin) + pid)
+    );
   }
-  
-  md.setBrakes(400,400);
+
+  md.setBrakes(400, 400);
 
   Serial.print("right OK\r\n");
 }
 
-void obstacleAvoid(){
+void obstacleAvoid() {
   /*
   int count = 0;
   bool avoided = false;
@@ -519,7 +515,7 @@ void obstacleAvoid(){
       sample0.add(ps1);
       //sample1.add(ps2);
       //sample2.add(ps3);
-      //sample3.add(ps4); 
+      //sample3.add(ps4);
       sample4.add(ps5);
       //sample5.add(ps6);
     }
@@ -529,7 +525,7 @@ void obstacleAvoid(){
     //float sensorValue3 = sample3.getMedian();
     float sensorValue4 = sample4.getMedian();
     //float sensorValue5 = sample5.getMedian();
-        
+
     float voltage0 = sensorValue0 * (5.0 / 1023.0);
     //float voltage1 = sensorValue1 * (5.0 / 1023.0);
     //float voltage2 = sensorValue2 * (5.0 / 1023.0);
@@ -556,49 +552,52 @@ void obstacleAvoid(){
         moveForward(20);
         turnRight(45);
         */
-        /*moveForward(30);
-        turnLeft(90);
-        moveForward(30);
-        turnLeft(90);
-        avoided=true;
-      } else if(dis2<=15 && dis2 > 0){
-        //front right sensor has obstacle
-        turnLeft(45);
-        /*
-        //moveForward(20);
-        //turnRight(45);
-        //moveForward(20);
-        //turnRight(45);
-        //moveForward(20);
-        //turnLeft(45);
-        //
-        //moveForward(30);
-        //turnRight(90);
-        //moveForward(30);
-        //turnLeft(45);
-        //avoided=true;
-      } //***
-      if(dis0<=15 && dis0>0 || dis4<=15 && dis4>0){
-        turnRight(90);
-        moveForward(30);
-        turnLeft(90);
-        moveForward(30);
-        turnLeft(90);
-        avoided=true;
-      }
-      else{
-        moveForward(10);
-        count++;
-      }
-    }else{
-      moveForward(10);
-      count++;
-    }
-    delay(500);
+  /*moveForward(30);
+  turnLeft(90);
+  moveForward(30);
+  turnLeft(90);
+  avoided=true;
+  } else if(dis2<=15 && dis2 > 0){
+  //front right sensor has obstacle
+  turnLeft(45);
+  /*
+  //moveForward(20);
+  //turnRight(45);
+  //moveForward(20);
+  //turnRight(45);
+  //moveForward(20);
+  //turnLeft(45);
+  //
+  //moveForward(30);
+  //turnRight(90);
+  //moveForward(30);
+  //turnLeft(45);
+  //avoided=true;
+  } //***
+  if(dis0<=15 && dis0>0 || dis4<=15 && dis4>0){
+  turnRight(90);
+  moveForward(30);
+  turnLeft(90);
+  moveForward(30);
+  turnLeft(90);
+  avoided=true;
+  }
+  else{
+  moveForward(10);
+  count++;
+  }
+  }else{
+  moveForward(10);
+  count++;
+  }
+  delay(500);
   }
   */
 }
 
+void brake() {
+  md.setBrakes(Speed_Brake, Speed_Brake - 10);
+}
 
 /*
      ********************************************************************************************************************************
@@ -656,8 +655,6 @@ double final_MedianRead(int tpin) {
 
 
 
-
-
 double distanceEvaluate(int pin)
 {
   double distanceReturn = 0.0;
@@ -687,17 +684,6 @@ double distanceEvaluate(int pin)
   }
   return distanceReturn;
 }
-
-
-
-
-
-
-
-
-
-
-
 
 
 void insertionsort(double array[], int length) {
@@ -763,13 +749,6 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
 
-  pinMode(M1A, INPUT);
-  pinMode(M2A, INPUT);
-  digitalWrite(M1A, LOW);
-  digitalWrite(M2A, LOW);
-  enableInterrupt(M1A, showEncode1, RISING);
-  enableInterrupt(M2B, showEncode2, RISING);
-
   pinMode(irTL, INPUT);
   pinMode(irTM, INPUT);
   pinMode(irTR, INPUT);
@@ -784,11 +763,17 @@ void setup() {
   digitalWrite(irBRB, LOW);
   digitalWrite(irBLT, LOW);
 
+
+  enableInterrupt(M1A, showEncode1, RISING);
+  enableInterrupt(M2B, showEncode2, RISING);
   md.init();
+
+
+
 }
 
 void loop() {
-  
+
   if (robotRead == "ok") {
     if (robotReady == false) {
       //delay(5000);
@@ -811,82 +796,82 @@ void loop() {
     switch (condition) {
     case 'W':
     case 'w':
-      {
-        (movementValue == 0) ? moveForward(10) : moveForward(movementValue);
-          break;
-      }
+    {
+      (movementValue == 0) ? moveForward(10) : moveForward(movementValue);
+      break;
+    }
 
     case 'A':
     case 'a':
-      {
-        (movementValue == 0) ? turnLeft(90) : turnLeft(movementValue);
-          break;
-      }
+    {
+      (movementValue == 0) ? turnLeft(90) : turnLeft(movementValue);
+      break;
+    }
 
     case 'D':
     case 'd':
-      {
-        (movementValue == 0) ? turnRight(90) : turnRight(movementValue);
-          break;
-      }
+    {
+      (movementValue == 0) ? turnRight(90) : turnRight(movementValue);
+      break;
+    }
 
     case 'S':
     case 's':
-      {
-        (movementValue == 0) ? moveBack(10) : moveBack(movementValue);
-          break;
-      }
+    {
+      (movementValue == 0) ? moveBack(10) : moveBack(movementValue);
+      break;
+    }
     case 'Z':
     case 'z':
-      {
-        //sensorData(userRead.charAt(2));
-        break;
-      }
-    case 'X': 
-    case 'x':{
-        obstacleAvoid();
-        break;
-      }
+    {
+      //sensorData(userRead.charAt(2));
+      break;
+    }
+    case 'X':
+    case 'x': {
+      obstacleAvoid();
+      break;
+    }
     case 'C':
     case 'c':
-      {
-        //caliberate();
-        break;
-      }
+    {
+      //caliberate();
+      break;
+    }
     case 'V':
     case 'v':
-      {
-        //updateSensorData();
-        break;
-      }
+    {
+      //updateSensorData();
+      break;
+    }
     case 'T':
     case 't':
-      {
-        (movementValue == 0) ? testMotors(0) : testMotors(movementValue);
-        break;
-      }
+    {
+      (movementValue == 0) ? testMotors(0) : testMotors(movementValue);
+      break;
+    }
     default:
-      {
-        //defaultResponse();
-        break;
-      }
+    {
+      //defaultResponse();
+      break;
+    }
     }
 
     robotRead = "";
     newData = false;
   }
-  
+
   //md.setSpeeds(325,325);
   //sensordata();
   //moveForward(100);
   //moveBack(10);
-  //delay(500);
-  //turnRight(720);
+  //delay(3000);
+  //turnRight(180);
   //delay(500);
   //moveForward(20);
   //delay(500);
   //turnRight(90);
-  
-  delay(1000);
+
+  delay(3000);
 
 }

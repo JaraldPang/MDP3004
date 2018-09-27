@@ -1,4 +1,4 @@
-//No Sharp
+
 #include <DualVNH5019MotorShield.h>
 #include <EnableInterrupt.h>
 #include <RunningMedian.h>
@@ -13,12 +13,12 @@
  * MDP Board Pin <> Arduino Pin <> Sensor Range <> Model <> Location
  * Top Sensor
  * PS1 <> A0  <> SE5  Distance <= 85          (1080)    TLeft
- * PS3 <> A2  <> SE7  30 <= Distance <= 130   (20150)   TMiddle
+ * PS3 <> A2  <> SE7  Distance <= 85          (1080)    TMiddle
  * PS5 <> A4  <> SE2  Distance <= 85          (1080)    TRight
  *
  * Bottom Sensor
  * PS2 <> A1  <> SE3 Distance <=80            (1080)    BRight(Front)
- * PS4 <> A3  <> SE1 Distance <=70            (1080)    BRight(Back)
+ * PS4 <> A3  <> SE1 Distance 30 <= x <= 130  (20150)   BRight(Back)
  * PS6 <> A5  <> SE6 Distance <=85            (1080)    BLeft(Front)
  *
  *
@@ -41,7 +41,7 @@
 
 #define toleranceValue 50
 
-#define sampleSize 15
+#define sampleSize 25
 
 SharpIR sensorTL(irTL, sampleSize, toleranceValue, TL);
 SharpIR sensorTM(irTM, sampleSize, toleranceValue, TM);
@@ -50,18 +50,6 @@ SharpIR sensorTR(irTR, sampleSize, toleranceValue, TR);
 SharpIR sensorBRT(irBRT, sampleSize, toleranceValue, BRT);
 SharpIR sensorBRB(irBRB, sampleSize, toleranceValue, BRB);
 SharpIR sensorBLT(irBLT, sampleSize, toleranceValue, BLT);
-
-
-//long ps1, ps2, ps4;
-//double sensorVal1, sensorVal2, sensorVal3;
-//float voltage1, voltage2, voltage3, dis1, dis2, dis4;
-
-RunningMedian sample0 = RunningMedian(sampleSize);
-RunningMedian sample1 = RunningMedian(sampleSize);
-RunningMedian sample2 = RunningMedian(sampleSize);
-RunningMedian sample3 = RunningMedian(sampleSize);
-RunningMedian sample4 = RunningMedian(sampleSize);
-RunningMedian sample5 = RunningMedian(sampleSize);
 
 /*
      ******************************************************************************************************************************
@@ -123,16 +111,12 @@ void showEncode2() {
   encoderRightCounter++;
 }
 
-
 /**
  * This function is to get encoder values
  */
 double computePID() {
   //Serial.println("[PID] M1Ticks(" + String(M1Ticks) + ") - M2Ticks(" + String(M2Ticks) + ") = " + String(M1Ticks-M2Ticks));
   double p, i, d, pid, error, integral;
-  //kp = 40;
-  //ki = 0;
-  //kd = 0;
 
   error = encoderLeftCounter - encoderRightCounter;
   integral += error;
@@ -595,20 +579,7 @@ void brake() {
 
 
 void sensordata(char c) {
-  String execute = String("");
-
-
-  if (c == 'g') {
-    execute += String(c);
-    Serial.println(execute);
-  }
-  else {
-    if (c == 'e') {
-      execute += String("");
-    }
-    else {
-      execute += String(c);
-    }
+  
     String resultTL = String(final_MedianRead(irTL)) + String("\t");
     String resultTM = String(final_MedianRead(irTM)) + String("\t");
     String resultTR = String(final_MedianRead(irTR)) + String("\t");
@@ -616,34 +587,20 @@ void sensordata(char c) {
     String resultBRB = String(final_MedianRead(irBRB)) + String("\t");
     String resultBLT = String(final_MedianRead(irBLT));
     Serial.println(execute + resultTL + resultTM + resultTR + resultBRT + resultBRB + resultBLT);
-  }
+  
 }
 
 double final_MedianRead(int tpin) {
   double x[9];
 
-
-
-
-
-
-
   for (int i = 0; i < 9; i ++) {
     x[i] = distanceEvaluate(tpin);
   }
 
-
-
-
   insertionsort(x, 9);
 
   return x[4];
-
-
-
 }
-
-
 
 double distanceEvaluate(int pin)
 {
@@ -675,7 +632,6 @@ double distanceEvaluate(int pin)
   return distanceReturn;
 }
 
-
 void insertionsort(double array[], int length) {
   double temp;
   for (int i = 1; i < length; i++) {
@@ -696,14 +652,6 @@ void insertionsort(double array[], int length) {
      ********************************************************************************************************************************
 */
 
-
-
-
-
-
-/*
-     ******************************************************************************************************************************
-*/
 
 void serialEvent() {
   while (Serial.available()) {

@@ -39,9 +39,9 @@
 #define irBRB A3
 #define irBLT A5
 
-#define toleranceValue 50
+#define toleranceValue 90
 
-#define sampleSize 25
+#define sampleSize 30
 
 SharpIR sensorTL(irTL, sampleSize, toleranceValue, TL);
 SharpIR sensorTM(irTM, sampleSize, toleranceValue, TM);
@@ -231,8 +231,8 @@ void moveForward(double cm) {
       pid = computePID();
       Serial.println("R/E1 : " + String((0.6 * Speed_Move) + pid) + " L/E2 : " + String((0.6 * Speed_Move) - pid));
       md.setSpeeds(
-        ((0.6 * Speed_Move) - pid),
-        ((0.6 * Speed_Move) + pid)
+        ((Speed_Move) - pid),
+        ((Speed_Move) + pid)
       );
     }
     while (encoderLeftCounter < targetTick) {
@@ -251,8 +251,8 @@ void moveForward(double cm) {
     while (encoderLeftCounter < targetTick) {
       pid = computePID();
       md.setSpeeds(
-        ((0.9 * Speed_Move) - pid),
-        ((0.9 * Speed_Move) + pid)
+        ((Speed_Move) - pid),
+        ((Speed_Move) + pid)
       );
     }
     //turnRight_sil(1);
@@ -463,14 +463,14 @@ void turnRight(double deg) {
     );
   }
 
-  while ( encoderLeftCounter < targetTick - 50) {
+  while (encoderLeftCounter < targetTick - 50) {
     pid = computePID();
     md.setSpeeds(
       -((Speed_Spin) - pid),
       ((Speed_Spin) + pid)
     );
   }
-  while ( encoderLeftCounter < targetTick) {
+  while (encoderLeftCounter < targetTick) {
     pid = computePID();
     md.setSpeeds(
       -((Speed_Spin) - pid),
@@ -483,28 +483,8 @@ void turnRight(double deg) {
   Serial.print("right OK\r\n");
 }
 
-void avoidLeft() {
-  turnLeft(45);
-  moveForward(20);
-  turnRight(45);
-  moveForward(20);
-  turnRight(45);
-  moveForward(20);
-  turnLeft(45);
-}
-
-void avoidRight() {
-  turnRight(45);
-  moveForward(20);
-  turnLeft(45);
-  moveForward(20);
-  turnLeft(45);
-  moveForward(20);
-  turnRight(45);
-}
-
 void obstacleAvoid() {
-  
+/*  
   int count = 0;
   bool avoided = false;
     for(int i=0;i<100;i++){
@@ -567,6 +547,87 @@ void obstacleAvoid() {
         count++;
     }
     delay(500);
+    */
+    bool avoidComplete = false;
+    while(avoidComplete == false) {
+    //if right has wall, obstacle at any part
+    /*if(final_MedianRead(irBRT)<=25 && final_MedianRead(irBRT)>0 && final_MedianRead(irTR)<=25 && final_MedianRead(irTR)>0 || final_MedianRead(irTM)<=25 && final_MedianRead(irTM)>0 || 
+    final_MedianRead(irTL)<=25 && final_MedianRead(irTL)>0) {
+      Serial.println("Obstacle near wall");
+      turnLeft(45);
+      //delay(500);
+      moveForward(30);
+      //delay(500);
+      turnRight(45);
+      //delay(500);
+      moveForward(20);
+      //delay(500);
+      turnRight(45);
+      //delay(500);
+      moveForward(30);
+      //delay(500);
+      turnLeft(42);
+      avoidComplete = true;
+    }*/
+    //if right no wall, obstacle at front right
+    if(final_MedianRead(irTR)<=25 && final_MedianRead(irTR)>0) {
+      Serial.println("Obstacle at front right");
+      turnLeft(45);
+      //delay(500);
+      moveForward(10);
+      //delay(500);
+      turnRight(45);
+      //delay(500);
+      moveForward(20);
+      //delay(500);
+      turnRight(45);
+      //delay(500);
+      moveForward(10);
+      //delay(500);
+      turnLeft(42);
+      avoidComplete = true;
+    }
+    //if right no wall, obstacle at front middle
+    else if(final_MedianRead(irTM)<=25 && final_MedianRead(irTM)>0) {
+      Serial.println("Obstacle at front middle");
+      turnRight(45);
+      //delay(500);
+      moveForward(30);
+      //delay(500);
+      turnLeft(45);
+      //delay(500);
+      moveForward(20);
+      //delay(500);
+      turnLeft(45);
+      //delay(500);
+      moveForward(30);
+      //delay(500);
+      turnRight(42);
+      avoidComplete = true;
+    }
+    //if right no wall, obstacle at front left
+    if(final_MedianRead(irTL)<=25 && final_MedianRead(irTL)>0) {
+      Serial.println("Obstacle at front left");
+      turnRight(45);
+      //delay(500);
+      moveForward(30);
+      //delay(500);
+      turnLeft(45);
+      //delay(500);
+      moveForward(20);
+      //delay(500);
+      turnLeft(45);
+      //delay(500);
+      moveForward(30);
+      //delay(500);
+      turnRight(42);
+      avoidComplete = true;
+    }
+    else {
+      moveForward(10);
+    }
+    delay(500);
+    }
 }
 
 void brake() {
@@ -578,7 +639,7 @@ void brake() {
 */
 
 
-void sensordata(char c) {
+void sensordata() {
   
     String resultTL = String(final_MedianRead(irTL)) + String("\t");
     String resultTM = String(final_MedianRead(irTM)) + String("\t");
@@ -586,7 +647,7 @@ void sensordata(char c) {
     String resultBRT = String(final_MedianRead(irBRT)) + String("\t");
     String resultBRB = String(final_MedianRead(irBRB)) + String("\t");
     String resultBLT = String(final_MedianRead(irBLT));
-    Serial.println(execute + resultTL + resultTM + resultTR + resultBRT + resultBRB + resultBLT);
+    Serial.println(resultTL + resultTM + resultTR + resultBRT + resultBRB + resultBLT);
   
 }
 
@@ -762,7 +823,7 @@ void loop() {
     case 'Z':
     case 'z':
     {
-      //sensorData(userRead.charAt(2));
+      sensordata();
       break;
     }
     case 'X':
@@ -798,7 +859,7 @@ void loop() {
     robotRead = "";
     newData = false;
   }
-
+  //obstacleAvoid();
   //md.setSpeeds(325,325);
   //sensordata();
   //moveForward(10);
@@ -810,6 +871,6 @@ void loop() {
   //delay(1000);
   //turnRight(90);
 
-  delay(1000);
+  //delay(500);
 
 }

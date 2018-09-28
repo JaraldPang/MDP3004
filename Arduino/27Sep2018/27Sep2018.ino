@@ -95,7 +95,7 @@ int motorStatus;
 double integral;
 long prevTick, prevMillis = 0;
 
-String robotRead;
+//String robotRead;
 bool newData = false, isStarted = false;
 bool robotReady = false;
 
@@ -716,7 +716,7 @@ void insertionsort(double array[], int length) {
      ********************************************************************************************************************************
 */
 
-
+/*
 void serialEvent() {
   while (Serial.available()) {
     // get the new byte:
@@ -729,7 +729,7 @@ void serialEvent() {
     // add it to the inputString:
     robotRead += inChar;
   }
-}
+}*/
 
 String getValue(String data, char separator, int index)
 {
@@ -775,7 +775,10 @@ void setup() {
 }
 
 void loop() {
-
+  while (Serial.available()) {
+    // get the new byte:
+  String robotRead = Serial.readString();
+  Serial.println("AN"+robotRead);
   if (robotRead == "ok") {
     if (robotReady == false) {
       //delay(5000);
@@ -875,5 +878,5 @@ void loop() {
   //turnRight(90);
 
   //delay(500);
-
+  }
 }

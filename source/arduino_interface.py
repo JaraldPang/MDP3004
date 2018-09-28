@@ -26,7 +26,7 @@ class ArduinoWrapper():
                 time.sleep(1)
             except Exception:
                 continue
-        print("Reconnected...")
+        print("Arduino Reconnected...")
         return self.ser
 
     def write(self, msg):

@@ -9,18 +9,18 @@ from bluetooth.btcommon import BluetoothError
 def main():
     pc_wrapper = PcWrapper()
     bt_wrapper = BluetoothWrapper()
-    ar_wrapper = None
+    ar_wrapper = ArduinoWrapper()
     pc_thread = threading.Thread(target=listen_to_pc,args=(pc_wrapper,ar_wrapper,bt_wrapper))
     bt_thread = threading.Thread(target=listen_to_bluetooth,args=(bt_wrapper,pc_wrapper,ar_wrapper))
     ar_thread = threading.Thread(target=listen_to_arduino,args=(ar_wrapper,pc_wrapper,bt_wrapper))
 
     #we utilize 3 threads due to GIL contention. Any more than 3 will incur context and lock switch overheads
     pc_thread.start()
-    #ar_thread.start()
+    ar_thread.start()
     bt_thread.start()
 
     pc_thread.join()
-    #ar_thread.join()
+    ar_thread.join()
     bt_thread.join()
 
 def listen_to_pc(pc_wrapper,arduino_wrapper=None,bt_wrapper=None):
@@ -40,11 +40,17 @@ def listen_to_pc(pc_wrapper,arduino_wrapper=None,bt_wrapper=None):
                     bt_wrapper.write(msg[2:])
                 else:
                     print("BT NOT CONNECTED")
-            #DISCARD THIS AFTER TESTING, ELSE IT WILL CAUSE SCREWUPS IF YOU SEND
-            #A MSG FROM PC WITH NO DIRECTION
+            #raises a connectione error for the following situation
+            #1) RPI resets while PC is connected
+            #2) PC reconnects
+            #3) msg is sent to PC
             else:
-               raise ConnectionResetError
+                if(msg is False):
+                    raise ConnectionResetError("Null or empty string received arising from connection reset")
+                else:
+                    raise ConnectionResetError("Malformed string received: {}".format(msg))
         except (timeout,ConnectionResetError) as e:
+            print(e)
             print("Unexpected Disconnect for PC occurred. Awaiting reconnection...")
             conn.close()
             conn = pc_wrapper.accept_connection_and_flush()
@@ -62,10 +68,7 @@ def listen_to_bluetooth(bt_wrapper,pc_wrapper=None,arduino_wrapper=None,):
             msg = conn.recv(1024).decode('utf-8')
             print("RECEIVED FROM BT INTERFACE: {}".format(msg))
             if(msg.startswith("AL")):
-                if(pc_wrapper.is_connected()):
-                    pc_wrapper.write(msg[2:])
-                else:
-                    print("PC NOT CONNECTED")
+                pc_wrapper.write(msg[2:])
             elif(msg.startswith("AR")):
                 arduino_wrapper.write(msg[2:])
         except (timeout,BluetoothError):

@@ -9,7 +9,7 @@
 #define pinSensor3 3
 #define pinSensor4 4
 #define pinSensor5 5
-
+z
 /**
  * Sharp IR Model :
  * GP2Y0A02YK0F --> "20150"
@@ -37,15 +37,21 @@ void setup() {
 
 void loop() {
   // read the input on analog pin 0:
-  float sensorValue = analogRead(pinSensor2);
+  float sensorValue = analogRead(A0);
   // Convert the analog reading (which goes from 0 - 1023) to a voltage (0 - 5V):
   // https://www.arduino.cc/en/Tutorial/ReadAnalogVoltage
   float voltage = sensorValue * (5.0 / 1023.0);
-
+  
+  int voltFromRaw = map(voltage, 0, 1023, 0, 5000);
+  
+  float distances = 27.728 * pow(voltFromRaw, -1.2045);
+  
   Serial.print(sensorValue);
   Serial.print("\t");
   Serial.print(voltage);
+  Serial.print("\t");
+  Serial.print(distances);
   Serial.println();
 
-  delay(500);
+  delay(300);
 }

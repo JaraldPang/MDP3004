@@ -61,10 +61,11 @@ class BluetoothWrapper(object):
                 if(next_msg is None):
                     next_msg = self.queue.get()
                 print("Flushing...")
-                self.conn.sendall("{}\n".format(next_msg).encode())
+                conn.sendall(next_msg.encode())
                 next_msg = None
             except(timeout,BluetoothError):
                 conn = self.accept_connection()
+        self.client_socket = conn
         return conn
 
 
@@ -78,7 +79,7 @@ class BluetoothWrapper(object):
             else:
                 self.client_socket.send(str(msg))
             return True
-        except BluetoothError:
+        except Exception:
             self.queue.put(msg)
             return False
 

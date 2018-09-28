@@ -36,10 +36,7 @@ def listen_to_pc(pc_wrapper,arduino_wrapper=None,bt_wrapper=None):
             if(msg.startswith("AR")):
                 arduino_wrapper.write(msg[2:])
             elif(msg.startswith("AN")):
-                if(bt_wrapper.is_connected()):
-                    bt_wrapper.write(msg[2:])
-                else:
-                    print("BT NOT CONNECTED")
+                bt_wrapper.write(msg[2:])
             #raises a connectione error for the following situation
             #1) RPI resets while PC is connected
             #2) PC reconnects
@@ -93,6 +90,7 @@ def listen_to_arduino(ar_wrapper,pc_wrapper=None,bt_wrapper=None):
                 bt_wrapper.write(msg[2:])
         except Exception:
             print("Unexpected Disconnect occurred from arduino, trying to reconnect...")
+            ser.close()
             ser = ar_wrapper.reconnect()
 
     print("Closing Arduino Listener")

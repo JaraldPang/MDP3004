@@ -55,10 +55,11 @@ class PcWrapper:
                 if(next_msg is None):
                     next_msg = self.queue.get()
                 print("Flushing...")
-                self.conn.sendall("{}\n".format(next_msg).encode())
+                conn.sendall("{}\n".format(next_msg).encode())
                 next_msg = None
             except(socket.timeout,socket.error,ConnectionResetError):
                 conn = self.accept_connection()
+        self.conn = conn
         return conn
 
     #we delegate read jobs to the read thread
@@ -71,7 +72,7 @@ class PcWrapper:
             else:
                 self.conn.sendall("{}\n".format(msg).encode())
             return True
-        except socket.error:
+        except Exception:
             self.queue.put(msg)
             return False
 

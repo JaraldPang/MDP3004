@@ -39,9 +39,9 @@
 #define irBRB A3
 #define irBLT A5
 
-#define toleranceValue 90
+#define toleranceValue 50
 
-#define sampleSize 30
+#define sampleSize 35
 
 SharpIR sensorTL(irTL, sampleSize, toleranceValue, TL);
 SharpIR sensorTM(irTM, sampleSize, toleranceValue, TM);
@@ -651,7 +651,7 @@ void sensordata() {
   String resultBRT = String(final_MedianRead(irBRT)) + String("\t");
   String resultBRB = String(final_MedianRead(irBRB)) + String("\t");
   String resultBLT = String(final_MedianRead(irBLT));
-  Serial.println("AN"+resultTL + resultTM + resultTR + resultBRT + resultBRB + resultBLT);
+  Serial.println("AN "+resultTL + resultTM + resultTR + resultBRT + resultBRB + resultBLT);
 }
 
 double final_MedianRead(int tpin) {
@@ -739,7 +739,7 @@ void serialEvent() {
       newData = true;
     }
     // add it to the inputString:
-    Serial.println("AN"+robotRead);
+    //Serial.println("AN"+robotRead);
   }
 }
 

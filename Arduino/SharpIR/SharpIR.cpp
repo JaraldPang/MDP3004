@@ -83,18 +83,22 @@ double SharpIR::cm() {
     case 0:
         //TL (1080)
         puntualDistance = 27.728 * pow(v, -1.2045);
+	puntualDistance = puntualDistance - 2.5;
         break;
     case 1:
         //BRT (1080)
         puntualDistance = 27.728 * pow(v, -1.2045);
+	puntualDistance = puntualDistance - 7.5;
         break;
     case 2:
         //TM (1080)
         puntualDistance = 27.728 * pow(v, -1.2045);
+	puntualDistance = puntualDistance - 9;
         break;
     case 3:
         //BRB (20150)
         puntualDistance = 60.374 * pow(v, -1.16);
+	puntualDistance = puntualDistance - 5;
         break;
     case 4:
         //TR (1080)

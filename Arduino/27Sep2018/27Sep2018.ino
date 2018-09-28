@@ -574,7 +574,7 @@ void obstacleAvoid() {
       Serial.println("Obstacle at front right");
       turnLeft(45);
       //delay(500);
-      moveForward(10);
+      moveForward(30);
       //delay(500);
       turnRight(45);
       //delay(500);
@@ -582,9 +582,10 @@ void obstacleAvoid() {
       //delay(500);
       turnRight(45);
       //delay(500);
-      moveForward(10);
+      moveForward(30);
       //delay(500);
       turnLeft(42);
+      moveForward(40);
       avoidComplete = true;
     }
     //if right no wall, obstacle at front middle
@@ -603,6 +604,7 @@ void obstacleAvoid() {
       moveForward(30);
       //delay(500);
       turnRight(42);
+      moveForward(40);
       avoidComplete = true;
     }
     //if right no wall, obstacle at front left
@@ -612,15 +614,16 @@ void obstacleAvoid() {
       //delay(500);
       moveForward(30);
       //delay(500);
-      turnLeft(45);
+      turnLeft(47);
       //delay(500);
       moveForward(20);
       //delay(500);
-      turnLeft(45);
+      turnLeft(47);
       //delay(500);
-      moveForward(30);
+      moveForward(33);
       //delay(500);
       turnRight(42);
+      moveForward(40);
       avoidComplete = true;
     }
     else {

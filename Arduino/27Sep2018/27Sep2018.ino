@@ -779,7 +779,7 @@ void loop() {
     // get the new byte:
   String robotRead = Serial.readString();
   Serial.println("AN"+robotRead);
-  if (robotRead == "ok") {
+  //if (robotRead == "ok") {
     if (robotReady == false) {
       //delay(5000);
       //moveForward(150);
@@ -803,6 +803,7 @@ void loop() {
     case 'w':
     {
       (movementValue == 0) ? moveForward(10) : moveForward(movementValue);
+      Serial.println("ANExecuted move command!");
       break;
     }
 

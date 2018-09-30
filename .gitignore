@@ -1,0 +1,16 @@
+#virtualenv
+mdpenv
+
+#ignore the following files
+.idea/
+
+### Java ###
+*.class
+
+### Python ###
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+*.pyc
+

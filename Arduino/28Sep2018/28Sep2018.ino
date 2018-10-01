@@ -550,79 +550,108 @@ void obstacleAvoid() {
       delay(500);
       */
   bool avoidComplete = false;
-  while (avoidComplete == false) {
-    //if right has wall, obstacle at any part
-    /*if(final_MedianRead(irBRT)<=25 && final_MedianRead(irBRT)>0 && final_MedianRead(irTR)<=25 && final_MedianRead(irTR)>0 || final_MedianRead(irTM)<=25 && final_MedianRead(irTM)>0 ||
-    final_MedianRead(irTL)<=25 && final_MedianRead(irTL)>0) {
+    while(avoidComplete == false) {
+    //if left has wall, obstacle at any part
+    if(final_MedianRead(irBLT)<=25 && final_MedianRead(irBLT)>0 && final_MedianRead(irTR)<=15 && final_MedianRead(irTR)>0) {
       Serial.println("Obstacle near wall");
-      turnLeft(45);
-      //delay(500);
-      moveForward(30);
-      //delay(500);
+      turnRight(90);
+      delay(1000);
+      moveForward(10);
+      delay(1000);
+      turnLeft(90);
+      delay(1000);
       turnRight(45);
-      //delay(500);
+      delay(1000);
       moveForward(20);
-      //delay(500);
-      turnRight(45);
-      //delay(500);
+      delay(1000);
+      turnLeft(45);
+      delay(1000);
       moveForward(30);
-      //delay(500);
+      delay(1000);
+      turnLeft(45);
+      delay(1000);
+      moveForward(20);
+      delay(1000);
+      turnRight(42);
+      avoidComplete = true;
+    }
+    else if(final_MedianRead(irBRB)<=25 && final_MedianRead(irBRB)>0 && final_MedianRead(irTL)<=15 && final_MedianRead(irTL)>0) {
+      Serial.println("Obstacle near wall");
+      turnLeft(90);
+      delay(1000);
+      moveForward(10);
+      delay(1000);
+      turnLeft(90);
+      delay(1000);
+      turnLeft(45);
+      delay(1000);
+      moveForward(20);
+      delay(1000);
+      turnRight(45);
+      delay(1000);
+      moveForward(30);
+      delay(1000);
+      turnRight(45);
+      delay(1000);
+      moveForward(20);
+      delay(1000);
       turnLeft(42);
       avoidComplete = true;
-    }*/
+    }
+    
     //if right no wall, obstacle at front right
-    if (final_MedianRead(irTR) <= 25 && final_MedianRead(irTR) > 0) {
+    if(final_MedianRead(irTR)<=15 && final_MedianRead(irTR)>0) {
       Serial.println("Obstacle at front right");
       turnLeft(45);
-      //delay(500);
-      moveForward(30);
-      //delay(500);
-      turnRight(45);
-      //delay(500);
+      delay(1000);
       moveForward(20);
-      //delay(500);
+      delay(1000);
       turnRight(45);
-      //delay(500);
+      delay(1000);
       moveForward(30);
-      //delay(500);
+      delay(1000);
+      turnRight(45);
+      delay(1000);
+      moveForward(20);
+      delay(1000);
       turnLeft(42);
       moveForward(40);
       avoidComplete = true;
     }
     //if right no wall, obstacle at front middle
-    else if (final_MedianRead(irTM) <= 25 && final_MedianRead(irTM) > 0) {
+    else if(final_MedianRead(irTM)<=15 && final_MedianRead(irTM)>0) {
       Serial.println("Obstacle at front middle");
       turnRight(45);
-      //delay(500);
-      moveForward(30);
-      //delay(500);
-      turnLeft(45);
-      //delay(500);
+      delay(1000);
       moveForward(20);
-      //delay(500);
+      delay(1000);
       turnLeft(45);
-      //delay(500);
+      delay(1000);
       moveForward(30);
-      //delay(500);
+      delay(1000);
+      turnLeft(45);
+      delay(1000);
+      moveForward(20);
+      delay(1000);
       turnRight(42);
       moveForward(40);
       avoidComplete = true;
     }
     //if right no wall, obstacle at front left
-    if (final_MedianRead(irTL) <= 25 && final_MedianRead(irTL) > 0) {
+    if(final_MedianRead(irTL)<=15 && final_MedianRead(irTL)>0) {
       Serial.println("Obstacle at front left");
       turnRight(45);
-      //delay(500);
-      moveForward(30);
-      //delay(500);
-      turnLeft(47);
-      //delay(500);
+      delay(1000);
       moveForward(20);
-      //delay(500);
+      delay(1000);
       turnLeft(47);
-      //delay(500);
-      moveForward(33);
-      //delay(500);
+      delay(1000);
+      moveForward(30);
+      delay(1000);
+      turnLeft(47);
+      delay(1000);
+      moveForward(20);
+      delay(1000);
       turnRight(42);
       moveForward(40);
       avoidComplete = true;
@@ -631,7 +660,7 @@ void obstacleAvoid() {
       moveForward(10);
     }
     delay(500);
-  }
+    }
 }
 
 void brake() {
@@ -848,6 +877,7 @@ void loop() {
     robotRead = "";
     newData = false;
   }
+  //delay(3000);
   //obstacleAvoid();
   //md.setSpeeds(325,325);
   //sensordata();

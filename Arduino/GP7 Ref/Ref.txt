@@ -2,36 +2,36 @@
  * ============================== Libraries to be included ==============================
  * include all the libraries that will be used
  */
-#include "DualVNH5019MotorShield.h"
-#include "PinChangeInt.h"
-#include "SharpIR.h"
+ #include "DualVNH5019MotorShield.h"
+ #include "PinChangeInt.h"
+ #include "SharpIR.h"
 
 /**
  * ============================== Define all constant values ==============================
  * define all the constant values that will be used
  */
-#define pinGreenLED 11 // green debugging led
-#define pinRedLED 13 // red debugging led
+ #define pinGreenLED 11 // green debugging led
+ #define pinRedLED 13 // red debugging led
 
-#define pinEncoderL 3
-#define pinEncoderR 5
+ #define pinEncoderL 3
+ #define pinEncoderR 5
 
-#define pinSensorL 0  // Left
-#define pinSensorFL 1 // Front Left
-#define pinSensorFC 2 // Front Center
-#define pinSensorFR 3 // Front Right
-#define pinSensorRF 4 // Right Front
-#define pinSensorRR 5 // Right Rear
+ #define pinSensorL 0  // Left
+ #define pinSensorFL 1 // Front Left
+ #define pinSensorFC 2 // Front Center
+ #define pinSensorFR 3 // Front Right
+ #define pinSensorRF 4 // Right Front
+ #define pinSensorRR 5 // Right Rear
 
-#define MODEL_SHORT 1080 // 1080 (Short), 20150 (Long)
-#define MODEL_LONG 20150 // 1080 (Short), 20150 (Long)
+ #define MODEL_SHORT 1080 // 1080 (Short), 20150 (Long)
+ #define MODEL_LONG 20150 // 1080 (Short), 20150 (Long)
 
-#define WALL_GAP 10
+ #define WALL_GAP 10
 
-#define SPEED_MOVE 350
-#define SPEED_SPIN 350
-#define SPEED_CALIBRATE 150
-#define MOTOR_MULTIPLIER 1
+ #define SPEED_MOVE 350
+ #define SPEED_SPIN 350
+ #define SPEED_CALIBRATE 150
+ #define MOTOR_MULTIPLIER 1
 
 // ********** change values here! **********
 #define TICKS_PER_CM 26
@@ -79,7 +79,6 @@ SharpIR sensorRR(pinSensorRR, MODEL_SHORT);
  */
 // values on 31 mar
 double arrMapping0[] = {18.76, 24.09, 32.29, 42.15, 52.99, 64.23, 74.94, 88.66, 98.4};
-
 double arrMapping1[] = {10.06, 21.48, 34.70, 52.78, 70.27};
 double arrMapping2[] = {10.14, 20.99, 32.61, 44.60, 50.32};
 double arrMapping3[] = {10.82, 21.38, 32.61, 42.76, 53.33};
@@ -90,77 +89,77 @@ double arrMapping5[] = {9.98, 22.79, 39.09, 64.21, 76.63};
  * ============================== Initiate global variables ==============================
  * initiate global variables that will be used
  */
-volatile long encoderCountLeft, encoderCountRight;
-long prevTick;
-double integral;
+ volatile long encoderCountLeft, encoderCountRight;
+ long prevTick;
+ double integral;
 
-int step_counter, step_best_calibrate;
-bool obstacle_left_center, obstacle_left_rear, obstacle_right_rear;
-bool opportunity_calibrate_left, opportunity_calibrate_front, opportunity_calibrate_right;
+ int step_counter, step_best_calibrate;
+ bool obstacle_left_center, obstacle_left_rear, obstacle_right_rear;
+ bool opportunity_calibrate_left, opportunity_calibrate_front, opportunity_calibrate_right;
 
-bool mode_fastest_path, mode_fastest_diagonal, mode_calibration, forward_command, sensor_command;
+ bool mode_fastest_path, mode_fastest_diagonal, mode_calibration, forward_command, sensor_command;
 
-void setup() {
-	Serial.begin(9600);
-	Serial.setTimeout(50);
+ void setup() {
+ 	Serial.begin(9600);
+ 	Serial.setTimeout(50);
 
-	pinMode(pinGreenLED, OUTPUT);
-	pinMode(pinRedLED, OUTPUT);
-	digitalWrite(pinGreenLED, HIGH);
-	digitalWrite(pinRedLED, LOW);
+ 	pinMode(pinGreenLED, OUTPUT);
+ 	pinMode(pinRedLED, OUTPUT);
+ 	digitalWrite(pinGreenLED, HIGH);
+ 	digitalWrite(pinRedLED, LOW);
 
-	md.init();
-	pinMode(pinEncoderL, INPUT);
-	pinMode(pinEncoderR, INPUT);
+ 	md.init();
+ 	pinMode(pinEncoderL, INPUT);
+ 	pinMode(pinEncoderR, INPUT);
 
-	PCintPort::attachInterrupt(pinEncoderL, incLeft, RISING);
-	PCintPort::attachInterrupt(pinEncoderR, incRight, RISING);
-	step_counter = 0;
-	step_best_calibrate = 0;
-	mode_fastest_path = false;
-	mode_fastest_diagonal = false;
-	mode_calibration = false;
-	obstacle_left_center = false;
-	obstacle_left_rear = false;
-	obstacle_right_rear = false;
-}
+ 	PCintPort::attachInterrupt(pinEncoderL, incLeft, RISING);
+ 	PCintPort::attachInterrupt(pinEncoderR, incRight, RISING);
+ 	step_counter = 0;
+ 	step_best_calibrate = 0;
+ 	mode_fastest_path = false;
+ 	mode_fastest_diagonal = false;
+ 	mode_calibration = false;
+ 	obstacle_left_center = false;
+ 	obstacle_left_rear = false;
+ 	obstacle_right_rear = false;
+ }
 
-void loop() {
-	int i = 0, j = 1;
-	double val;
-	String valString = "";
-	char commandBuffer[50];
-	char command, ch;
-	bool flag = true;
-	int emergency = 0;
+ void loop() {
+ 	int i = 0, j = 1;
+ 	double val;
+ 	String valString = "";
+ 	char commandBuffer[50];
+ 	char command, ch;
+ 	bool flag = true;
+ 	int emergency = 0;
 
-	forward_command = false;
-	sensor_command = false;
+ 	forward_command = false;
+ 	sensor_command = false;
 
-	opportunity_calibrate_left = false;
-	opportunity_calibrate_front = false;
-	opportunity_calibrate_right = false;
+ 	opportunity_calibrate_left = false;
+ 	opportunity_calibrate_front = false;
+ 	opportunity_calibrate_right = false;
 
-	while (1) {
-		if (Serial.available()) {
-			ch = Serial.read();
+ 	while (1){
+ 		if (Serial.available()) {
+ 			ch = Serial.read();
 
-			if ((ch == 'a') || (ch == 'A')) {
-				continue;
-			}
+ 			if ((ch == 'a') || (ch == 'A')) {
+ 				continue;
+ 			}
 
-			if ((ch == 'z') || (ch == 'Z') || (ch == 'c') || (ch == 'C') || (ch == 'e') || (ch == 'E')) {
-				switch (ch) {
-				case 'z': case 'Z':
-					opportunity_calibrate_left = true;
-					break;
-				// case 'x': case 'X':
-				//   opportunity_calibrate_front = true;
-				//   break;
-				case 'c': case 'C':
+ 			if ((ch == 'z') || (ch == 'Z') || (ch == 'c') || (ch == 'C') || (ch == 'e') || (ch == 'E')) {
+ 				switch(ch) {
+ 					case 'z': case 'Z':
+ 					opportunity_calibrate_left = true;
+ 					break;
+					// case 'x': case 'X':
+					//   opportunity_calibrate_front = true;
+					//   break;
+					case 'c': case 'C':
 					opportunity_calibrate_right = true;
 					break;
-				case 'e': case 'E':
+					case 'e': case 'E':
 					emergency = 1;
 					break;
 				}
@@ -168,29 +167,29 @@ void loop() {
 				ch = Serial.read();
 				continue;
 			}
-
+			
 			commandBuffer[i] = ch;
 			i++;
 
-			if (ch == '|') {
+			if (ch == '|'){
 				digitalWrite(pinGreenLED, LOW);
 				digitalWrite(pinRedLED, HIGH);
 				break;
 			}
 		}
 	}
-
+	
 	command = commandBuffer[0];
 
-	while (j < (i - 1)) {
+	while (j < (i-1)) {
 		valString += commandBuffer[j];
 		j++;
 	}
-
+	
 	val = valString.toDouble();
 	int start_inst_index = 0;
 	switch (command) {
-	case 'Q': case 'q':
+		case 'Q': case 'q':
 //		delay(5000);
 //		rotateRight(90);
 //		rotateRight(90);
@@ -201,94 +200,94 @@ void loop() {
 //		delay(1000);
 //		rotateRight(90);
 		break;
-	case 'M': case 'm': // mode
-		flag = false;
-		if (val == 2) {
-			mode_fastest_path = true;
-			mode_fastest_diagonal = true;
-		}
-		else if (val == 1) {
-			mode_fastest_path = true;
-			mode_fastest_diagonal = false;
-		}
-		else {
-			mode_fastest_path = false;
-			mode_fastest_diagonal = false;
-		}
-		break;
-	case 'F': case 'f': // forward
-		(val == 0) ? forward(10) : forward(val * 10);
-		//      if (val == 0){
-		//        forward(10);
-		//      }
-		//      else if (val >= 4){
-		//        while(val >= 4){
-		//          forward(40);
-		//          step_counter++;
-		//          step_best_calibrate++;
-		//          autoCalibrate(1);
-		//          val -= 4;
-		//        }
-		//        if (val > 0){9
-		//          forward(val * 10);
-		//        }
-		//      }
-		//      else {
-		//        forward(val * 10);
-		//      }
+		case 'M': case 'm': // mode
+			flag = false;
+			if (val == 2) {
+				mode_fastest_path = true;
+				mode_fastest_diagonal = true;
+			}
+			else if (val == 1) {
+				mode_fastest_path = true;
+				mode_fastest_diagonal = false;
+			}
+			else {
+				mode_fastest_path = false;
+				mode_fastest_diagonal = false;
+			}
+			break;
+		case 'F': case 'f': // forward
+			(val == 0) ? forward(10) : forward(val * 10);
+	//      if (val == 0){
+	//        forward(10);
+	//      }
+	//      else if (val >= 4){
+	//        while(val >= 4){
+	//          forward(40);
+	//          step_counter++;
+	//          step_best_calibrate++;
+	//          autoCalibrate(1);
+	//          val -= 4;
+	//        }
+	//        if (val > 0){9
+	//          forward(val * 10); 
+	//        }
+	//      }
+	//      else {
+	//        forward(val * 10);
+	//      }
 
-		if ((val == 0) || (val == 1)) {
-			forward_command = true;
-		}
-		step_counter++;
-		step_best_calibrate++;
-		break;
-	case 'B': case 'b': // reverse
-		(val == 0) ? reverse(10) : reverse(val * 10);
-		step_counter++;
-		step_best_calibrate++;
-		break;
-	case 'L': case 'l': // rotateLeft
-		(val == 0) ? rotateLeft(90) : rotateLeft(val);
-		step_counter++;
-		step_best_calibrate++;
-		break;
-	case 'R': case 'r': // rotateRight
-		(val == 0) ? rotateRight(90) : rotateRight(val);
-		step_counter++;
-		step_best_calibrate++;
-		break;
-	case 'S': case 's': // readSensors
-		flag = false;
-		sensor_command = true;
-		autoCalibrate(1);
-		readSensors();
-		break;
-	// case 'C': case 'c': // calibrate to right wall
-	//   flag = false;
-	//   step_counter = (calibrateWithRight()) ? 0 : step_counter;
-	//   break;
-	case 'X': case 'x':
-		flag = false;
-		step_counter = (calibrateWithFront()) ? 0 : step_counter;
-		break;
+			if ((val == 0) || (val == 1)) {
+				forward_command = true;
+			}
+			step_counter++;
+			step_best_calibrate++;
+			break;
+		case 'B': case 'b': // reverse
+			(val == 0) ? reverse(10) : reverse(val * 10);
+			step_counter++;
+			step_best_calibrate++;
+			break;
+		case 'L': case 'l': // rotateLeft
+			(val == 0) ? rotateLeft(90) : rotateLeft(val);
+			step_counter++;
+			step_best_calibrate++;
+			break;
+		case 'R': case 'r': // rotateRight
+			(val == 0) ? rotateRight(90) : rotateRight(val);
+			step_counter++;
+			step_best_calibrate++;
+			break;
+		case 'S': case 's': // readSensors
+			flag = false;
+			sensor_command = true;
+			autoCalibrate(1);
+			readSensors();
+			break;
+			// case 'C': case 'c': // calibrate to right wall
+			//   flag = false;
+			//   step_counter = (calibrateWithRight()) ? 0 : step_counter;
+			//   break;
+		case 'X': case 'x': 
+			flag = false;
+			step_counter = (calibrateWithFront()) ? 0 : step_counter;
+			break;
 		// case 'Z': case 'z':
-		//   flag = false;
-		//   step_counter = (calibrateWithLeft()) ? 0 : step_counter;
-		//   break;
-		// case 'E': case 'e':
-		//   flag = false;
-		//   (autoCalibrate(1));
-		break;
-	case 'V': case 'v':
-		autoCalibrate(1);
-		break;
-	default:
-		flag = false;
+			//   flag = false; 
+			//   step_counter = (calibrateWithLeft()) ? 0 : step_counter;
+			//   break;
+			// case 'E': case 'e':
+			//   flag = false;
+			//   (autoCalibrate(1));
+			break;
+    case 'V': case 'v':
+      autoCalibrate(1);
+      break;
+		default: 
+			flag = false;
 //      Serial.println("E");
-	}
+}
 
-	if (flag) {
+if (flag) {
 		// check if command was action, calibrate if yes
 		if (mode_fastest_path) {
 			if ((!mode_fastest_diagonal) && (Serial.available())) {
@@ -296,9 +295,9 @@ void loop() {
 			}
 		}
 		else {
-			autoCalibrate(emergency);
+				autoCalibrate(emergency);  
 		}
-
+		
 	}
 
 	if (!mode_fastest_path) {
@@ -314,7 +313,7 @@ void loop() {
 		}
 	}
 	digitalWrite(pinGreenLED, HIGH);
-	digitalWrite(pinRedLED, LOW);
+	digitalWrite(pinRedLED, LOW); 
 }
 
 
@@ -322,12 +321,12 @@ void loop() {
  * ============================== For Motors ==============================
  */
 void incLeft() {
-	if (mode_fastest_path) {
-		(encoderCountLeft % STEPS_PER_EXTRA_TICK_FASTEST == 0) ? encoderCountLeft += 2 : encoderCountLeft++;
+	if(mode_fastest_path) {
+	 	(encoderCountLeft % STEPS_PER_EXTRA_TICK_FASTEST == 0) ? encoderCountLeft += 2 : encoderCountLeft++;
 	}
-	else {
-		(encoderCountLeft % STEPS_PER_EXTRA_TICK_EXPLORE == 0) ? encoderCountLeft += 2 : encoderCountLeft++;
-	}
+ 	else {
+	 	(encoderCountLeft % STEPS_PER_EXTRA_TICK_EXPLORE == 0) ? encoderCountLeft += 2 : encoderCountLeft++;
+ 	}
 //  encoderCountLeft++;
 }
 
@@ -338,7 +337,7 @@ void incRight() {
 //  else {
 //    (encoderCountRight % STEPS_PER_EXTRA_TICK_EXPLORE == 0) ? encoderCountRight += 2 : encoderCountRight++;
 //  }
-	encoderCountRight++;
+ 	encoderCountRight++;
 }
 
 double computePID() {
@@ -370,7 +369,7 @@ void forward(double cm) {
 	double SPEED_RAMP = 0;
 	int delay_time = DELAY_PER_MOVE;
 
-	targetTick = ((cm * 1.15) - 1.5) * TICKS_PER_CM; // Caliberated to 30.25 ticks per cm
+	targetTick = ((cm * 1.15)-1.5) * TICKS_PER_CM; // Caliberated to 30.25 ticks per cm
 
 	if (!mode_calibration) {
 		while (encoderCountLeft < min(TICKS_TO_RAMP, targetTick)) {
@@ -411,7 +410,7 @@ void reverse(double cm) {
 	double SPEED_RAMP = 0;
 	int delay_time = DELAY_PER_MOVE;
 
-	targetTick = ((cm * 1.1) - 1) * TICKS_PER_CM; // Caliberated to 30.25 ticks per cm
+	targetTick = ((cm * 1.1)-1) * TICKS_PER_CM; // Caliberated to 30.25 ticks per cm
 
 	if (!mode_calibration) {
 		while (encoderCountLeft < min(TICKS_TO_RAMP, targetTick)) {
@@ -449,14 +448,14 @@ void rotateRight(double deg) {
 	double SPEED_RAMP = 0;
 	int delay_time = DELAY_PER_MOVE;
 
-	if (deg <= 45) targetTick = deg * TICKS_ROTATE_RIGHT_45;
-	else if (deg <= 90) targetTick = deg * TICKS_ROTATE_RIGHT; //4.523 4.375
-
+  if (deg <= 45) targetTick = deg * TICKS_ROTATE_RIGHT_45;
+  else if (deg <= 90) targetTick = deg * TICKS_ROTATE_RIGHT; //4.523 4.375
+	
 	// if (deg <= 90) targetTick = deg * TICKS_ROTATE_RIGHT; //4.523 4.375
 	// else if (deg <= 180 ) targetTick = deg * 4.62;
 	// else if (deg <= 360 ) targetTick = deg * 4.675;
 	// else targetTick = deg * 4.65;
-
+	
 	if (!mode_calibration) {
 		while (encoderCountLeft < min(TICKS_TO_RAMP, targetTick)) {
 			SPEED_RAMP = modifiedMap(encoderCountLeft, 0, TICKS_TO_RAMP, 50, SPEED_SPIN);
@@ -493,9 +492,9 @@ void rotateLeft(double deg) {
 	double SPEED_RAMP = 0;
 	int delay_time = DELAY_PER_MOVE;
 
-	if (deg <= 45) targetTick = deg * TICKS_ROTATE_LEFT_45;
-	else if (deg <= 90) targetTick = deg * TICKS_ROTATE_LEFT;
-
+  if (deg <= 45) targetTick = deg * TICKS_ROTATE_LEFT_45;
+  else if (deg <= 90) targetTick = deg * TICKS_ROTATE_LEFT;
+  
 //	if (deg <= 90) targetTick = deg * TICKS_ROTATE_LEFT; //4.424;
 //	else if (deg <= 180 ) targetTick = deg * 4.51;
 //	else if (deg <= 360 ) targetTick = deg * 4.51;
@@ -532,17 +531,16 @@ void rotateLeft(double deg) {
 /**
  * ============================== For Sensors ==============================
  */
+ void readSensors() {
+ 	int i;
+ 	String output = "";
 
-void readSensors() {
-	int i;
-	String output = "";
-
-	double distFL = calibrateSensorValue(sensorFL.distance(), 1);
-	double distFC = calibrateSensorValue(sensorFC.distance(), 2);
-	double distFR = calibrateSensorValue(sensorFR.distance(), 3);
-	double distRF = calibrateSensorValue(sensorRF.distance(), 4);
-	double distRR = calibrateSensorValue(sensorRR.distance(), 5);
-	double distL = calibrateSensorValue(sensorL.distance(), 0);
+ 	double distFL = calibrateSensorValue(sensorFL.distance(), 1);
+ 	double distFC = calibrateSensorValue(sensorFC.distance(), 2);
+ 	double distFR = calibrateSensorValue(sensorFR.distance(), 3);
+ 	double distRF = calibrateSensorValue(sensorRF.distance(), 4);
+ 	double distRR = calibrateSensorValue(sensorRR.distance(), 5);
+ 	double distL = calibrateSensorValue(sensorL.distance(), 0);
 
 	// prepare to return obstacle position to algo
 	int posFL = obstaclePosition(distFL, 1);
@@ -640,31 +638,31 @@ void readSensors() {
 	output += String(posRF);
 	output += String(posRR);
 	output += String(posL);
-
+	
 	Serial.println(output);
 }
 
-double calibrateSensorValue(double dist, int n) {
+double calibrateSensorValue(double dist, int n){
 	double *arr;
 	int i, len;
 
 	//int dist = sensor.distance();
-
-	switch (n) {
-	case 0: arr = arrMapping0; len = sizeof(arrMapping0) / sizeof(*arr); break;
-	case 1: arr = arrMapping1; len = sizeof(arrMapping1) / sizeof(*arr); break;
-	case 2: arr = arrMapping2; len = sizeof(arrMapping2) / sizeof(*arr); break;
-	case 3: arr = arrMapping3; len = sizeof(arrMapping3) / sizeof(*arr); break;
-	case 4: arr = arrMapping4; len = sizeof(arrMapping4) / sizeof(*arr); break;
-	case 5: arr = arrMapping5; len = sizeof(arrMapping5) / sizeof(*arr); break;
-	default: return -1;
+	
+	switch(n){
+		case 0: arr = arrMapping0; len = sizeof(arrMapping0)/sizeof(*arr); break;
+		case 1: arr = arrMapping1; len = sizeof(arrMapping1)/sizeof(*arr); break;
+		case 2: arr = arrMapping2; len = sizeof(arrMapping2)/sizeof(*arr); break;
+		case 3: arr = arrMapping3; len = sizeof(arrMapping3)/sizeof(*arr); break;
+		case 4: arr = arrMapping4; len = sizeof(arrMapping4)/sizeof(*arr); break;
+		case 5: arr = arrMapping5; len = sizeof(arrMapping5)/sizeof(*arr); break;
+		default: return -1;
 	}
 
-	for (i = 0; i < len; i++) {
-		if (dist < arr[i]) {
+	for (i = 0; i < len; i++){
+		if (dist < arr[i]){
 			//Serial.println("true, " + String(i) + ", " + String(dist) + ", " + arr[i]);
-			int a = (i == 0) ? 0 : arr[i - 1];
-			int offset = (n == 0) ? 1 : 0;
+			int a = (i == 0)? 0 : arr[i-1];
+			int offset = (n == 0)? 1 : 0;
 
 			if ((i == 0) && (n == 0)) {
 				return modifiedMap(dist, a, arr[i], 0, ((i + offset + 1) * 10));
@@ -673,56 +671,56 @@ double calibrateSensorValue(double dist, int n) {
 			return modifiedMap(dist, a, arr[i], ((i + offset) * 10), ((i + offset + 1) * 10));
 		}
 	}
-
-	return i * 10;
+	
+	return i*10;
 }
 
-int 0obstaclePosition(double val, int shortrange) {
+int obstaclePosition(double val, int shortrange){
 	/*
 		values for shortrange
 		0 = left side
-		1 = front
+		1 = front 
 		2 = right side
 		*/
 
-	int tmp = 0;
+		int tmp = 0;
 
-	int modulo = ((int) (val + 0.5)) % 10;
-
-	if ((modulo != 7) && (modulo != 8) && (modulo != 9) && (modulo != 0) && (modulo != 1) && (modulo != 2) && (modulo != 3)) {
-		return -1;
-	}
-	else if (shortrange == 1) {
-		tmp = (val + 4) / 10;
-		if ((tmp >= 1) && (tmp <= RANGE_OF_FRONT_SENSOR)) {
-			return tmp;
+		int modulo = ((int) (val + 0.5)) % 10;
+		
+		if ((modulo != 7) && (modulo != 8) && (modulo != 9) && (modulo != 0) && (modulo != 1) && (modulo != 2) && (modulo != 3)) {
+			return -1;
+		}
+		else if (shortrange == 1) {
+			tmp = (val + 4) / 10;
+			if ((tmp >= 1) && (tmp <= RANGE_OF_FRONT_SENSOR)) {
+				return tmp;
+			}
+			else {
+				return 0; 
+			}    
+		}
+		else if (shortrange == 2) {
+			tmp = (val + 4) / 10;
+			if ((tmp >= 1) && (tmp <= RANGE_OF_RIGHT_SENSOR)) {
+				return tmp;
+			}
+			else {
+				return 0; 
+			}    
 		}
 		else {
-			return 0;
+			tmp = (val - 6) / 10;
+			if ((tmp >= 1) && (tmp <= RANGE_OF_LEFT_SENSOR)) {
+				return tmp;
+			}
+			else {
+				return 0;
+			}
 		}
 	}
-	else if (shortrange == 2) {
-		tmp = (val + 4) / 10;
-		if ((tmp >= 1) && (tmp <= RANGE_OF_RIGHT_SENSOR)) {
-			return tmp;
-		}
-		else {
-			return 0;
-		}
-	}
-	else {
-		tmp = (val - 6) / 10;
-		if ((tmp >= 1) && (tmp <= RANGE_OF_LEFT_SENSOR)) {
-			return tmp;
-		}
-		else {
-			return 0;
-		}
-	}
-}
 
-double modifiedMap(double x, double in_min, double in_max, double out_min, double out_max) {
-	double temp = (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+	double modifiedMap(double x, double in_min, double in_max, double out_min, double out_max) {
+		double temp = (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 	return temp;
 }
 
@@ -730,22 +728,22 @@ double modifiedMap(double x, double in_min, double in_max, double out_min, doubl
  * ============================== Calibrate robot ==============================
  */
 void autoCalibrate(int force_calibrate) {
-	digitalWrite(pinGreenLED, HIGH);
-	digitalWrite(pinRedLED, HIGH);
+ 	digitalWrite(pinGreenLED, HIGH);
+ 	digitalWrite(pinRedLED, HIGH);
+ 
+ 	bool to_calibrate = false;
+ 	double distFL = calibrateSensorValue(sensorFL.distance(), 1);
+ 	double distFC = calibrateSensorValue(sensorFC.distance(), 2);
+ 	double distFR = calibrateSensorValue(sensorFR.distance(), 3);
+ 	double distRF = calibrateSensorValue(sensorRF.distance(), 4);
+ 	double distRR = calibrateSensorValue(sensorRR.distance(), 5);
+ 	double distL = calibrateSensorValue(sensorL.distance(), 0);
 
-	bool to_calibrate = false;
-	double distFL = calibrateSensorValue(sensorFL.distance(), 1);
-	double distFC = calibrateSensorValue(sensorFC.distance(), 2);
-	double distFR = calibrateSensorValue(sensorFR.distance(), 3);
-	double distRF = calibrateSensorValue(sensorRF.distance(), 4);
-	double distRR = calibrateSensorValue(sensorRR.distance(), 5);
-	double distL = calibrateSensorValue(sensorL.distance(), 0);
-
-	int calibrate_front = 0;
+  int calibrate_front = 0;
 	int calibrate_right = 0;
 
 	if (force_calibrate == 0) {
-		bool to_calibrate1, to_calibrate2, to_calibrate3, to_calibrate4, to_calibrate5, to_calibrate6;
+		bool to_calibrate1,to_calibrate2,to_calibrate3,to_calibrate4,to_calibrate5,to_calibrate6;
 		to_calibrate1 = ((distFL <= WALL_GAP + 4) && ((distFL <= (WALL_GAP - 2)) || (distFL >= (WALL_GAP + 2)))) ? true : false;
 		to_calibrate2 = ((distFC <= WALL_GAP + 4) && ((distFC <= (WALL_GAP - 2)) || (distFC >= (WALL_GAP + 2)))) ? true : false;
 		to_calibrate3 = ((distFR <= WALL_GAP + 4) && ((distFR <= (WALL_GAP - 2)) || (distFR >= (WALL_GAP + 2)))) ? true : false;
@@ -779,7 +777,7 @@ void autoCalibrate(int force_calibrate) {
 			}
 		}
 	}
-
+  
 	if (to_calibrate) {
 		if (opportunity_calibrate_left) {
 			step_counter = 0;
@@ -859,10 +857,10 @@ void autoCalibrate(int force_calibrate) {
 				// calibrate the angle after turning back
 				if (calibrate_right == 1) {
 					switch (calibrate_front) {
-					case 1: calibrateAngle(sensorFL, 1, sensorFR, 3, 17); break;
-					case 2: calibrateAngle(sensorFL, 1, sensorFC, 2, 9); break;
-					case 3: calibrateAngle(sensorFC, 2, sensorFR, 3, 9); break;
-					default: break;
+						case 1: calibrateAngle(sensorFL, 1, sensorFR, 3, 17); break;
+						case 2: calibrateAngle(sensorFL, 1, sensorFC, 2, 9); break;
+						case 3: calibrateAngle(sensorFC, 2, sensorFR, 3, 9); break;
+						default: break;
 					}
 				}
 			}
@@ -897,7 +895,7 @@ void autoCalibrate(int force_calibrate) {
 					calibrateWithFront();
 					rotateLeft(90);
 				}
-
+				
 
 				// check for front obstacles to calibrate with
 				distFL = calibrateSensorValue(sensorFL.distance(), 1);
@@ -949,9 +947,9 @@ void autoCalibrate(int force_calibrate) {
 	}
 	else if ((abs(distRF - distRR) < 5) && ((distRF + distRR) <= (3 * WALL_GAP))) {
 		step_counter = 0;
-
+		
 		calibrateAngle(sensorRF, 4, sensorRR, 5, 9);
-
+		
 		if (((distRF + distRR) < ((2 * WALL_GAP) - 4)) || ((distRF + distRR) > ((2 * WALL_GAP) + 4))) {
 			rotateRight(90);
 			calibrateDistance(sensorFL, 1);
@@ -1000,45 +998,45 @@ void autoCalibrate(int force_calibrate) {
 
 	// if too close to one obstacle (calibrate to that one obstacle)
 	if (distFL <= WALL_GAP - 2) {
-		if (!calibrateWithFront()) {
-			calibrateDistance(sensorFL, 1);
-		}
+	  if (!calibrateWithFront()) {
+	    calibrateDistance(sensorFL, 1);
+	  }
 	}
 
 	if (distFC <= WALL_GAP - 2) {
-		if (!calibrateWithFront()) {
-			calibrateDistance(sensorFC, 2);
-		}
+	  if (!calibrateWithFront()) {
+	    calibrateDistance(sensorFC, 2);
+	  }
 	}
 
 	if (distFR <= WALL_GAP - 2) {
-		if (!calibrateWithFront()) {
-			calibrateDistance(sensorFR, 3);
-		}
+	  if (!calibrateWithFront()) {
+	    calibrateDistance(sensorFR, 3);
+	  }
 	}
 
 	if (distRF <= WALL_GAP - 2) {
-		rotateRight(90);
-		if (!calibrateWithFront()) {
-			calibrateDistance(sensorFL, 1);
-		}
-		rotateLeft(90);
+	  rotateRight(90);
+	  if (!calibrateWithFront()) {
+	    calibrateDistance(sensorFL, 1);
+	  }
+	  rotateLeft(90);
 	}
 
 	if (distRR <= WALL_GAP - 2) {
-		rotateRight(90);
-		if (!calibrateWithFront()) {
-			calibrateDistance(sensorFC, 2);
-		}
-		rotateLeft(90);
+	  rotateRight(90);
+	  if (!calibrateWithFront()) {
+	    calibrateDistance(sensorFC, 2);
+	  }
+	  rotateLeft(90);
 	}
 
 	if (distL <= ((WALL_GAP * 2) - 1)) {
-		rotateLeft(90);
-		if (!calibrateWithFront()) {
-			calibrateDistance(sensorFR, 3);
-		}
-		rotateRight(90);
+	  rotateLeft(90);
+	  if (!calibrateWithFront()) {
+	    calibrateDistance(sensorFR, 3);
+	  }
+	  rotateRight(90);
 	}
 }
 
@@ -1132,7 +1130,7 @@ void calibrateAngle(SharpIR sensorL, int arrL, SharpIR sensorR, int arrR, int di
 //    if (distL > distR){
 //      rotateRight(10);
 //    }
-//    else if (distR > distL){
+//    else if (distR > distL){   
 //      rotateLeft(10);
 //    }
 //
@@ -1147,23 +1145,23 @@ void calibrateAngle(SharpIR sensorL, int arrL, SharpIR sensorR, int arrR, int di
 //  if (distL > distR){
 //    rotateRight(angle);
 //  }
-//  else if (distR > distL){
+//  else if (distR > distL){   
 //    rotateLeft(angle);
 //  }
 
-	for (i = 0; i < 9; i++) {
-		if (diff < 0.25) {
-			break;
-		}
+for (i = 0; i < 9; i++){
+	if (diff < 0.25) {
+		break;
+	}
 		// Serial.println("dist: " + String(distL) + ", " + String(distR) + ", " + String(diff) + ", " + String(diff));
-		angle = (atan(diff / dist) * (180 / 3.14159265));
-		//angle = (diff > 0.5) ? angle : angle/2;
-		angle = angle / 2;
+		angle = (atan(diff/dist) * (180/3.14159265));
+//    angle = (diff > 0.5) ? angle : angle/2;
+  angle = angle/2;
 		// Serial.println("angle: " + String(angle));
-		if (distL > distR) {
+		if (distL > distR){
 			rotateRight(angle);
 		}
-		else if (distR > distL) {
+		else if (distR > distL){   
 			rotateLeft(angle);
 		}
 		delay(20);
@@ -1175,7 +1173,7 @@ void calibrateAngle(SharpIR sensorL, int arrL, SharpIR sensorR, int arrR, int di
 	mode_calibration = false;
 }
 
-void calibrateDistance(SharpIR sensor, int arr) {
+void calibrateDistance(SharpIR sensor, int arr){
 	mode_calibration = true;
 	double dist = calibrateSensorValue(sensor.distance(), arr);
 

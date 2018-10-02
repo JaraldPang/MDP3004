@@ -1,8 +1,6 @@
 package view
 
-import tornadofx.View
-import tornadofx.borderpane
-import tornadofx.paddingAll
+import tornadofx.*
 
 class MainView : View("MDP Group 17") {
     override val root = borderpane {

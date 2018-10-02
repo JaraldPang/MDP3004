@@ -8,7 +8,8 @@ import model.MovementInfo
 class Robot(
     val centerCell: CellInfoModel,
     val explorationMaze: MazeModel,
-    private val speed: Int?
+    private val speed: Int?,
+    private val connection: Connection
 ) {
     val isAtStartZone get() = centerCell.row == 1 && centerCell.col == 1
 
@@ -21,7 +22,7 @@ class Robot(
         this.sensors = sensors
     }
 
-    fun sense() {
+    suspend fun sense() {
         val (centerRow, centerCol, direction) = centerCell
         for (sensor in sensors) {
             val sensedDistance = sensor.sense()
@@ -41,6 +42,9 @@ class Robot(
                     if (!MazeModel.isOutsideOfMaze(row, col) && explorationMaze[row][col] == CELL_UNKNOWN) {
                         if (i == sensedDistance) {
                             explorationMaze[row][col] = CELL_OBSTACLE
+                            if (connection.isConnected) {
+                                connection.sendObstacle(row, col)
+                            }
                         } else {
                             explorationMaze[row][col] = CELL_SENSED
                         }
@@ -54,12 +58,18 @@ class Robot(
         delay(1000L / (speed ?: 3))
         centerCell.direction = centerCell.direction.turnLeft()
         movementCount++
+        if (connection.isConnected) {
+            connection.sendMovement(Movement.TURN_LEFT)
+        }
     }
 
     suspend fun turnRight() {
         delay(1000L / (speed ?: 3))
         centerCell.direction = centerCell.direction.turnRight()
         movementCount++
+        if (connection.isConnected) {
+            connection.sendMovement(Movement.TURN_RIGHT)
+        }
     }
 
     suspend fun moveForward() {
@@ -82,6 +92,9 @@ class Robot(
             centerCell.col += colDiff
         }
         movementCount++
+        if (connection.isConnected) {
+            connection.sendMovement(Movement.MOVE_FORWARD)
+        }
     }
 
     suspend fun goToStartZone() {

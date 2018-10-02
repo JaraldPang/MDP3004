@@ -3,9 +3,7 @@ package model
 import domain.*
 import javafx.beans.property.SimpleIntegerProperty
 import javafx.beans.property.SimpleObjectProperty
-import tornadofx.ViewModel
-import tornadofx.getValue
-import tornadofx.setValue
+import tornadofx.*
 import kotlin.math.min
 
 class MazeModel() : ViewModel() {

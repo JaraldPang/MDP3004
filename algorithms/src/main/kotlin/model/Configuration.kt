@@ -2,9 +2,7 @@ package model
 
 import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.property.SimpleStringProperty
-import tornadofx.ViewModel
-import tornadofx.getValue
-import tornadofx.setValue
+import tornadofx.*
 
 class ConfigurationModel : ViewModel() {
     val speedProperty = SimpleObjectProperty<Int?>(null)

@@ -1,8 +1,7 @@
 package app
 
 import javafx.stage.Stage
-import tornadofx.App
-import tornadofx.launch
+import tornadofx.*
 import view.MainView
 
 class Group17AlgorithmsApp : App(MainView::class) {

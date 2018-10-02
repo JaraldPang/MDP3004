@@ -1,11 +1,13 @@
 package view
 
 import controller.MainController
+import javafx.beans.binding.Bindings
 import javafx.geometry.Pos
 import javafx.util.converter.DoubleStringConverter
 import javafx.util.converter.IntegerStringConverter
 import javafx.util.converter.LongStringConverter
 import tornadofx.*
+import java.util.concurrent.Callable
 
 class ConfigurationView : View() {
     val controller: MainController by inject()
@@ -93,6 +95,9 @@ class ConfigurationView : View() {
             button("Load") {
                 action { controller.loadMapDescriptor() }
             }
+            button("Save") {
+                action { controller.saveMapDescriptor() }
+            }
             label("File: ./mazes/")
             textfield(controller.configurationModel.filenameProperty)
         }
@@ -104,6 +109,10 @@ class ConfigurationView : View() {
             }
             button("Fastest Path") {
                 action { controller.runFastestPath() }
+            }
+            button("Connect") {
+                enableWhen(Bindings.createBooleanBinding(Callable { controller.connection.isConnected }).not())
+                action { controller.connect() }
             }
         }
     }

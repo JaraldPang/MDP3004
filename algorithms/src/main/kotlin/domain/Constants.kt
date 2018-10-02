@@ -30,6 +30,7 @@ const val MAZE_ROWS = 20
 
 const val SENSE_RANGE_SHORT = 3
 const val SENSE_RANGE_LONG = 2
+const val NUMBER_OF_SENSORS = 6
 
 const val CELL_OBSTACLE = -2
 const val CELL_UNKNOWN = -1

@@ -4,13 +4,16 @@ import domain.*
 import javafx.beans.property.SimpleBooleanProperty
 import kotlinx.coroutines.experimental.Dispatchers
 import kotlinx.coroutines.experimental.GlobalScope
+import kotlinx.coroutines.experimental.channels.actor
 import kotlinx.coroutines.experimental.javafx.JavaFx
 import kotlinx.coroutines.experimental.launch
 import model.CellInfoModel
 import model.ConfigurationModel
 import model.MazeModel
-import tornadofx.Controller
+import tornadofx.*
 import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.PrintWriter
 
 class MainController : Controller() {
     val centerCell: CellInfoModel by inject()
@@ -18,6 +21,14 @@ class MainController : Controller() {
     val realMaze = MazeModel()
     val configurationModel: ConfigurationModel by inject()
     val displayRealMaze = SimpleBooleanProperty(true)
+    private val wayPointChannel = GlobalScope.actor<Pair<Int, Int>>(Dispatchers.JavaFx) {
+        for ((x, y) in this) {
+            configurationModel.wayPointX = x
+            configurationModel.wayPointY = y
+        }
+    }
+
+    val connection = Connection(wayPointChannel = wayPointChannel)
 
     init {
         with(centerCell) {
@@ -31,9 +42,13 @@ class MainController : Controller() {
     fun runExploration() {
         GlobalScope.launch(Dispatchers.JavaFx) {
             val speed = configurationModel.speed
-            val robot = Robot(centerCell, explorationMaze, speed)
-            val sensors = listOf(2, 3, 4, 5, 6).map {
-                SimulatedSensor(it, 0..2, robot, realMaze)
+            val robot = Robot(centerCell, explorationMaze, speed, connection)
+            val sensors = if (!connection.isConnected) {
+                listOf(2, 3, 4, 5, 6).map { SimulatedSensor(it, 0..2, robot, realMaze) }
+            } else {
+                listOf(3, 4, 5, 6, 7, 2).zip(connection.sensedDataChannels).map { (position, channel) ->
+                    ActualSensor(position, 0..2, channel)
+                }
             }
             robot.setSensors(sensors)
             displayRealMaze.value = false
@@ -61,7 +76,7 @@ class MainController : Controller() {
     fun runFastestPath() {
         GlobalScope.launch(Dispatchers.JavaFx) {
             val speed = configurationModel.speed
-            val robot = Robot(centerCell, explorationMaze, speed)
+            val robot = Robot(centerCell, explorationMaze, speed, connection)
             displayRealMaze.value = false
             val wayPointX = configurationModel.wayPointX
             val wayPointY = configurationModel.wayPointY
@@ -82,6 +97,26 @@ class MainController : Controller() {
             if (lines.size == 2) {
                 realMaze.parseFromMapDescriptors(lines[0], lines[1])
             }
+        }
+    }
+
+    fun saveMapDescriptor() {
+        val filename = configurationModel.filename ?: return
+        val part1 = configurationModel.mapDescriptorPart1 ?: return
+        val part2 = configurationModel.mapDescriptorPart2 ?: return
+        if (!filename.isBlank() && !part1.isBlank() && !part2.isBlank()) {
+            PrintWriter(FileOutputStream("mazes/$filename").bufferedWriter(), true).use {
+                it.println(part1)
+                it.println(part2)
+            }
+            println("Saved to .mazes/$filename")
+        }
+    }
+
+    fun connect() {
+        GlobalScope.launch(Dispatchers.JavaFx) {
+            connection.connect()
+            connection.startReadingLoop()
         }
     }
 }

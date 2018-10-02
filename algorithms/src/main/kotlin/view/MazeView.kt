@@ -3,6 +3,7 @@ package view
 import controller.MainController
 import domain.*
 import javafx.beans.binding.Bindings
+import javafx.beans.binding.ObjectBinding
 import javafx.scene.paint.Color
 import tornadofx.*
 import java.util.concurrent.Callable
@@ -25,69 +26,13 @@ class MazeView : View() {
                                 controller.realMaze[row][col] = CELL_SENSED
                             }
                         }
-                        fillProperty().bind(controller.realMaze.mazeProperties[row][col].objectBinding {
-                            when (it) {
-                                CELL_OBSTACLE -> Color.BLACK
-                                CELL_UNKNOWN -> Color.GRAY
-                                else -> if ((row in 0..2 && col in 0..2)
-                                    || (row in MAZE_ROWS - 3 until MAZE_ROWS && col in MAZE_COLUMNS - 3 until MAZE_COLUMNS)
-                                ) {
-                                    Color.YELLOW
-                                } else {
-                                    Color.WHITE
-                                }
-                            }
-                        })
+                        fillProperty().bind(createRealMapBinding(row, col))
                         controller.displayRealMaze.onChange { value ->
                             fillProperty().unbind()
                             if (value) {
-                                fillProperty().bind(controller.realMaze.mazeProperties[row][col].objectBinding {
-                                    when (it) {
-                                        CELL_OBSTACLE -> Color.BLACK
-                                        CELL_UNKNOWN -> Color.GRAY
-                                        else -> if ((row in 0..2 && col in 0..2)
-                                            || (row in MAZE_ROWS - 3 until MAZE_ROWS && col in MAZE_COLUMNS - 3 until MAZE_COLUMNS)
-                                        ) {
-                                            Color.YELLOW
-                                        } else {
-                                            Color.WHITE
-                                        }
-                                    }
-                                })
+                                fillProperty().bind(createRealMapBinding(row, col))
                             } else {
-                                fillProperty().bind(
-                                    Bindings.createObjectBinding(
-                                        Callable {
-                                            val (centerRow, centerCol, direction) = controller.centerCell
-                                            val cell = controller.explorationMaze[row][col]
-                                            when (cell) {
-                                                CELL_UNKNOWN -> Color.GRAY
-                                                CELL_OBSTACLE -> Color.BLACK
-                                                else -> {
-                                                    if (row in centerRow - 1..centerRow + 1 && col in centerCol - 1..centerCol + 1) {
-                                                        when {
-                                                            direction == Direction.UP && row == centerRow + 1 && col == centerCol -> Color.RED
-                                                            direction == Direction.DOWN && row == centerRow - 1 && col == centerCol -> Color.RED
-                                                            direction == Direction.LEFT && row == centerRow && col == centerCol - 1 -> Color.RED
-                                                            direction == Direction.RIGHT && row == centerRow && col == centerCol + 1 -> Color.RED
-                                                            else -> Color.GREEN
-                                                        }
-                                                    } else if ((row in 0..2 && col in 0..2)
-                                                        || (row in MAZE_ROWS - 3 until MAZE_ROWS && col in MAZE_COLUMNS - 3 until MAZE_COLUMNS)
-                                                    ) {
-                                                        Color.YELLOW
-                                                    } else {
-                                                        Color.WHITE
-                                                    }
-                                                }
-                                            }
-                                        },
-                                        controller.explorationMaze.mazeProperties[row][col],
-                                        controller.centerCell.rowProperty,
-                                        controller.centerCell.colProperty,
-                                        controller.centerCell.directionProperty
-                                    )
-                                )
+                                fillProperty().bind(createExplorationMapBinding(row, col))
                             }
                         }
                     }
@@ -96,4 +41,51 @@ class MazeView : View() {
         }
         isGridLinesVisible = true
     }
+
+    private fun createRealMapBinding(row: Int, col: Int): ObjectBinding<Color> = Bindings.createObjectBinding(
+        Callable {
+            val cell = controller.realMaze[row][col]
+            val wayPointX = controller.configurationModel.wayPointX
+            val wayPointY = controller.configurationModel.wayPointY
+            when {
+                cell == CELL_OBSTACLE -> Color.BLACK
+                cell == CELL_UNKNOWN -> Color.GRAY
+                (row in 0..2 && col in 0..2) || (row in MAZE_ROWS - 3 until MAZE_ROWS && col in MAZE_COLUMNS - 3 until MAZE_COLUMNS) -> Color.YELLOW
+                row == wayPointY && col == wayPointX -> Color.BLUE
+                else -> Color.WHITE
+            }
+        },
+        controller.realMaze.mazeProperties[row][col],
+        controller.configurationModel.wayPointXProperty,
+        controller.configurationModel.wayPointYProperty
+    )
+
+    private fun createExplorationMapBinding(row: Int, col: Int): ObjectBinding<Color> = Bindings.createObjectBinding(
+        Callable {
+            val (centerRow, centerCol, direction) = controller.centerCell
+            val cell = controller.explorationMaze[row][col]
+            val wayPointX = controller.configurationModel.wayPointX
+            val wayPointY = controller.configurationModel.wayPointY
+            when {
+                cell == CELL_UNKNOWN -> Color.GRAY
+                cell == CELL_OBSTACLE -> Color.BLACK
+                row in centerRow - 1..centerRow + 1 && col in centerCol - 1..centerCol + 1 -> when {
+                    direction == Direction.UP && row == centerRow + 1 && col == centerCol -> Color.RED
+                    direction == Direction.DOWN && row == centerRow - 1 && col == centerCol -> Color.RED
+                    direction == Direction.LEFT && row == centerRow && col == centerCol - 1 -> Color.RED
+                    direction == Direction.RIGHT && row == centerRow && col == centerCol + 1 -> Color.RED
+                    else -> Color.GREEN
+                }
+                (row in 0..2 && col in 0..2) || (row in MAZE_ROWS - 3 until MAZE_ROWS && col in MAZE_COLUMNS - 3 until MAZE_COLUMNS) -> Color.YELLOW
+                row == wayPointY && col == wayPointX -> Color.BLUE
+                else -> Color.WHITE
+            }
+        },
+        controller.explorationMaze.mazeProperties[row][col],
+        controller.centerCell.rowProperty,
+        controller.centerCell.colProperty,
+        controller.centerCell.directionProperty,
+        controller.configurationModel.wayPointXProperty,
+        controller.configurationModel.wayPointYProperty
+    )
 }

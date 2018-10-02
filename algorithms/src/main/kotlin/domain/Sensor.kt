@@ -1,5 +1,6 @@
 package domain
 
+import kotlinx.coroutines.experimental.channels.ReceiveChannel
 import model.MazeModel
 
 /**
@@ -15,17 +16,13 @@ abstract class Sensor(val position: Int, val senseRange: IntRange) {
      * Returns how many cells away from the sensor is there an obstacle or a wall
      * If sensor finds no obstacles in the [senseRange], return -1.
      */
-    abstract fun sense(): Int
+    abstract suspend fun sense(): Int
 }
 
-class SimulatedSensor(
-    position: Int,
-    senseRange: IntRange,
-    private val robot: Robot,
-    private val realMaze: MazeModel
-) : Sensor(position, senseRange) {
+class SimulatedSensor(position: Int, senseRange: IntRange, private val robot: Robot, private val realMaze: MazeModel) :
+    Sensor(position, senseRange) {
 
-    override fun sense(): Int {
+    override suspend fun sense(): Int {
         val (centerRow, centerCol, direction) = robot.centerCell
         val (rowDiff, colDiff, rowInc, colInc) = SENSOR_INFO[position][direction.ordinal]
         for (i in senseRange) {
@@ -36,6 +33,14 @@ class SimulatedSensor(
             }
         }
         return -1
+    }
+}
+
+class ActualSensor(position: Int, sensedRange: IntRange, private val sensedDataChannel: ReceiveChannel<Int>) :
+    Sensor(position, sensedRange) {
+
+    override suspend fun sense(): Int {
+        return sensedDataChannel.receive()
     }
 }
 

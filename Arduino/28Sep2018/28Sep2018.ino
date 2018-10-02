@@ -43,6 +43,10 @@
 
 #define sampleSize 35
 
+#define RANGE_OF_LEFT_SENSOR 5
+#define RANGE_OF_FRONT_SENSOR 2
+#define RANGE_OF_RIGHT_SENSOR 3
+
 SharpIR sensorTL(irTL, sampleSize, toleranceValue, TL);
 SharpIR sensorTM(irTM, sampleSize, toleranceValue, TM);
 SharpIR sensorTR(irTR, sampleSize, toleranceValue, TR);
@@ -550,79 +554,108 @@ void obstacleAvoid() {
       delay(500);
       */
   bool avoidComplete = false;
-  while (avoidComplete == false) {
-    //if right has wall, obstacle at any part
-    /*if(final_MedianRead(irBRT)<=25 && final_MedianRead(irBRT)>0 && final_MedianRead(irTR)<=25 && final_MedianRead(irTR)>0 || final_MedianRead(irTM)<=25 && final_MedianRead(irTM)>0 ||
-    final_MedianRead(irTL)<=25 && final_MedianRead(irTL)>0) {
+    while(avoidComplete == false) {
+    //if left has wall, obstacle at any part
+    if(final_MedianRead(irBLT)<=25 && final_MedianRead(irBLT)>0 && final_MedianRead(irTR)<=15 && final_MedianRead(irTR)>0) {
       Serial.println("Obstacle near wall");
-      turnLeft(45);
-      //delay(500);
-      moveForward(30);
-      //delay(500);
+      turnRight(90);
+      delay(1000);
+      moveForward(10);
+      delay(1000);
+      turnLeft(90);
+      delay(1000);
       turnRight(45);
-      //delay(500);
+      delay(1000);
       moveForward(20);
-      //delay(500);
-      turnRight(45);
-      //delay(500);
+      delay(1000);
+      turnLeft(45);
+      delay(1000);
       moveForward(30);
-      //delay(500);
+      delay(1000);
+      turnLeft(45);
+      delay(1000);
+      moveForward(20);
+      delay(1000);
+      turnRight(42);
+      avoidComplete = true;
+    }
+    else if(final_MedianRead(irBRB)<=25 && final_MedianRead(irBRB)>0 && final_MedianRead(irTL)<=15 && final_MedianRead(irTL)>0) {
+      Serial.println("Obstacle near wall");
+      turnLeft(90);
+      delay(1000);
+      moveForward(10);
+      delay(1000);
+      turnLeft(90);
+      delay(1000);
+      turnLeft(45);
+      delay(1000);
+      moveForward(20);
+      delay(1000);
+      turnRight(45);
+      delay(1000);
+      moveForward(30);
+      delay(1000);
+      turnRight(45);
+      delay(1000);
+      moveForward(20);
+      delay(1000);
       turnLeft(42);
       avoidComplete = true;
-    }*/
+    }
+    
     //if right no wall, obstacle at front right
-    if (final_MedianRead(irTR) <= 25 && final_MedianRead(irTR) > 0) {
+    if(final_MedianRead(irTR)<=15 && final_MedianRead(irTR)>0) {
       Serial.println("Obstacle at front right");
       turnLeft(45);
-      //delay(500);
-      moveForward(30);
-      //delay(500);
-      turnRight(45);
-      //delay(500);
+      delay(1000);
       moveForward(20);
-      //delay(500);
+      delay(1000);
       turnRight(45);
-      //delay(500);
+      delay(1000);
       moveForward(30);
-      //delay(500);
+      delay(1000);
+      turnRight(45);
+      delay(1000);
+      moveForward(20);
+      delay(1000);
       turnLeft(42);
       moveForward(40);
       avoidComplete = true;
     }
     //if right no wall, obstacle at front middle
-    else if (final_MedianRead(irTM) <= 25 && final_MedianRead(irTM) > 0) {
+    else if(final_MedianRead(irTM)<=15 && final_MedianRead(irTM)>0) {
       Serial.println("Obstacle at front middle");
       turnRight(45);
-      //delay(500);
-      moveForward(30);
-      //delay(500);
-      turnLeft(45);
-      //delay(500);
+      delay(1000);
       moveForward(20);
-      //delay(500);
+      delay(1000);
       turnLeft(45);
-      //delay(500);
+      delay(1000);
       moveForward(30);
-      //delay(500);
+      delay(1000);
+      turnLeft(45);
+      delay(1000);
+      moveForward(20);
+      delay(1000);
       turnRight(42);
       moveForward(40);
       avoidComplete = true;
     }
     //if right no wall, obstacle at front left
-    if (final_MedianRead(irTL) <= 25 && final_MedianRead(irTL) > 0) {
+    if(final_MedianRead(irTL)<=15 && final_MedianRead(irTL)>0) {
       Serial.println("Obstacle at front left");
       turnRight(45);
-      //delay(500);
-      moveForward(30);
-      //delay(500);
-      turnLeft(47);
-      //delay(500);
+      delay(1000);
       moveForward(20);
-      //delay(500);
+      delay(1000);
       turnLeft(47);
-      //delay(500);
-      moveForward(33);
-      //delay(500);
+      delay(1000);
+      moveForward(30);
+      delay(1000);
+      turnLeft(47);
+      delay(1000);
+      moveForward(20);
+      delay(1000);
       turnRight(42);
       moveForward(40);
       avoidComplete = true;
@@ -631,7 +664,7 @@ void obstacleAvoid() {
       moveForward(10);
     }
     delay(500);
-  }
+    }
 }
 
 void brake() {
@@ -652,6 +685,21 @@ void sensordata() {
   String resultBRB = String(final_MedianRead(irBRB)) + String("\t");
   String resultBLT = String(final_MedianRead(irBLT));
   Serial.println("AN "+resultTL + resultTM + resultTR + resultBRT + resultBRB + resultBLT);
+
+  int posTL = obstaclePosition(final_MedianRead(irTL), 1);
+  int posTM = obstaclePosition(final_MedianRead(irTM), 1);
+  int posTR = obstaclePosition(final_MedianRead(irTR), 1);
+  int posBRT = obstaclePosition(final_MedianRead(irBRT), 2);
+  int posBRB = obstaclePosition(final_MedianRead(irBRB), 2);
+  int posBLT = obstaclePosition(final_MedianRead(irBLT), 0);
+
+  String printPosTL = String(posTL) + String("\t");
+  String printPosTM = String(posTM) + String("\t");
+  String printPosTR = String(posTR) + String("\t");
+  String printPosBRT = String(posBRT) + String("\t");
+  String printPosBRB = String(posBRB) + String("\t");
+  String printPosBLT = String(posBLT);
+  Serial.println("AN "+printPosTL + printPosTM + printPosTR + printPosBRT + printPosBRB + printPosBLT);
 }
 
 double final_MedianRead(int tpin) {
@@ -695,6 +743,50 @@ double distanceEvaluate(int pin)
   }
   return distanceReturn;
 }
+
+int obstaclePosition(double val, int shortrange){
+  /*
+    values for shortrange
+    0 = left side
+    1 = front 
+    2 = right side
+    */
+
+    int tmp = 0;
+
+    int modulo = ((int) (val + 0.5)) % 10;
+    
+    if ((modulo != 7) && (modulo != 8) && (modulo != 9) && (modulo != 0) && (modulo != 1) && (modulo != 2) && (modulo != 3)) {
+      return -1;
+    }
+    else if (shortrange == 1) {
+      tmp = (val + 4) / 10;
+      if ((tmp >= 1) && (tmp <= RANGE_OF_FRONT_SENSOR)) {
+        return tmp;
+      }
+      else {
+        return 0; 
+      }    
+    }
+    else if (shortrange == 2) {
+      tmp = (val + 4) / 10;
+      if ((tmp >= 1) && (tmp <= RANGE_OF_RIGHT_SENSOR)) {
+        return tmp;
+      }
+      else {
+        return 0; 
+      }    
+    }
+    else {
+      tmp = (val - 6) / 10;
+      if ((tmp >= 1) && (tmp <= RANGE_OF_LEFT_SENSOR)) {
+        return tmp;
+      }
+      else {
+        return 0;
+      }
+    }
+  }
 
 void insertionsort(double array[], int length) {
   double temp;
@@ -848,6 +940,7 @@ void loop() {
     robotRead = "";
     newData = false;
   }
+  //delay(3000);
   //obstacleAvoid();
   //md.setSpeeds(325,325);
   //sensordata();

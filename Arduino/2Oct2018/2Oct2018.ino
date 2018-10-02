@@ -52,10 +52,13 @@ SharpIR sensorBRB(BRB, MODEL_LONG);
 SharpIR sensorBLT(BLT, MODEL_SHORT);
 
 #define MIN_RANGE_OF_SHORT_SENSOR 1
-#define MIN_RANGE_OF_LONG_SENSOR 3
 #define MAX_RANGE_OF_SHORT_SENSOR 4
+
+#define MIN_RANGE_OF_LONG_SENSOR 3
 #define MAX_RANGE_OF_LONG_SENSOR 7
 
+#define SHORT_OFFSET 10
+#define LONG_OFFSET 20
 
 /*
      ******************************************************************************************************************************
@@ -683,13 +686,20 @@ void insertionsort(double array[], int length) {
 void readSensors() {
   int i;
   String output = "";
-
+/*
   double distTL = calibrateSensorValue(sensorTL.distance(), 1);
   double distTM = calibrateSensorValue(sensorTM.distance(), 2);
   double distTR = calibrateSensorValue(sensorTR.distance(), 3);
   double distBLT = calibrateSensorValue(sensorBLT.distance(), 5);
   double distBRT = calibrateSensorValue(sensorBRT.distance(), 4);
   double distBRB = calibrateSensorValue(sensorBRB.distance(), 0);
+  */
+  double distTL = sensorTL.distance();
+  double distTM = sensorTM.distance();
+  double distTR = sensorTR.distance();
+  double distBLT = sensorBLT.distance();
+  double distBRT = sensorBRT.distance();
+  double distBRB = sensorBRB.distance();
 
   int posTL = obstaclePosition(
                 distTL,
@@ -720,7 +730,7 @@ void readSensors() {
 
   // check for any values that are not satisfied
   for (i = 0; i < 5 ; i++) {
-    if (posTL != -1) {
+    if (posTL != -2) {
       break;
     }
     else {
@@ -731,7 +741,7 @@ void readSensors() {
     }
   }
   for (i = 0; i < 5 ; i++) {
-    if (posTM != -1) {
+    if (posTM != -2) {
       break;
     }
     else {
@@ -742,7 +752,7 @@ void readSensors() {
     }
   }
   for (i = 0; i < 5 ; i++) {
-    if (posTR != -1) {
+    if (posTR != -2) {
       break;
     }
     else {
@@ -753,7 +763,7 @@ void readSensors() {
     }
   }
   for (i = 0; i < 5 ; i++) {
-    if (posBRT != -1) {
+    if (posBRT != -2) {
       break;
     }
     else {
@@ -764,7 +774,7 @@ void readSensors() {
     }
   }
   for (i = 0; i < 5 ; i++) {
-    if (posBLT != -1) {
+    if (posBLT != -2) {
       break;
     }
     else {
@@ -775,7 +785,7 @@ void readSensors() {
     }
   }
   for (i = 0; i < 10 ; i++) {
-    if (posBRB != -1) {
+    if (posBRB != -2) {
       break;
     }
     else {
@@ -813,6 +823,7 @@ void readSensors() {
   */
 
   // concatenate all position into a string and send
+
   output += String(posTL);  output += ",";
   output += String(posTM);  output += ",";
   output += String(posTR);  output += ",";
@@ -829,13 +840,13 @@ void readSensors() {
   Serial.println(output);
 }
 
-double calibrateSensorValue(double dist, int n) {
+double calibrateSensorValue(double dist, int category) {
   double *arr;
   int i, len;
 
   /*0 - BRB, 1 - TL, 2 - TM, 3 - TR, 4 - BRT, 5 - BLT*/
 
-  switch (n) {
+  switch (category) {
   case 0: arr = arrMapping0; len = sizeof(arrMapping0) / sizeof(*arr); break;
   case 1: arr = arrMapping1; len = sizeof(arrMapping1) / sizeof(*arr); break;
   case 2: arr = arrMapping2; len = sizeof(arrMapping2) / sizeof(*arr); break;
@@ -848,13 +859,13 @@ double calibrateSensorValue(double dist, int n) {
   for (i = 0; i < len; i++) {
     if (dist < arr[i]) {
       int a = (i == 0) ? 0 : arr[i - 1];
-      int offset = (n == 0) ? 1 : 0;
+      int offset = (category == 0) ? 1 : 0;
 
-      if ((i == 0) && (n == 0)) {
-        return modifiedMap(dist, a, arr[i], 0, ((i + offset + 1) * 10));
+      if ((i == 0) && (category == 0)) {
+        return map(dist, a, arr[i], 0, ((i + offset + 1) * 10));
       }
 
-      return modifiedMap(dist, a, arr[i], ((i + offset) * 10), ((i + offset + 1) * 10));
+      return map(dist, a, arr[i], ((i + offset) * 10), ((i + offset + 1) * 10));
     }
   }
 
@@ -871,61 +882,46 @@ int obstaclePosition(double val, int shortrange) {
 
   int tmp = 0;
 
-  int modulo = ((int) (val + 0.5)) % 10;
-
-  //Get Remainder, Conver to integer 37.85%10=7.85=8
-  if (
-    (modulo != 7) &&
-    (modulo != 8) &&
-    (modulo != 9) &&
-    (modulo != 0) &&
-    (modulo != 1) &&
-    (modulo != 2) &&
-    (modulo != 3)
-  ) {
-    return -1;
-  }
   //Front
-  else if (shortrange == 1) {
-    Serial.println("Front" + String(shortrange) + "-" + String(val));
-    tmp = (val + 4) / 10;
-    if ((tmp >= MIN_RANGE_OF_SHORT_SENSOR) && (tmp <= MAX_RANGE_OF_SHORT_SENSOR)) {
+  if (shortrange == 1) {
+    tmp = (val - SHORT_OFFSET) / 10;
+    Serial.println(tmp);
+    if ((tmp < MIN_RANGE_OF_SHORT_SENSOR)){
       return tmp;
     }
-    else {
-      return 0;
+    else if ((tmp >= MIN_RANGE_OF_SHORT_SENSOR) && (tmp <= MAX_RANGE_OF_SHORT_SENSOR)) {
+      return tmp;
+    }
+    else{
+      return -1;
     }
   }
   //Side
   else if (shortrange == 2) {
-    Serial.println("Side" + String(shortrange) + "-" + String(val));
-    tmp = (val + 4) / 10;
-    if ((tmp >= MIN_RANGE_OF_SHORT_SENSOR) && (tmp <= MAX_RANGE_OF_SHORT_SENSOR)) {
+    tmp = (val - SHORT_OFFSET) / 10;
+    if ((tmp < MIN_RANGE_OF_SHORT_SENSOR)){
+      return tmp;
+    }
+    else if ((tmp >= MIN_RANGE_OF_SHORT_SENSOR) && (tmp <= MAX_RANGE_OF_SHORT_SENSOR)) {
       return tmp;
     }
     else {
-      return 0;
+      return -1;
     }
   }
   //Long
   else {
-    Serial.println("Long" + String(shortrange) + "-" + String(val));
-    tmp = (val - 6) / 10;
-    if ((tmp >= MIN_RANGE_OF_LONG_SENSOR) && (tmp <= MAX_RANGE_OF_LONG_SENSOR)) {
-      return tmp;
-    }
-    else if ((tmp >= 0) && (tmp<=2)){
-      return -1;
-    }
-    else {
+    tmp = (val - LONG_OFFSET) / 10;
+    if ((tmp < MIN_RANGE_OF_LONG_SENSOR)){
       return 0;
     }
+    else if ((tmp >= MIN_RANGE_OF_LONG_SENSOR) && (tmp <= MAX_RANGE_OF_LONG_SENSOR)) {
+      return tmp;
+    }
+    else {
+      return -1;
+    }
   }
-}
-
-double modifiedMap(double x, double in_min, double in_max, double out_min, double out_max) {
-  double temp = (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
-  return temp;
 }
 
 /*

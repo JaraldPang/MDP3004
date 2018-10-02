@@ -103,7 +103,8 @@ def listen_to_arduino(ar_wrapper,pc_wrapper=None,bt_wrapper=None):
             elif(msg.startswith("an")):
                 print("ARDUINO writing to ANDROID: {}".format(msg))
                 bt_wrapper.write(msg[2:])
-        except Exception:
+        except Exception as e:
+            print(e)
             print("Unexpected Disconnect occurred from arduino, trying to reconnect...")
             ser.close()
             ser = ar_wrapper.reconnect()

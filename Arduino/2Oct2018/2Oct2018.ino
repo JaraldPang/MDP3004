@@ -1,4 +1,3 @@
-
 #include <DualVNH5019MotorShield.h>
 #include <EnableInterrupt.h>
 #include <RunningMedian.h>
@@ -52,24 +51,34 @@ SharpIR sensorBRT(BRT, MODEL_SHORT);
 SharpIR sensorBRB(BRB, MODEL_LONG);
 SharpIR sensorBLT(BLT, MODEL_SHORT);
 
-#define RANGE_OF_LEFT_SENSOR 5
-#define RANGE_OF_FRONT_SENSOR 2
-#define RANGE_OF_RIGHT_SENSOR 3
+
+#define RANGE_OF_SHORT_SESNOR 3
+#define RANGE_OF_LONG_SENSOR 7
 
 
-//20  30  40  50  60  70  80  90
-double arrMapping0[] = {18.76, 24.09, 32.29, 42.15, 52.99, 64.23, 74.94, 88.66, 98.4};
-//10  20  30  40  50  60
-//1 - TL
-//2 - TM
-//3 - TR
-//4 - BRT
-//5 - BLT
-double arrMapping1[] = {10.06, 21.48, 34.70, 52.78, 70.27};
-double arrMapping2[] = {10.14, 20.99, 32.61, 44.60, 50.32};
-double arrMapping3[] = {10.82, 21.38, 32.61, 42.76, 53.33};
-double arrMapping4[] = {10.16, 20.89, 32.61, 45.41, 59.30};
-double arrMapping5[] = {9.98, 22.79, 39.09, 64.21, 76.63};
+
+
+
+
+/*
+     ******************************************************************************************************************************
+     2Oct2018
+     ******************************************************************************************************************************    
+*/
+//1 - TL, 2 - TM, 3 - TR, 4 - BRT, 5 - BLT
+
+//Front 
+double arrMapping1[] = {10.00, 21.27, 34.61, 43.78, 50.29};
+double arrMapping2[] = {10.59, 21.17, 33.25, 44.60, 47.41};
+double arrMapping3[] = {10.51, 21.80, 33.96, 42.03, 46.24};
+
+//Right
+double arrMapping4[] = {10.97, 23.12, 36.22, 48.37, 54.46};
+//Right - LR
+double arrMapping0[] = {23.30, 30.37, 40.97, 52.45, 63.15, 74.94, 88.66, 98.4};
+
+//Left
+double arrMapping5[] = {8.98, 20.59, 32.39, 44.60, 53.33};
 /*
      ******************************************************************************************************************************
 */
@@ -606,13 +615,13 @@ void brake() {
 
 void sensordata() {
 
-  String resultTL = String(final_MedianRead(irTL)) + String("\t");
-  String resultTM = String(final_MedianRead(irTM)) + String("\t");
-  String resultTR = String(final_MedianRead(irTR)) + String("\t");
-  String resultBRT = String(final_MedianRead(irBRT)) + String("\t");
-  String resultBRB = String(final_MedianRead(irBRB)) + String("\t");
+  String resultTL = String(final_MedianRead(irTL)) + String(",");
+  String resultTM = String(final_MedianRead(irTM)) + String(",");
+  String resultTR = String(final_MedianRead(irTR)) + String(",");
+  String resultBRT = String(final_MedianRead(irBRT)) + String(",");
+  String resultBRB = String(final_MedianRead(irBRB)) + String(",");
   String resultBLT = String(final_MedianRead(irBLT));
-  Serial.println("AN" + resultTL + resultTM + resultTR + resultBRT + resultBRB + resultBLT);
+  Serial.println("an" + resultTL + resultTM + resultTR + resultBRT + resultBRB + resultBLT);
 }
 
 double final_MedianRead(int tpin) {
@@ -678,6 +687,7 @@ void readSensors() {
   int i;
   String output = "";
 
+
   int posTL = obstaclePosition(
                 calibrateSensorValue(
                   sensorTL.distance(), 1),
@@ -707,7 +717,33 @@ void readSensors() {
                  calibrateSensorValue(
                    sensorBLT.distance(), 5),
                  2);
+  
+  /*
+   int posTL = 
+                calibrateSensorValue(
+                  sensorTL.distance(), 1);
 
+  int posTM = 
+                calibrateSensorValue(
+                  sensorTM.distance(), 2);
+
+  int posTR = 
+                calibrateSensorValue(
+                  sensorTR.distance(), 3);
+
+  int posBRT = 
+                 calibrateSensorValue(
+                   sensorBRT.distance(), 4);
+
+  int posBRB =
+                 calibrateSensorValue(
+                   sensorBRB.distance(), 0);
+
+  int posBLT =
+                 calibrateSensorValue(
+                   sensorBLT.distance(), 5);
+
+  */
 
   // check for any values that are not satisfied
   for (i = 0; i < 10 ; i++) {
@@ -809,11 +845,11 @@ void readSensors() {
   */
 
   // concatenate all position into a string and send
-  output += String(posTL);
-  output += String(posTM);
-  output += String(posTR);
-  output += String(posBRT);
-  output += String(posBRB);
+  output += String(posTL);  output += ",";
+  output += String(posTM);  output += ",";
+  output += String(posTR);  output += ",";
+  output += String(posBRT); output += ",";
+  output += String(posBRB); output += ",";
   output += String(posBLT);
 
   Serial.println(output);
@@ -859,9 +895,9 @@ double calibrateSensorValue(double dist, int n) {
 int obstaclePosition(double val, int shortrange) {
   /*
     values for shortrange
-    0 = left side
+    0 = long range  
     1 = front
-    2 = right side
+    2 = right & left side
     */
 
   int tmp = 0;
@@ -871,27 +907,30 @@ int obstaclePosition(double val, int shortrange) {
   if ((modulo != 7) && (modulo != 8) && (modulo != 9) && (modulo != 0) && (modulo != 1) && (modulo != 2) && (modulo != 3)) {
     return -1;
   }
+  //Front
   else if (shortrange == 1) {
     tmp = (val + 4) / 10;
-    if ((tmp >= 1) && (tmp <= RANGE_OF_FRONT_SENSOR)) {
+    if ((tmp >= 1) && (tmp <= RANGE_OF_SHORT_SESNOR)) {
       return tmp;
     }
     else {
       return 0;
     }
   }
+  //Side
   else if (shortrange == 2) {
     tmp = (val + 4) / 10;
-    if ((tmp >= 1) && (tmp <= RANGE_OF_RIGHT_SENSOR)) {
+    if ((tmp >= 1) && (tmp <= RANGE_OF_SHORT_SESNOR)) {
       return tmp;
     }
     else {
       return 0;
     }
   }
+  //Long
   else {
     tmp = (val - 6) / 10;
-    if ((tmp >= 1) && (tmp <= RANGE_OF_LEFT_SENSOR)) {
+    if ((tmp >= 1) && (tmp <= RANGE_OF_LONG_SENSOR)) {
       return tmp;
     }
     else {
@@ -1315,7 +1354,7 @@ void loop() {
     case 'S':
     case 's':
     {
-      (movementValue == 0) ? moveBack(10) : moveBack(movementValue);
+      //(movementValue == 0) ? moveBack(10) : moveBack(movementValue);
       break;
     }
     case 'Z':
@@ -1333,6 +1372,8 @@ void loop() {
     case 'c':
     {
       //caliberate();
+      readSensors();
+
       break;
     }
     case 'V':

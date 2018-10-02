@@ -51,23 +51,20 @@ SharpIR sensorBRT(BRT, MODEL_SHORT);
 SharpIR sensorBRB(BRB, MODEL_LONG);
 SharpIR sensorBLT(BLT, MODEL_SHORT);
 
-
-#define RANGE_OF_SHORT_SESNOR 3
-#define RANGE_OF_LONG_SENSOR 7
-
-
-
-
+#define MIN_RANGE_OF_SHORT_SENSOR 1
+#define MIN_RANGE_OF_LONG_SENSOR 3
+#define MAX_RANGE_OF_SHORT_SENSOR 4
+#define MAX_RANGE_OF_LONG_SENSOR 7
 
 
 /*
      ******************************************************************************************************************************
      2Oct2018
-     ******************************************************************************************************************************    
+     ******************************************************************************************************************************
 */
 //1 - TL, 2 - TM, 3 - TR, 4 - BRT, 5 - BLT
 
-//Front 
+//Front
 double arrMapping1[] = {10.00, 21.27, 34.61, 43.78, 50.29};
 double arrMapping2[] = {10.59, 21.17, 33.25, 44.60, 47.41};
 double arrMapping3[] = {10.51, 21.80, 33.96, 42.03, 46.24};
@@ -75,7 +72,7 @@ double arrMapping3[] = {10.51, 21.80, 33.96, 42.03, 46.24};
 //Right
 double arrMapping4[] = {10.97, 23.12, 36.22, 48.37, 54.46};
 //Right - LR
-double arrMapping0[] = {23.30, 30.37, 40.97, 52.45, 63.15, 74.94, 88.66, 98.4};
+double arrMapping0[] = {20.20, 22.85, 30.37, 39.52, 49.73, 62.40, 74.94, 85.88, 96.24};
 
 //Left
 double arrMapping5[] = {8.98, 20.59, 32.39, 44.60, 53.33};
@@ -615,11 +612,11 @@ void brake() {
 
 void sensordata() {
 
-  String resultTL = String(final_MedianRead(irTL)) + String(",");
-  String resultTM = String(final_MedianRead(irTM)) + String(",");
-  String resultTR = String(final_MedianRead(irTR)) + String(",");
-  String resultBRT = String(final_MedianRead(irBRT)) + String(",");
-  String resultBRB = String(final_MedianRead(irBRB)) + String(",");
+  String resultTL = String(final_MedianRead(irTL)) + String(" , ");
+  String resultTM = String(final_MedianRead(irTM)) + String(" , ");
+  String resultTR = String(final_MedianRead(irTR)) + String(" , ");
+  String resultBRT = String(final_MedianRead(irBRT)) + String(" , ");
+  String resultBRB = String(final_MedianRead(irBRB)) + String(" , ");
   String resultBLT = String(final_MedianRead(irBLT));
   Serial.println("an" + resultTL + resultTM + resultTR + resultBRT + resultBRB + resultBLT);
 }
@@ -687,66 +684,42 @@ void readSensors() {
   int i;
   String output = "";
 
+  double distTL = calibrateSensorValue(sensorTL.distance(), 1);
+  double distTM = calibrateSensorValue(sensorTM.distance(), 2);
+  double distTR = calibrateSensorValue(sensorTR.distance(), 3);
+  double distBLT = calibrateSensorValue(sensorBLT.distance(), 5);
+  double distBRT = calibrateSensorValue(sensorBRT.distance(), 4);
+  double distBRB = calibrateSensorValue(sensorBRB.distance(), 0);
 
   int posTL = obstaclePosition(
-                calibrateSensorValue(
-                  sensorTL.distance(), 1),
+                distTL,
                 1);
 
   int posTM = obstaclePosition(
-                calibrateSensorValue(
-                  sensorTM.distance(), 2),
+                distTM,
                 1);
 
   int posTR = obstaclePosition(
-                calibrateSensorValue(
-                  sensorTR.distance(), 3),
+                distTR,
                 1);
 
+
+  int posBLT = obstaclePosition(
+                 distBLT,
+                 2);
+
+
   int posBRT = obstaclePosition(
-                 calibrateSensorValue(
-                   sensorBRT.distance(), 4),
+                 distBRT,
                  2);
 
   int posBRB = obstaclePosition(
-                 calibrateSensorValue(
-                   sensorBRB.distance(), 0),
+                 distBRB,
                  0);
 
-  int posBLT = obstaclePosition(
-                 calibrateSensorValue(
-                   sensorBLT.distance(), 5),
-                 2);
-  
-  /*
-   int posTL = 
-                calibrateSensorValue(
-                  sensorTL.distance(), 1);
-
-  int posTM = 
-                calibrateSensorValue(
-                  sensorTM.distance(), 2);
-
-  int posTR = 
-                calibrateSensorValue(
-                  sensorTR.distance(), 3);
-
-  int posBRT = 
-                 calibrateSensorValue(
-                   sensorBRT.distance(), 4);
-
-  int posBRB =
-                 calibrateSensorValue(
-                   sensorBRB.distance(), 0);
-
-  int posBLT =
-                 calibrateSensorValue(
-                   sensorBLT.distance(), 5);
-
-  */
 
   // check for any values that are not satisfied
-  for (i = 0; i < 10 ; i++) {
+  for (i = 0; i < 5 ; i++) {
     if (posTL != -1) {
       break;
     }
@@ -757,8 +730,7 @@ void readSensors() {
                 1);
     }
   }
-
-  for (i = 0; i < 10 ; i++) {
+  for (i = 0; i < 5 ; i++) {
     if (posTM != -1) {
       break;
     }
@@ -769,9 +741,7 @@ void readSensors() {
                 1);
     }
   }
-
-
-  for (i = 0; i < 10 ; i++) {
+  for (i = 0; i < 5 ; i++) {
     if (posTR != -1) {
       break;
     }
@@ -782,9 +752,7 @@ void readSensors() {
                 1);
     }
   }
-
-
-  for (i = 0; i < 10 ; i++) {
+  for (i = 0; i < 5 ; i++) {
     if (posBRT != -1) {
       break;
     }
@@ -795,7 +763,17 @@ void readSensors() {
                  2);
     }
   }
-
+  for (i = 0; i < 5 ; i++) {
+    if (posBLT != -1) {
+      break;
+    }
+    else {
+      posBLT = obstaclePosition(
+                 calibrateSensorValue(
+                   sensorBLT.distance(), 5),
+                 2);
+    }
+  }
   for (i = 0; i < 10 ; i++) {
     if (posBRB != -1) {
       break;
@@ -808,26 +786,16 @@ void readSensors() {
     }
   }
 
-  for (i = 0; i < 10 ; i++) {
-    if (posBLT != -1) {
-      break;
-    }
-    else {
-      posBLT = obstaclePosition(
-                 calibrateSensorValue(
-                   sensorBLT.distance(), 5),
-                 2);
-    }
-  }
-
   // ensure that there are no "-1" sensor values
+  /*
   posTL = (posTL == -1) ? 0 : posTL;
   posTM = (posTM == -1) ? 0 : posTM;
   posTR = (posTR == -1) ? 0 : posTR;
   posBRT = (posBRT == -1) ? 0 : posBRT;
   posBRB = (posBRB == -1) ? 0 : posBRB;
   posBLT = (posBLT == -1) ? 0 : posBLT;
-
+  */
+  
   // for checking how many obstacles are there on left
   /*
   if (!sensor_command) {
@@ -850,8 +818,14 @@ void readSensors() {
   output += String(posTR);  output += ",";
   output += String(posBRT); output += ",";
   output += String(posBRB); output += ",";
-  output += String(posBLT);
-
+  output += String(posBLT); output += "; \t";
+  output += String(distTL);  output += ",";
+  output += String(distTM);  output += ",";
+  output += String(distTR);  output += ",";
+  output += String(distBRT); output += ",";
+  output += String(distBRB); output += ",";
+  output += String(distBLT)
+            ;
   Serial.println(output);
 }
 
@@ -859,12 +833,7 @@ double calibrateSensorValue(double dist, int n) {
   double *arr;
   int i, len;
 
-//0 - BRB
-//1 - TL
-//2 - TM
-//3 - TR
-//4 - BRT
-//5 - BLT
+  /*0 - BRB, 1 - TL, 2 - TM, 3 - TR, 4 - BRT, 5 - BLT*/
 
   switch (n) {
   case 0: arr = arrMapping0; len = sizeof(arrMapping0) / sizeof(*arr); break;
@@ -895,7 +864,7 @@ double calibrateSensorValue(double dist, int n) {
 int obstaclePosition(double val, int shortrange) {
   /*
     values for shortrange
-    0 = long range  
+    0 = long range
     1 = front
     2 = right & left side
     */
@@ -904,13 +873,23 @@ int obstaclePosition(double val, int shortrange) {
 
   int modulo = ((int) (val + 0.5)) % 10;
 
-  if ((modulo != 7) && (modulo != 8) && (modulo != 9) && (modulo != 0) && (modulo != 1) && (modulo != 2) && (modulo != 3)) {
+  //Get Remainder, Conver to integer 37.85%10=7.85=8
+  if (
+    (modulo != 7) &&
+    (modulo != 8) &&
+    (modulo != 9) &&
+    (modulo != 0) &&
+    (modulo != 1) &&
+    (modulo != 2) &&
+    (modulo != 3)
+  ) {
     return -1;
   }
   //Front
   else if (shortrange == 1) {
+    Serial.println("Front" + String(shortrange) + "-" + String(val));
     tmp = (val + 4) / 10;
-    if ((tmp >= 1) && (tmp <= RANGE_OF_SHORT_SESNOR)) {
+    if ((tmp >= MIN_RANGE_OF_SHORT_SENSOR) && (tmp <= MAX_RANGE_OF_SHORT_SENSOR)) {
       return tmp;
     }
     else {
@@ -919,8 +898,9 @@ int obstaclePosition(double val, int shortrange) {
   }
   //Side
   else if (shortrange == 2) {
+    Serial.println("Side" + String(shortrange) + "-" + String(val));
     tmp = (val + 4) / 10;
-    if ((tmp >= 1) && (tmp <= RANGE_OF_SHORT_SESNOR)) {
+    if ((tmp >= MIN_RANGE_OF_SHORT_SENSOR) && (tmp <= MAX_RANGE_OF_SHORT_SENSOR)) {
       return tmp;
     }
     else {
@@ -929,9 +909,13 @@ int obstaclePosition(double val, int shortrange) {
   }
   //Long
   else {
+    Serial.println("Long" + String(shortrange) + "-" + String(val));
     tmp = (val - 6) / 10;
-    if ((tmp >= 1) && (tmp <= RANGE_OF_LONG_SENSOR)) {
+    if ((tmp >= MIN_RANGE_OF_LONG_SENSOR) && (tmp <= MAX_RANGE_OF_LONG_SENSOR)) {
       return tmp;
+    }
+    else if ((tmp >= 0) && (tmp<=2)){
+      return -1;
     }
     else {
       return 0;
@@ -943,322 +927,6 @@ double modifiedMap(double x, double in_min, double in_max, double out_min, doubl
   double temp = (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
   return temp;
 }
-
-/*
-void autoCalibrate(int force_calibrate) {
-  digitalWrite(pinGreenLED, HIGH);
-  digitalWrite(pinRedLED, HIGH);
-
-  bool to_calibrate = false;
-  double distFL = calibrateSensorValue(sensorFL.distance(), 1);
-  double distFC = calibrateSensorValue(sensorFC.distance(), 2);
-  double distFR = calibrateSensorValue(sensorFR.distance(), 3);
-  double distRF = calibrateSensorValue(sensorRF.distance(), 4);
-  double distRR = calibrateSensorValue(sensorRR.distance(), 5);
-  double distL = calibrateSensorValue(sensorL.distance(), 0);
-
-  int calibrate_front = 0;
-  int calibrate_right = 0;
-
-  if (force_calibrate == 0) {
-    bool to_calibrate1, to_calibrate2, to_calibrate3, to_calibrate4, to_calibrate5, to_calibrate6;
-    to_calibrate1 = ((distFL <= WALL_GAP + 4) && ((distFL <= (WALL_GAP - 2)) || (distFL >= (WALL_GAP + 2)))) ? true : false;
-    to_calibrate2 = ((distFC <= WALL_GAP + 4) && ((distFC <= (WALL_GAP - 2)) || (distFC >= (WALL_GAP + 2)))) ? true : false;
-    to_calibrate3 = ((distFR <= WALL_GAP + 4) && ((distFR <= (WALL_GAP - 2)) || (distFR >= (WALL_GAP + 2)))) ? true : false;
-    to_calibrate4 = ((distRF <= WALL_GAP + 4) && ((distRF <= (WALL_GAP - 2)) || (distRF >= (WALL_GAP + 2)))) ? true : false;
-    to_calibrate5 = ((distRR <= WALL_GAP + 4) && ((distRR <= (WALL_GAP - 2)) || (distRR >= (WALL_GAP + 2)))) ? true : false;
-    to_calibrate6 = ((distL <= (2 * WALL_GAP) + 4) && ((distL <= ((2 * WALL_GAP) - 1)) || (distL >= ((2 * WALL_GAP) + 2)))) ? true : false;
-    to_calibrate = (to_calibrate1 || to_calibrate2 || to_calibrate3 || to_calibrate4 || to_calibrate5 || to_calibrate6);
-    force_calibrate++;
-  }
-  else if ((force_calibrate == 1) || (force_calibrate == 2)) {
-    to_calibrate = true;
-  }
-  else {
-    return;
-  }
-
-  force_calibrate++;
-
-  // check for best opportunity to calibrate
-  if (step_best_calibrate >= STEPS_TO_BEST_CALIBRATE) {
-    if (((abs(distFL - distFR) < 5) && ((distFL + distFR) <= (3 * WALL_GAP))) || ((abs(distFL - distFC) < 5) && ((distFL + distFC) <= (3 * WALL_GAP))) || ((abs(distFC - distFR) < 5) && ((distFC + distFR) <= (3 * WALL_GAP)))) {
-      if ((distRF <= (WALL_GAP + 4)) || (distRR <= (WALL_GAP + 4)) || (distL <= ((2 * WALL_GAP) + 4))) {
-        step_best_calibrate = 0;
-        to_calibrate = true;
-      }
-    }
-    else if ((abs(distRF - distRR) < 5) && ((distRF + distRR) <= (3 * WALL_GAP))) {
-      if ((distFL <= (WALL_GAP + 4)) || (distFC <= (WALL_GAP + 4)) || (distFR <= (WALL_GAP + 4))) {
-        step_best_calibrate = 0;
-        to_calibrate = true;
-      }
-    }
-  }
-
-  if (to_calibrate) {
-    if (opportunity_calibrate_left) {
-      step_counter = 0;
-      rotateLeft(90);
-      calibrateWithFront();
-      rotateRight(90);
-
-      distFL = calibrateSensorValue(sensorFL.distance(), 1);
-
-      if ((distFL <= WALL_GAP + 4) && ((distFL <= (WALL_GAP - 2)) || (distFL >= (WALL_GAP + 2)))) {
-        calibrateDistance(sensorFL, 1);
-      }
-      else {
-        distFC = calibrateSensorValue(sensorFC.distance(), 2);
-
-        if ((distFC <= WALL_GAP + 4) && ((distFC <= (WALL_GAP - 2)) || (distFC >= (WALL_GAP + 2)))) {
-          calibrateDistance(sensorFC, 2);
-        }
-        else {
-          distFR = calibrateSensorValue(sensorFR.distance(), 3);
-
-          if ((distFR <= WALL_GAP + 4) && ((distFR <= (WALL_GAP - 2)) || (distFR >= (WALL_GAP + 2)))) {
-            calibrateDistance(sensorFR, 3);
-          }
-        }
-      }
-    }
-    else {
-      if ((abs(distFL - distFR) < 5) && ((distFL + distFR) <= (3 * WALL_GAP))) {
-        // check if target side can calibrate angle
-        calibrateAngle(sensorFL, 1, sensorFR, 3, 17);
-        calibrateDistance(sensorFL, 1);
-        calibrate_front = 1;
-      }
-      else if ((abs(distFL - distFC) < 5) && ((distFL + distFC) <= (3 * WALL_GAP))) {
-        calibrateAngle(sensorFL, 1, sensorFC, 2, 9);
-        calibrateDistance(sensorFC, 2);
-        calibrate_front = 2;
-      }
-      else if ((abs(distFC - distFR) < 5) && ((distFC + distFR) <= (3 * WALL_GAP))) {
-        calibrateAngle(sensorFC, 2, sensorFR, 3, 9);
-        calibrateDistance(sensorFC, 2);
-        calibrate_front = 3;
-      }
-      // check for 1 obstacle on other side+
-      // if yes, calibrate dist on other side
-      if (calibrate_front > 0) {
-        step_counter = 0;
-
-        distRF = calibrateSensorValue(sensorRF.distance(), 4);
-        if ((distRF <= (WALL_GAP + 4)) && ((distRF >= (WALL_GAP + 2)) || (distRF <= (WALL_GAP - 2)))) {
-          rotateRight(90);
-          calibrateDistance(sensorFL, 1);
-          rotateLeft(90);
-          calibrate_right = 1;
-        }
-        else {
-          distRR = calibrateSensorValue(sensorRR.distance(), 5);
-          if ((distRR <= (WALL_GAP + 4)) && ((distRR >= (WALL_GAP + 2)) || (distRR <= (WALL_GAP - 2)))) {
-            rotateRight(90);
-            calibrateDistance(sensorFC, 2);
-            rotateLeft(90);
-            calibrate_right = 1;
-          }
-          else {
-            distL = calibrateSensorValue(sensorL.distance(), 0);
-
-            if ((distL <= ((WALL_GAP * 2) + 4)) && ((distL >= (2 * WALL_GAP + 2)) || (distL <= (2 * WALL_GAP - 1)))) {
-              rotateLeft(90);
-              calibrateDistance(sensorFR, 3);
-              rotateRight(90);
-              calibrate_right = 1;
-            }
-          }
-        }
-
-        // calibrate the angle after turning back
-        if (calibrate_right == 1) {
-          switch (calibrate_front) {
-          case 1: calibrateAngle(sensorFL, 1, sensorFR, 3, 17); break;
-          case 2: calibrateAngle(sensorFL, 1, sensorFC, 2, 9); break;
-          case 3: calibrateAngle(sensorFC, 2, sensorFR, 3, 9); break;
-          default: break;
-          }
-        }
-      }
-      else if (((abs(distRF - distRR) < 5) && ((distRF + distRR) <= (3 * WALL_GAP))) || opportunity_calibrate_right || (forward_command && obstacle_right_rear && ((distRF <= (WALL_GAP + 4)) || (distRR <= (WALL_GAP + 4))))) {
-        // check for right wall and calibrate
-        step_counter = 0;
-
-        // check to see if there is enough clearance from wall
-        if (distFL <= (WALL_GAP + 4)) {
-          calibrateDistance(sensorFL, 1);
-        }
-        else if (distFC <= (WALL_GAP + 4)) {
-          calibrateDistance(sensorFC, 2);
-        }
-        else if (distFR <= (WALL_GAP + 4)) {
-          calibrateDistance(sensorFR, 3);
-        }
-
-        if ((abs(distRF - distRR) < 5) && ((distRF + distRR) <= (3 * WALL_GAP))) {
-          if (((distRF + distRR) < ((2 * WALL_GAP) - 4)) || ((distRF + distRR) > ((2 * WALL_GAP) + 4))) {
-            // calibrate to right
-            rotateRight(90);
-            calibrateWithFront();
-            rotateLeft(90);
-          }
-          else {
-            calibrateAngle(sensorRF, 4, sensorRR, 5, 9);
-          }
-        }
-        else {
-          rotateRight(90);
-          calibrateWithFront();
-          rotateLeft(90);
-        }
-
-
-        // check for front obstacles to calibrate with
-        distFL = calibrateSensorValue(sensorFL.distance(), 1);
-        if (distFL <= (WALL_GAP + 4)) {
-          calibrateDistance(sensorFL, 1);
-          calibrate_front = 1;
-        }
-        else {
-          distFC = calibrateSensorValue(sensorFC.distance(), 2);
-          if (distFC <= (WALL_GAP + 4)) {
-            calibrateDistance(sensorFC, 2);
-            calibrate_front = 2;
-          }
-          else {
-            distFR = calibrateSensorValue(sensorFR.distance(), 3);
-            if (distFR <= (WALL_GAP + 4)) {
-              calibrateDistance(sensorFR, 3);
-              calibrate_front = 3;
-            }
-          }
-        }
-      }
-      else {
-        // rotateLeft(90);
-        // calibrateWithFront();
-        // rotateRight(90);
-
-        // distFL = calibrateSensorValue(sensorFL.distance(), 1);
-
-        // if ((distFL <= WALL_GAP + 4) && ((distFL <= (WALL_GAP - 2)) || (distFL >= (WALL_GAP + 2)))) {
-        //   calibrateDistance(sensorFL, 1);
-        // }
-        // else {
-        //   distFC = calibrateSensorValue(sensorFC.distance(), 2);
-
-        //   if ((distFC <= WALL_GAP + 4) && ((distFC <= (WALL_GAP - 2)) || (distFC >= (WALL_GAP + 2)))) {
-        //     calibrateDistance(sensorFC, 2);
-        //   }
-        //   else {
-        //     distFR = calibrateSensorValue(sensorFR.distance(), 3);
-
-        //     if ((distFR <= WALL_GAP + 4) && ((distFR <= (WALL_GAP - 2)) || (distFR >= (WALL_GAP + 2)))) {
-        //       calibrateDistance(sensorFR, 3);
-        //     }
-        //   }
-        // }
-      }
-    }
-  }
-  else if ((abs(distRF - distRR) < 5) && ((distRF + distRR) <= (3 * WALL_GAP))) {
-    step_counter = 0;
-
-    calibrateAngle(sensorRF, 4, sensorRR, 5, 9);
-
-    if (((distRF + distRR) < ((2 * WALL_GAP) - 4)) || ((distRF + distRR) > ((2 * WALL_GAP) + 4))) {
-      rotateRight(90);
-      calibrateDistance(sensorFL, 1);
-      rotateLeft(90);
-      calibrateAngle(sensorRF, 4, sensorRR, 5, 9);
-    }
-  }
-  else if (distL <= ((WALL_GAP * 2) + 4)) {
-    if ((distL <= ((WALL_GAP * 2) - 1)) || (distL >= ((WALL_GAP * 2) + 2))) {
-      step_counter = STEPS_TO_CALIBRATE;
-
-      rotateLeft(90);
-      if (calibrateWithFront()) {
-        step_counter = 0;
-      }
-      rotateRight(90);
-
-      distFL = calibrateSensorValue(sensorFL.distance(), 1);
-
-      if ((distFL <= WALL_GAP + 4) && ((distFL <= (WALL_GAP - 2)) || (distFL >= (WALL_GAP + 2)))) {
-        calibrateDistance(sensorFL, 1);
-      }
-      else {
-        distFC = calibrateSensorValue(sensorFC.distance(), 2);
-
-        if ((distFC <= WALL_GAP + 4) && ((distFC <= (WALL_GAP - 2)) || (distFC >= (WALL_GAP + 2)))) {
-          calibrateDistance(sensorFC, 2);
-        }
-        else {
-          distFR = calibrateSensorValue(sensorFR.distance(), 3);
-
-          if ((distFR <= WALL_GAP + 4) && ((distFR <= (WALL_GAP - 2)) || (distFR >= (WALL_GAP + 2)))) {
-            calibrateDistance(sensorFR, 3);
-          }
-        }
-      }
-    }
-  }
-
-  distFL = calibrateSensorValue(sensorFL.distance(), 1);
-  distFC = calibrateSensorValue(sensorFC.distance(), 2);
-  distFR = calibrateSensorValue(sensorFR.distance(), 3);
-  distRF = calibrateSensorValue(sensorRF.distance(), 4);
-  distRR = calibrateSensorValue(sensorRR.distance(), 5);
-  distL = calibrateSensorValue(sensorL.distance(), 0);
-
-  // if too close to one obstacle (calibrate to that one obstacle)
-  if (distFL <= WALL_GAP - 2) {
-    if (!calibrateWithFront()) {
-      calibrateDistance(sensorFL, 1);
-    }
-  }
-
-  if (distFC <= WALL_GAP - 2) {
-    if (!calibrateWithFront()) {
-      calibrateDistance(sensorFC, 2);
-    }
-  }
-
-  if (distFR <= WALL_GAP - 2) {
-    if (!calibrateWithFront()) {
-      calibrateDistance(sensorFR, 3);
-    }
-  }
-
-  if (distRF <= WALL_GAP - 2) {
-    rotateRight(90);
-    if (!calibrateWithFront()) {
-      calibrateDistance(sensorFL, 1);
-    }
-    rotateLeft(90);
-  }
-
-  if (distRR <= WALL_GAP - 2) {
-    rotateRight(90);
-    if (!calibrateWithFront()) {
-      calibrateDistance(sensorFC, 2);
-    }
-    rotateLeft(90);
-  }
-
-  if (distL <= ((WALL_GAP * 2) - 1)) {
-    rotateLeft(90);
-    if (!calibrateWithFront()) {
-      calibrateDistance(sensorFR, 3);
-    }
-    rotateRight(90);
-  }
-}
-
-*/
 
 /*
      ********************************************************************************************************************************
@@ -1354,7 +1022,7 @@ void loop() {
     case 'S':
     case 's':
     {
-      //(movementValue == 0) ? moveBack(10) : moveBack(movementValue);
+      (movementValue == 0) ? moveBack(10) : moveBack(movementValue);
       break;
     }
     case 'Z':

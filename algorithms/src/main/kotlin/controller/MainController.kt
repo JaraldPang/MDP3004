@@ -119,4 +119,13 @@ class MainController : Controller() {
             connection.startReadingLoop()
         }
     }
+
+    fun reset() {
+        centerCell.reset()
+        explorationMaze.reset()
+        explorationMaze.initExploration()
+        realMaze.reset()
+        configurationModel.reset()
+        displayRealMaze.value = true
+    }
 }

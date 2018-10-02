@@ -70,6 +70,14 @@ class MazeModel() : ViewModel() {
         }
     }
 
+    fun reset() {
+        for (row in 0 until MAZE_ROWS) {
+            for (col in 0 until MAZE_COLUMNS) {
+                this[row][col] = 0
+            }
+        }
+    }
+
     fun getEnvironmentOnSides(cellInfoModel: CellInfoModel): IntArray {
         val (centerRow, centerCol, direction) = cellInfoModel
         val minSides = IntArray(3)
@@ -312,6 +320,12 @@ class CellInfoModel(row: Int = 1, col: Int = 1, direction: Direction = Direction
 
     fun copy(row: Int = this.row, col: Int = this.col, direction: Direction = this.direction) =
         CellInfoModel(row, col, direction)
+
+    fun reset() {
+        row = 1
+        col = 1
+        direction = Direction.UP
+    }
 }
 
 data class MovementInfo(val movement: Movement, val direction: Direction)

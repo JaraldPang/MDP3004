@@ -6,7 +6,7 @@ import io.ktor.network.sockets.aSocket
 import io.ktor.network.sockets.openReadChannel
 import io.ktor.network.sockets.openWriteChannel
 import io.ktor.network.util.ioCoroutineDispatcher
-import kotlinx.coroutines.experimental.Job
+import javafx.beans.property.SimpleObjectProperty
 import kotlinx.coroutines.experimental.channels.Channel
 import kotlinx.coroutines.experimental.channels.SendChannel
 import kotlinx.coroutines.experimental.delay
@@ -15,6 +15,7 @@ import kotlinx.coroutines.experimental.io.ByteWriteChannel
 import kotlinx.coroutines.experimental.io.readUTF8Line
 import kotlinx.coroutines.experimental.io.writeStringUtf8
 import kotlinx.coroutines.experimental.withTimeout
+import tornadofx.*
 import java.util.concurrent.TimeUnit
 
 class Connection(
@@ -42,10 +43,10 @@ class Connection(
         }
     }
 
-    private var socket: Socket? = null
+    val socketProperty = SimpleObjectProperty<Socket?>(null)
+    private var socket by socketProperty
     private var input: ByteReadChannel? = null
     private var output: ByteWriteChannel? = null
-    private var readJob: Job? = null
 
     val isConnected get() = socket != null
 

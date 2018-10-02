@@ -1,13 +1,11 @@
 package view
 
 import controller.MainController
-import javafx.beans.binding.Bindings
 import javafx.geometry.Pos
 import javafx.util.converter.DoubleStringConverter
 import javafx.util.converter.IntegerStringConverter
 import javafx.util.converter.LongStringConverter
 import tornadofx.*
-import java.util.concurrent.Callable
 
 class ConfigurationView : View() {
     val controller: MainController by inject()
@@ -111,8 +109,11 @@ class ConfigurationView : View() {
                 action { controller.runFastestPath() }
             }
             button("Connect") {
-                enableWhen(Bindings.createBooleanBinding(Callable { controller.connection.isConnected }).not())
+                enableWhen(controller.connection.socketProperty.booleanBinding { it == null })
                 action { controller.connect() }
+            }
+            button("Reset") {
+                action { controller.reset() }
             }
         }
     }

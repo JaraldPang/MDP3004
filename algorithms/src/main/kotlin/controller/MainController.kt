@@ -56,20 +56,25 @@ class MainController : Controller() {
             val timeLimit = configurationModel.time
             when {
                 speed != null && coverageLimit != null -> {
-                    val exploration = CoverageLimitedExploration(robot, coverageLimit)
+                    val exploration = CoverageLimitedExploration(robot, connection, coverageLimit)
                     exploration.explore()
                 }
                 speed != null && timeLimit != null -> {
-                    val exploration = TimeLimitedExploration(robot, timeLimit)
+                    val exploration = TimeLimitedExploration(robot, connection, timeLimit)
                     exploration.explore()
                 }
                 else -> {
-                    val exploration = Exploration(robot)
+                    val exploration = Exploration(robot, connection)
                     exploration.explore()
                 }
             }
-            configurationModel.mapDescriptorPart1 = robot.explorationMaze.outputExploredUnexploredString()
-            configurationModel.mapDescriptorPart2 = robot.explorationMaze.outputEmptyObstacleString()
+            val part1 = robot.explorationMaze.outputExploredUnexploredString()
+            val part2 = robot.explorationMaze.outputEmptyObstacleString()
+            configurationModel.mapDescriptorPart1 = part1
+            configurationModel.mapDescriptorPart2 = part2
+            if (connection.isConnected) {
+                connection.sendMdfString(part1, part2)
+            }
         }
     }
 

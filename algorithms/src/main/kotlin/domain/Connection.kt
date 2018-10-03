@@ -41,6 +41,10 @@ class Connection(
             }
             return "arrow{$x,$y,$directionCommand}"
         }
+
+        const val CALIBRATION = "calibration"
+
+        fun mdfStringCommand(part1: String, part2: String) = "mdf{$part1,$part2}"
     }
 
     val socketProperty = SimpleObjectProperty<Socket?>(null)
@@ -146,5 +150,13 @@ class Connection(
 
     suspend fun sendObstacle(row: Int, col: Int) {
         sendToAndroid(obstacleCommand(col, row))
+    }
+
+    suspend fun sendMdfString(part1: String, part2: String) {
+        sendToAndroid(mdfStringCommand(part1, part2))
+    }
+
+    suspend fun sendCalibrationCommand() {
+        sendToArduino(CALIBRATION)
     }
 }

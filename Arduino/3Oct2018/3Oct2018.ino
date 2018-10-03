@@ -465,46 +465,46 @@ void obstacleAvoid() {
     if(final_MedianRead(irBLT)<=25 && final_MedianRead(irBLT)>0 && final_MedianRead(irTR)<=15 && final_MedianRead(irTR)>0) {
       Serial.println("Obstacle near wall");
       turnRight(90);
-      delay(1000);
+      delay(500);
       moveForward(10);
-      delay(1000);
+      delay(500);
       turnLeft(90);
-      delay(1000);
+      delay(500);
       turnRight(45);
-      delay(1000);
+      delay(500);
       moveForward(20);
-      delay(1000);
+      delay(500);
       turnLeft(45);
-      delay(1000);
+      delay(500);
       moveForward(30);
-      delay(1000);
+      delay(500);
       turnLeft(45);
-      delay(1000);
+      delay(500);
       moveForward(20);
-      delay(1000);
+      delay(500);
       turnRight(42);
       avoidComplete = true;
     }
     else if(final_MedianRead(irBRB)<=25 && final_MedianRead(irBRB)>0 && final_MedianRead(irTL)<=15 && final_MedianRead(irTL)>0) {
       Serial.println("Obstacle near wall");
       turnLeft(90);
-      delay(1000);
+      delay(500);
       moveForward(10);
-      delay(1000);
+      delay(500);
       turnLeft(90);
-      delay(1000);
+      delay(500);
       turnLeft(45);
-      delay(1000);
+      delay(500);
       moveForward(20);
-      delay(1000);
+      delay(500);
       turnRight(45);
-      delay(1000);
+      delay(500);
       moveForward(30);
-      delay(1000);
+      delay(500);
       turnRight(45);
-      delay(1000);
+      delay(500);
       moveForward(20);
-      delay(1000);
+      delay(500);
       turnLeft(42);
       avoidComplete = true;
     }
@@ -513,17 +513,17 @@ void obstacleAvoid() {
     if(final_MedianRead(irTR)<=15 && final_MedianRead(irTR)>0) {
       Serial.println("Obstacle at front right");
       turnLeft(45);
-      delay(1000);
+      delay(500);
       moveForward(20);
-      delay(1000);
+      delay(500);
       turnRight(45);
-      delay(1000);
+      delay(500);
       moveForward(30);
-      delay(1000);
+      delay(500);
       turnRight(45);
-      delay(1000);
+      delay(500);
       moveForward(20);
-      delay(1000);
+      delay(500);
       turnLeft(42);
       moveForward(40);
       avoidComplete = true;
@@ -532,17 +532,17 @@ void obstacleAvoid() {
     else if(final_MedianRead(irTM)<=15 && final_MedianRead(irTM)>0) {
       Serial.println("Obstacle at front middle");
       turnRight(45);
-      delay(1000);
+      delay(500);
       moveForward(20);
-      delay(1000);
+      delay(500);
       turnLeft(45);
-      delay(1000);
+      delay(500);
       moveForward(30);
-      delay(1000);
+      delay(500);
       turnLeft(45);
-      delay(1000);
+      delay(500);
       moveForward(20);
-      delay(1000);
+      delay(500);
       turnRight(42);
       moveForward(40);
       avoidComplete = true;
@@ -551,17 +551,17 @@ void obstacleAvoid() {
     if(final_MedianRead(irTL)<=15 && final_MedianRead(irTL)>0) {
       Serial.println("Obstacle at front left");
       turnRight(45);
-      delay(1000);
+      delay(500);
       moveForward(20);
-      delay(1000);
+      delay(500);
       turnLeft(47);
-      delay(1000);
+      delay(500);
       moveForward(30);
-      delay(1000);
+      delay(500);
       turnLeft(47);
-      delay(1000);
+      delay(500);
       moveForward(20);
-      delay(1000);
+      delay(500);
       turnRight(42);
       moveForward(40);
       avoidComplete = true;
@@ -586,15 +586,20 @@ void startCalibrate() {
   double distBRB = calibrateSensorValue(sensorBRB.distance(), 0);
   
   turnLeft(180);
+  delay(500);
   calibrateWithFront();
   if((distBLT <= WALL_GAP + 4) && ((distBLT <= (WALL_GAP - 2)) || (distBLT >= (WALL_GAP + 2)))) {
     turnLeft(90);
+    delay(500);
     calibrateWithFront();
+    delay(500);
     turnLeft(90);
   }
   else if((distBRT <= WALL_GAP + 4) && ((distBRT <= (WALL_GAP - 2)) || (distBRT >= (WALL_GAP + 2)))) {
     turnRight(90);
+    delay(500);
     calibrateWithFront();
+    delay(500);
     turnRight(90);
   }
 }
@@ -652,7 +657,9 @@ void autoCalibrate(int force_calibrate) {
     if (opportunity_calibrate_left) {
       step_counter = 0;
       turnLeft(90);
+      delay(500);
       calibrateWithFront();
+      delay(500);
       turnRight(90);
 
       distTL = calibrateSensorValue(sensorTL.distance(), 1);
@@ -700,7 +707,9 @@ void autoCalibrate(int force_calibrate) {
         distBRT = calibrateSensorValue(sensorTR.distance(), 4);
         if ((distBRT <= (WALL_GAP + 4)) && ((distBRT >= (WALL_GAP + 2)) || (distBRT <= (WALL_GAP - 2)))) {
           turnRight(90);
+          delay(500);
           calibrateDistance(sensorTL, 1);
+          delay(500);
           turnLeft(90);
           calibrate_right = 1;
         }
@@ -708,7 +717,9 @@ void autoCalibrate(int force_calibrate) {
           distBRB = calibrateSensorValue(sensorBRB.distance(), 0);
           if ((distBRB <= ((WALL_GAP * 2) + 4)) && ((distBRB >= (2 * WALL_GAP + 2)) || (distBRB <= (2 * WALL_GAP - 1)))) {
             turnRight(90);
+            delay(500);
             calibrateDistance(sensorTM, 2);
+            delay(500);
             turnLeft(90);
             calibrate_right = 1;
           }
@@ -717,7 +728,9 @@ void autoCalibrate(int force_calibrate) {
 
             if ((distBLT <= (WALL_GAP + 4)) && ((distBLT >= (WALL_GAP + 2)) || (distBLT <= (WALL_GAP - 2)))) {
               turnLeft(90);
+              delay(500);
               calibrateDistance(sensorTR, 3);
+              delay(500);
               turnRight(90);
               calibrate_right = 1;
             }
@@ -753,7 +766,9 @@ void autoCalibrate(int force_calibrate) {
           if (((distBRT + distBRB) < ((2 * WALL_GAP) - 4)) || ((distBRT + distBRB) > ((2 * WALL_GAP) + 4))) {
             // calibrate to right
             turnRight(90);
+            delay(500);
             calibrateWithFront();
+            delay(500);
             turnLeft(90);
           }
           else {
@@ -762,7 +777,9 @@ void autoCalibrate(int force_calibrate) {
         }
         else {
           turnRight(90);
+          delay(500);
           calibrateWithFront();
+          delay(500);
           turnLeft(90);
         }
 
@@ -822,7 +839,9 @@ void autoCalibrate(int force_calibrate) {
 
     if (((distBRT + distBRB) < ((2 * WALL_GAP) - 4)) || ((distBRT + distBRB) > ((2 * WALL_GAP) + 4))) {
       turnRight(90);
+      delay(500);
       calibrateDistance(sensorTL, 1);
+      delay(500);
       turnLeft(90);
       calibrateAngle(sensorTR, 4, sensorBRB, 5, 9);
     }
@@ -832,9 +851,11 @@ void autoCalibrate(int force_calibrate) {
       step_counter = STEPS_TO_CALIBRATE;
 
       turnLeft(90);
+      delay(500);
       if (calibrateWithFront()) {
         step_counter = 0;
       }
+      delay(500);
       turnRight(90);
 
       distTL = calibrateSensorValue(sensorTL.distance(), 1);
@@ -915,7 +936,9 @@ bool calibrateWithLeft() {
   bool output = false;
 
   turnLeft(90);
+  delay(500);
   output = calibrateWithFront();
+  delay(500);
   turnRight(90);
 
   return output; // return whether calibrated angle
@@ -983,7 +1006,9 @@ bool calibrateWithRight() {
   // TODO: implement check and calibrate with front
   */
   turnRight(90);
+  delay(500);
   output = calibrateWithFront();
+  delay(500);
   turnLeft(90);
   
   return output; // return whether calibrated angle
@@ -1305,7 +1330,7 @@ int obstaclePosition(double val, int shortrange) {
   //Front
   if (shortrange == 1) {
     tmp = (val - SHORT_OFFSET) / 10;
-    Serial.println(tmp);
+    //Serial.println(tmp);
     if ((tmp < MIN_RANGE_OF_SHORT_SENSOR)){
       return tmp;
     }
@@ -1418,6 +1443,9 @@ void loop() {
     case 'w':
     {
       (movementValue == 0) ? moveForward(10) : moveForward(movementValue);
+      if(step_counter == STEPS_TO_CALIBRATE) {
+        autoCalibrate(1);
+      }
       step_counter++;
       step_best_calibrate++;
       break;
@@ -1427,6 +1455,9 @@ void loop() {
     case 'a':
     {
       (movementValue == 0) ? turnLeft(90) : turnLeft(movementValue);
+      if(step_counter == STEPS_TO_CALIBRATE) {
+        autoCalibrate(1);
+      }
       step_counter++;
       step_best_calibrate++;
       break;
@@ -1436,6 +1467,9 @@ void loop() {
     case 'd':
     {
       (movementValue == 0) ? turnRight(90) : turnRight(movementValue);
+      if(step_counter == STEPS_TO_CALIBRATE) {
+        autoCalibrate(1);
+      }
       step_counter++;
       step_best_calibrate++;
       break;
@@ -1445,6 +1479,9 @@ void loop() {
     case 's':
     {
       (movementValue == 0) ? moveBack(10) : moveBack(movementValue);
+      if(step_counter == STEPS_TO_CALIBRATE) {
+        autoCalibrate(1);
+      }
       step_counter++;
       step_best_calibrate++;
       break;
@@ -1478,6 +1515,7 @@ void loop() {
     case 't':
     {
       //(movementValue == 0) ? testMotors(0) : testMotors(movementValue);
+      autoCalibrate(1);
       break;
     }
     case 'B':
@@ -1519,11 +1557,11 @@ void loop() {
   //sensordata();
   //moveForward(10);
   //moveBack(10);
-  //delay(1000);
+  //delay(500);
   //turnRight(180);
-  //delay(1000);
+  //delay(500);
   //moveForward(10);
-  //delay(1000);
+  //delay(500);
   //turnRight(90);
 
   //delay(500);

@@ -39,7 +39,6 @@ def listen_to_pc(pc_wrapper,arduino_wrapper=None,bt_wrapper=None):
                     raise ConnectionResetError("Malformed string received: {}".format(msg))
                 msg += char
                 if(msg.endswith("\n")):
-                    print("Breaking")
                     break
             print("RECEIVED FROM PC INTERFACE: {}.".format(msg))
             if(msg.startswith("ar")):

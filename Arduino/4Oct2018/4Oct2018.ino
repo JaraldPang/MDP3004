@@ -1368,16 +1368,6 @@ void setup() {
 }
 
 void loop() {
-  
-
-  if (robotRead == "ok\n") {
-    if (robotReady == false) {
-      robotReady = true;
-      //startCalibrate();
-      Serial.println(messageHeader + "ready" + messageTail);
-      readSensors();
-    }
-  }
 
   if (newData) {
 
@@ -1396,7 +1386,7 @@ void loop() {
       */
       step_counter++;
       step_best_calibrate++;
-      readSensors();
+ 
       break;
     }
     case 'A':
@@ -1410,7 +1400,6 @@ void loop() {
       */
       step_counter++;
       step_best_calibrate++;
-      readSensors();
       break;
     }
 
@@ -1425,7 +1414,6 @@ void loop() {
       */
       step_counter++;
       step_best_calibrate++;
-      readSensors();
       break;
     }
 
@@ -1440,7 +1428,6 @@ void loop() {
       */
       step_counter++;
       step_best_calibrate++;
-      readSensors();
       break;
     }
     case 'Z':
@@ -1498,6 +1485,12 @@ void loop() {
     {
       startCalibrate();
       break;
+    }
+    case 'O':
+    case 'o':
+    {
+        //Serial.println(messageHeader + "ready" + messageTail);
+        readSensors();
     }
     default:
     {

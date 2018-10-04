@@ -5,12 +5,13 @@ from matplotlib import pyplot as plt
 
 def main():
 
+    numImg = 0
     cam = cv.VideoCapture(0)
     cam.set(3, 1280)
     cam.set(4, 720)
 
     while True:
-        _,img = cam.read()
+        _, img = cam.read()
 
         img1 = cv.imread('testbed/arrow_real.jpg', cv.IMREAD_UNCHANGED)
         gray1 = cv.cvtColor(img1, cv.COLOR_BGR2GRAY)
@@ -31,10 +32,12 @@ def main():
             hull = cv.convexHull(c)
             hullArea = float(cv.contourArea(hull))
             if (6 <= len(approx) <= 8 and hullArea > 10000 and cv.matchShapes(cnts1[0], c, 1, 0.0) < 0.1):
-                print(len(approx))
+                numImg += 1
                 cv.drawContours(img, [c], -1, (0, 255, 0), 3)
                 cv.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
-
+				
+        print(numImg, " Arrows")
+        numImg = 0
         cv.imshow('', img)
         cv.waitKey(1)
 

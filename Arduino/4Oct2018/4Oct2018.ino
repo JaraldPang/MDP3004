@@ -144,7 +144,7 @@ bool calibration_state = false;
 
 String robotRead;
 
-String messageHeader = "an";
+//String "an" = "an";
 String messageTail = "";
 
 //E1
@@ -489,7 +489,7 @@ void turnRight(double deg) {
 }
 
 void replyStop() {
-  Serial.println(messageHeader + "ok" + messageTail);
+  Serial.println("anok" + messageTail);
 }
 
 void obstacleAvoid() {
@@ -1107,7 +1107,7 @@ void sensordata() {
   String resultBRT = String(final_MedianRead(irBRT)) + String(" , ");
   String resultBRB = String(final_MedianRead(irBRB)) + String(" , ");
   String resultBLT = String(final_MedianRead(irBLT));
-  Serial.println(messageHeader + resultTL + resultTM + resultTR + resultBRT + resultBRB + resultBLT + messageTail);
+  Serial.println("an" + resultTL + resultTM + resultTR + resultBRT + resultBRB + resultBLT + messageTail);
 }
 
 double final_MedianRead(int tpin) {
@@ -1224,7 +1224,7 @@ void readSensors() {
   output += String(posBLT);
   blink_LED();
   Serial.println("alsensor" + output + messageTail);
-  Serial.println("");
+  output += "";
 }
 
 double calibrateSensorValue(double dist, int category) {
@@ -1340,7 +1340,7 @@ void serialEvent() {
       newData = true;
     }
     // add it to the inputString:
-    Serial.println(messageHeader + robotRead + messageTail);
+    Serial.println("an" + robotRead + messageTail);
   }
 }
 
@@ -1385,7 +1385,7 @@ void loop() {
     if (robotReady == false) {
       robotReady = true;
       //startCalibrate();
-      Serial.println(messageHeader + "ready" + messageTail);
+      Serial.println("anready" + messageTail);
       readSensors();
     }
   }

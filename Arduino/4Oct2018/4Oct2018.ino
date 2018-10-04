@@ -1329,6 +1329,8 @@ String getValue(String data, char separator, int index) {
 }
 
 void serialEvent() {
+  String okString = String("ok");
+
   if (Serial.available() > 0) {
     // get the new byte:
     robotRead = Serial.readString();
@@ -1366,12 +1368,14 @@ void setup() {
 }
 
 void loop() {
-  if (robotRead == "ok") {
+  
+
+  if (robotRead == "ok\n") {
     if (robotReady == false) {
       robotReady = true;
-      readSensors();
       //startCalibrate();
-      Serial.println(messageHeader + "ok" + messageTail);
+      Serial.println(messageHeader + "ready" + messageTail);
+      readSensors();
     }
   }
 
@@ -1511,7 +1515,7 @@ void loop() {
   //moveForward(10);
   //moveBack(10);
   //delay(500);
-  //turnRight(180);
+  //turnRight(180);n
   //delay(500);
   //moveForward(10);
   //delay(500);

@@ -28,8 +28,8 @@ enum class Movement { TURN_RIGHT, MOVE_FORWARD, TURN_LEFT }
 const val MAZE_COLUMNS = 15
 const val MAZE_ROWS = 20
 
-const val SENSE_RANGE_SHORT = 3
-const val SENSE_RANGE_LONG = 2
+val SENSE_RANGE_SHORT = 0..4
+val SENSE_RANGE_LONG = 3..7
 const val NUMBER_OF_SENSORS = 6
 
 const val CELL_OBSTACLE = -2

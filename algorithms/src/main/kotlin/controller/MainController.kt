@@ -5,6 +5,7 @@ import javafx.beans.property.SimpleBooleanProperty
 import kotlinx.coroutines.experimental.Dispatchers
 import kotlinx.coroutines.experimental.GlobalScope
 import kotlinx.coroutines.experimental.channels.actor
+import kotlinx.coroutines.experimental.channels.consumeEach
 import kotlinx.coroutines.experimental.javafx.JavaFx
 import kotlinx.coroutines.experimental.launch
 import model.CellInfoModel
@@ -22,13 +23,22 @@ class MainController : Controller() {
     val configurationModel: ConfigurationModel by inject()
     val displayRealMaze = SimpleBooleanProperty(true)
     private val wayPointChannel = GlobalScope.actor<Pair<Int, Int>>(Dispatchers.JavaFx) {
-        for ((x, y) in this) {
+        consumeEach { (x, y) ->
             configurationModel.wayPointX = x
             configurationModel.wayPointY = y
         }
     }
 
-    val connection = Connection(wayPointChannel = wayPointChannel)
+    private val startCommandChannel = GlobalScope.actor<String>(Dispatchers.JavaFx) {
+        consumeEach {
+            when (it) {
+                Connection.START_EXPLORATION_COMMAND -> runExploration()
+                Connection.START_FASTEST_PATH_COMMAND -> runFastestPath()
+            }
+        }
+    }
+
+    val connection = Connection(wayPointChannel = wayPointChannel, startCommandChannel = startCommandChannel)
 
     init {
         with(centerCell) {
@@ -46,8 +56,13 @@ class MainController : Controller() {
             val sensors = if (!connection.isConnected) {
                 listOf(2, 3, 4, 5, 6).map { SimulatedSensor(it, 0..2, robot, realMaze) }
             } else {
-                listOf(3, 4, 5, 6, 7, 2).zip(connection.sensedDataChannels).map { (position, channel) ->
-                    ActualSensor(position, 0..2, channel)
+                listOf(3, 4, 5, 6, 8, 2).zip(connection.sensedDataChannels).map { (position, channel) ->
+                    val senseRange = if (position == 8) {
+                        SENSE_RANGE_LONG
+                    } else {
+                        SENSE_RANGE_SHORT
+                    }
+                    ActualSensor(position, senseRange, channel)
                 }
             }
             robot.setSensors(sensors)

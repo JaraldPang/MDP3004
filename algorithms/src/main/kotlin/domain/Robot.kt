@@ -55,7 +55,9 @@ class Robot(
     }
 
     suspend fun turnLeft() {
-        delay(1000L / (speed ?: 3))
+        if (!connection.isConnected) {
+            delay(1000L / (speed ?: 3))
+        }
         centerCell.direction = centerCell.direction.turnLeft()
         movementCount++
         if (connection.isConnected) {
@@ -64,7 +66,9 @@ class Robot(
     }
 
     suspend fun turnRight() {
-        delay(1000L / (speed ?: 3))
+        if (!connection.isConnected) {
+            delay(1000L / (speed ?: 3))
+        }
         centerCell.direction = centerCell.direction.turnRight()
         movementCount++
         if (connection.isConnected) {
@@ -73,7 +77,9 @@ class Robot(
     }
 
     suspend fun moveForward() {
-        delay(1000L / (speed ?: 3))
+        if (!connection.isConnected) {
+            delay(1000L / (speed ?: 3))
+        }
         val (centerRow, centerCol, currentDirection) = centerCell
         val (rowDiff, colDiff) = NEXT_CELL[MovementInfo(Movement.MOVE_FORWARD, currentDirection)]
             ?: throw IllegalStateException()
@@ -116,16 +122,6 @@ class Robot(
             .minBy { it.size } ?: throw IllegalStateException("Unable to find way to go home")
         val movements = path.toMovements()
         moveFollowingMovements(movements)
-    }
-
-    fun coversRow(row: Int): Boolean {
-        val rowDiff = row - centerCell.row
-        return rowDiff >= -1 && rowDiff <= 1
-    }
-
-    fun coversColumn(col: Int): Boolean {
-        val colDiff = col - centerCell.col
-        return colDiff >= -1 && colDiff <= 1
     }
 
     suspend fun turnToFaceUp() {

@@ -21,7 +21,8 @@ import java.util.concurrent.TimeUnit
 class Connection(
     private val hostname: String = HOSTNAME,
     private val port: Int = PORT,
-    private val wayPointChannel: SendChannel<Pair<Int, Int>>
+    private val wayPointChannel: SendChannel<Pair<Int, Int>>,
+    private val startCommandChannel: SendChannel<String>
 ) {
     companion object {
         const val HOSTNAME = "192.168.17.1"
@@ -31,6 +32,8 @@ class Connection(
         const val MOVE_FORWARD_COMMAND = "w"
         const val TURN_LEFT_COMMAND = "a"
         const val TURN_RIGHT_COMMAND = "d"
+        const val START_EXPLORATION_COMMAND = "starte"
+        const val START_FASTEST_PATH_COMMAND = "startf"
         fun obstacleCommand(x: Int, y: Int) = "obstacle{$x,$y}"
         fun arrowCommand(x: Int, y: Int, direction: Direction): String {
             val directionCommand = when (direction) {
@@ -42,7 +45,7 @@ class Connection(
             return "arrow{$x,$y,$directionCommand}"
         }
 
-        const val CALIBRATION = "calibration"
+        const val CALIBRATE_COMMAND = "calibrate"
 
         fun mdfStringCommand(part1: String, part2: String) = "mdf{$part1,$part2}"
     }
@@ -71,23 +74,28 @@ class Connection(
             val input = checkNotNull(input)
             try {
                 println("Reading...")
-                val line = withTimeout(15, TimeUnit.SECONDS) { input.readUTF8Line() }
+                val line = withTimeout(60, TimeUnit.SECONDS) { input.readUTF8Line() }
                 println("Line read: ${line ?: "<null>"}")
                 if (line == null) {
                     reconnect()
                     continue
                 }
-                if (line.startsWith("way")) {
-                    val indexOfComma = line.indexOf(',')
-                    val x = line.substring(4 until indexOfComma).toInt()
-                    val y = line.substring(indexOfComma + 1 until line.length - 1).toInt()
-                    wayPointChannel.send(x to y)
-                } else if (line.startsWith("sensor")) {
-                    val sensedData = line.substring(6).split(',').map { it.toInt() }
-                    sensedData.zip(sensedDataChannels).forEach { (data, channel) -> channel.send(data) }
+                when {
+                    line.startsWith("way") -> {
+                        val indexOfComma = line.indexOf(',')
+                        val x = line.substring(4 until indexOfComma).toInt()
+                        val y = line.substring(indexOfComma + 1 until line.length - 1).toInt()
+                        wayPointChannel.send(x to y)
+                    }
+                    line.startsWith("sensor") -> {
+                        val sensedData = line.substring(6).split(',').map { it.toInt() }
+                        sensedData.zip(sensedDataChannels).forEach { (data, channel) -> channel.send(data) }
+                    }
+                    line == START_EXPLORATION_COMMAND || line == START_FASTEST_PATH_COMMAND ->
+                        startCommandChannel.send(line)
                 }
             } catch (e: Throwable) {
-                println(e.message)
+                System.err.println(e.message)
                 reconnect()
             }
         }
@@ -99,7 +107,7 @@ class Connection(
             socket?.dispose()
             socket = null
             try {
-                withTimeout(5, TimeUnit.SECONDS) { connect() }
+                withTimeout(10, TimeUnit.SECONDS) { connect() }
                 break
             } catch (e: Throwable) {
                 println(e.message)
@@ -157,6 +165,6 @@ class Connection(
     }
 
     suspend fun sendCalibrationCommand() {
-        sendToArduino(CALIBRATION)
+        sendToArduino(CALIBRATE_COMMAND)
     }
 }

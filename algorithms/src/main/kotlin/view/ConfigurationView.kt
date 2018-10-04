@@ -1,10 +1,18 @@
 package view
 
 import controller.MainController
+import javafx.event.EventHandler
 import javafx.geometry.Pos
+import javafx.scene.Node
+import javafx.scene.input.MouseEvent
 import javafx.util.converter.DoubleStringConverter
 import javafx.util.converter.IntegerStringConverter
 import javafx.util.converter.LongStringConverter
+import kotlinx.coroutines.experimental.Dispatchers
+import kotlinx.coroutines.experimental.GlobalScope
+import kotlinx.coroutines.experimental.channels.Channel
+import kotlinx.coroutines.experimental.channels.actor
+import kotlinx.coroutines.experimental.javafx.JavaFx
 import tornadofx.*
 
 class ConfigurationView : View() {
@@ -110,11 +118,23 @@ class ConfigurationView : View() {
             }
             button("Connect") {
                 enableWhen(controller.connection.socketProperty.booleanBinding { it == null })
-                action { controller.connect() }
+                onClick { controller.connect() }
             }
             button("Reset") {
                 action { controller.reset() }
             }
         }
+    }
+}
+
+fun Node.onClick(action: suspend (MouseEvent) -> Unit) {
+    val eventActor = GlobalScope.actor<MouseEvent>(Dispatchers.JavaFx, capacity = Channel.CONFLATED) {
+        for (event in channel) {
+            action(event)
+        }
+    }
+
+    onMouseClicked = EventHandler {
+        eventActor.offer(it)
     }
 }

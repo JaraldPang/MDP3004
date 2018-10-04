@@ -1222,7 +1222,9 @@ void readSensors() {
   output += String(posBRT); output += ",";
   output += String(posBRB); output += ",";
   output += String(posBLT);
+  blink_LED();
   Serial.println("alsensor" + output + messageTail);
+  Serial.println("");
 }
 
 double calibrateSensorValue(double dist, int category) {
@@ -1353,6 +1355,8 @@ void setup() {
   pinMode(irBRB, INPUT);
   pinMode(irBLT, INPUT);
 
+  pinMode(LED_BUILTIN, OUTPUT);
+
   digitalWrite(irTL, LOW);
   digitalWrite(irTM, LOW);
   digitalWrite(irTR, LOW);
@@ -1365,6 +1369,13 @@ void setup() {
   enableInterrupt(M2B, showEncode2, RISING);
 
   md.init();
+}
+
+void blink_LED() {
+  digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
+  delay(1000);                       // wait for a second
+  digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
+  delay(1000);
 }
 
 void loop() {

@@ -2,6 +2,7 @@
 #include <EnableInterrupt.h>
 #include <RunningMedian.h>
 #include <SharpIR.h>
+#include <string.h>
 
 /*
      ******************************************************************************************************************************
@@ -334,7 +335,9 @@ void moveForward(double cm) {
 
   md.setBrakes(Speed_Brake, Speed_Brake - 10);
 
-  Serial.println(messageHeader + "ok" + messageTail);
+  if (calibration_state != true) {
+    replyStop();
+  }
 }
 
 void moveBack(int cm) {
@@ -375,7 +378,9 @@ void moveBack(int cm) {
 
   md.setBrakes(400, 400);
 
-  Serial.println(messageHeader + "ok" + messageTail);
+  if (calibration_state != true) {
+    replyStop();
+  }
 }
 
 void turnLeft(double deg) {
@@ -424,7 +429,9 @@ void turnLeft(double deg) {
 
   md.setBrakes(Speed_Brake, Speed_Brake);
 
-  Serial.println(messageHeader + "ok" + messageTail);
+  if (calibration_state != true) {
+    replyStop();
+  }
 }
 
 void turnRight(double deg) {
@@ -476,6 +483,12 @@ void turnRight(double deg) {
 
   md.setBrakes(Speed_Brake, Speed_Brake);
 
+  if (calibration_state != true) {
+    replyStop();
+  }
+}
+
+void replyStop() {
   Serial.println(messageHeader + "ok" + messageTail);
 }
 
@@ -1155,7 +1168,6 @@ void insertionsort(double array[], int length) {
   }
 }
 
-
 void readSensors() {
   int i;
   String output = "";
@@ -1174,111 +1186,18 @@ void readSensors() {
   double distBRT = final_MedianRead(irBRT);
   double distBRB = final_MedianRead(irBRB);
 
-  int posTL = obstaclePosition(
-                distTL,
-                1);
+  int posTL = obstaclePosition(distTL, 1);
 
-  int posTM = obstaclePosition(
-                distTM,
-                1);
+  int posTM = obstaclePosition(distTM, 1);
 
-  int posTR = obstaclePosition(
-                distTR,
-                1);
+  int posTR = obstaclePosition(distTR, 1);
 
+  int posBLT = obstaclePosition(distBLT, 2);
 
-  int posBLT = obstaclePosition(
-                 distBLT,
-                 2);
+  int posBRT = obstaclePosition(distBRT, 2);
 
+  int posBRB = obstaclePosition(distBRB, 0);
 
-  int posBRT = obstaclePosition(
-                 distBRT,
-                 2);
-
-  int posBRB = obstaclePosition(
-                 distBRB,
-                 0);
-
-  // check for any values that are not satisfied
-  /*
-  for (i = 0; i < 5 ; i++) {
-    if (posTL != -2) {
-      break;
-    }
-    else {
-      posTL = obstaclePosition(
-                calibrateSensorValue(
-                  sensorTL.distance(), 1),
-                1);
-    }
-  }
-  for (i = 0; i < 5 ; i++) {
-    if (posTM != -2) {
-      break;
-    }
-    else {
-      posTM = obstaclePosition(
-                calibrateSensorValue(
-                  sensorTM.distance(), 2),
-                1);
-    }
-  }
-  for (i = 0; i < 5 ; i++) {
-    if (posTR != -2) {
-      break;
-    }
-    else {
-      posTR = obstaclePosition(
-                calibrateSensorValue(
-                  sensorTR.distance(), 3),
-                1);
-    }
-  }
-  for (i = 0; i < 5 ; i++) {
-    if (posBRT != -2) {
-      break;
-    }
-    else {
-      posBRT = obstaclePosition(
-                 calibrateSensorValue(
-                   sensorBRT.distance(), 4),
-                 2);
-    }
-  }
-  for (i = 0; i < 5 ; i++) {
-    if (posBLT != -2) {
-      break;
-    }
-    else {
-      posBLT = obstaclePosition(
-                 calibrateSensorValue(
-                   sensorBLT.distance(), 5),
-                 2);
-    }
-  }
-  for (i = 0; i < 10 ; i++) {
-    if (posBRB != -2) {
-      break;
-    }
-    else {
-      posBRB = obstaclePosition(
-                 calibrateSensorValue(
-                   sensorBRB.distance(), 0),
-                 0);
-    }
-  }
-  */
-
-  // ensure that there are no "-1" sensor values
-  /*
-  posTL = (posTL == -1) ? 0 : posTL;
-  posTM = (posTM == -1) ? 0 : posTM;
-  posTR = (posTR == -1) ? 0 : posTR;
-  posBRT = (posBRT == -1) ? 0 : posBRT;
-  posBRB = (posBRB == -1) ? 0 : posBRB;
-  posBLT = (posBLT == -1) ? 0 : posBLT;
-  */
 
   // for checking how many obstacles are there on left
   /*
@@ -1455,12 +1374,12 @@ void loop() {
       Serial.println(messageHeader + "ok" + messageTail);
     }
   }
+
   if (newData) {
+
     double movementValue = getValue(robotRead, ';', 1).toInt();
     char condition = robotRead.charAt(0);
-    if (robotRead == "motor") {
-      isStarted = !isStarted;
-    }
+
     switch (condition) {
     case 'W':
     case 'w':
@@ -1476,7 +1395,6 @@ void loop() {
       readSensors();
       break;
     }
-
     case 'A':
     case 'a':
     {

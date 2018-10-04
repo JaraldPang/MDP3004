@@ -102,7 +102,7 @@ double arrMapping5[] = {8.98, 20.59, 32.39, 44.60, 53.33};
 // Brake speed
 #define Speed_Brake 400
 
-// Calibration speed 
+// Calibration speed
 #define Speed_Calibration 200
 
 //E1 Right Side
@@ -135,7 +135,7 @@ bool opportunity_calibrate_left, opportunity_calibrate_front, opportunity_calibr
 bool mode_fastest_path, mode_fastest_diagonal, mode_calibration, forward_command, sensor_command;
 
 
-bool calibration_state = true; 
+bool calibration_state = false;
 
 /*
      ******************************************************************************************************************************
@@ -143,7 +143,7 @@ bool calibration_state = true;
 
 String robotRead;
 
-String messageHeader = "an"; 
+String messageHeader = "an";
 
 //E1
 void showEncode1() {
@@ -176,7 +176,7 @@ void moveForward(double cm) {
 
   double pid;
   int targetTick;
-  int Set_Speed = (calibration_state == true) ? Speed_Calibration : Speed_Move; 
+  int Set_Speed = (calibration_state == true) ? Speed_Calibration : Speed_Move;
 
   integral = 0;
   encoderLeftCounter = encoderRightCounter = prevTick = 0;
@@ -339,8 +339,8 @@ void moveForward(double cm) {
 void moveBack(int cm) {
   double pid;
   int targetTick;
-  int Set_Speed = (calibration_state == true) ? Speed_Calibration : Speed_Move; 
-  
+  int Set_Speed = (calibration_state == true) ? Speed_Calibration : Speed_Move;
+
   integral = 0;
   encoderLeftCounter = encoderRightCounter = prevTick = 0;
 
@@ -380,8 +380,8 @@ void moveBack(int cm) {
 void turnLeft(double deg) {
   double pid;
   float targetTick;
-  int Set_Speed = (calibration_state == true) ? Speed_Calibration : Speed_Spin; 
-  
+  int Set_Speed = (calibration_state == true) ? Speed_Calibration : Speed_Spin;
+
   integral = 0;
   encoderLeftCounter = encoderRightCounter = prevTick = 0;
 
@@ -429,8 +429,8 @@ void turnLeft(double deg) {
 void turnRight(double deg) {
   double pid;
   float targetTick;
-  int Set_Speed = (calibration_state == true) ? Speed_Calibration : Speed_Spin; 
-  
+  int Set_Speed = (calibration_state == true) ? Speed_Calibration : Speed_Spin;
+
   integral = 0;
   encoderLeftCounter = encoderRightCounter = prevTick = 0;
 
@@ -480,9 +480,9 @@ void turnRight(double deg) {
 
 void obstacleAvoid() {
   bool avoidComplete = false;
-  while(avoidComplete == false) {
+  while (avoidComplete == false) {
     //if left has wall, obstacle at any part
-    if(final_MedianRead(irBLT)<=25 && final_MedianRead(irBLT)>0 && final_MedianRead(irTR)<=15 && final_MedianRead(irTR)>0) {
+    if (final_MedianRead(irBLT) <= 25 && final_MedianRead(irBLT) > 0 && final_MedianRead(irTR) <= 15 && final_MedianRead(irTR) > 0) {
       Serial.println("Obstacle near wall");
       turnRight(90);
       delay(500);
@@ -505,7 +505,7 @@ void obstacleAvoid() {
       turnRight(42);
       avoidComplete = true;
     }
-    else if(final_MedianRead(irBRB)<=25 && final_MedianRead(irBRB)>0 && final_MedianRead(irTL)<=15 && final_MedianRead(irTL)>0) {
+    else if (final_MedianRead(irBRB) <= 25 && final_MedianRead(irBRB) > 0 && final_MedianRead(irTL) <= 15 && final_MedianRead(irTL) > 0) {
       Serial.println("Obstacle near wall");
       turnLeft(90);
       delay(500);
@@ -528,9 +528,9 @@ void obstacleAvoid() {
       turnLeft(42);
       avoidComplete = true;
     }
-    
+
     //if right no wall, obstacle at front right
-    if(final_MedianRead(irTR)<=15 && final_MedianRead(irTR)>0) {
+    if (final_MedianRead(irTR) <= 15 && final_MedianRead(irTR) > 0) {
       Serial.println("Obstacle at front right");
       turnLeft(45);
       delay(500);
@@ -549,7 +549,7 @@ void obstacleAvoid() {
       avoidComplete = true;
     }
     //if right no wall, obstacle at front middle
-    else if(final_MedianRead(irTM)<=15 && final_MedianRead(irTM)>0) {
+    else if (final_MedianRead(irTM) <= 15 && final_MedianRead(irTM) > 0) {
       Serial.println("Obstacle at front middle");
       turnRight(45);
       delay(500);
@@ -568,7 +568,7 @@ void obstacleAvoid() {
       avoidComplete = true;
     }
     //if right no wall, obstacle at front left
-    if(final_MedianRead(irTL)<=15 && final_MedianRead(irTL)>0) {
+    if (final_MedianRead(irTL) <= 15 && final_MedianRead(irTL) > 0) {
       Serial.println("Obstacle at front left");
       turnRight(45);
       delay(500);
@@ -590,7 +590,7 @@ void obstacleAvoid() {
       moveForward(10);
     }
     delay(500);
-    }
+  }
 }
 
 void startCalibrate() {
@@ -600,18 +600,18 @@ void startCalibrate() {
   double distBRT = calibrateSensorValue(sensorBRT.distance(), 4);
   double distBLT = calibrateSensorValue(sensorBLT.distance(), 5);
   double distBRB = calibrateSensorValue(sensorBRB.distance(), 0);
-  
+
   turnLeft(180);
   delay(500);
   calibrateWithFront();
-  if((distBLT <= WALL_GAP + 4) && ((distBLT <= (WALL_GAP - 2)) || (distBLT >= (WALL_GAP + 2)))) {
+  if ((distBLT <= WALL_GAP + 4) && ((distBLT <= (WALL_GAP - 2)) || (distBLT >= (WALL_GAP + 2)))) {
     turnLeft(90);
     delay(500);
     calibrateWithFront();
     delay(500);
     turnLeft(90);
   }
-  else if((distBRT <= WALL_GAP + 4) && ((distBRT <= (WALL_GAP - 2)) || (distBRT >= (WALL_GAP + 2)))) {
+  else if ((distBRT <= WALL_GAP + 4) && ((distBRT <= (WALL_GAP - 2)) || (distBRT >= (WALL_GAP + 2)))) {
     turnRight(90);
     delay(500);
     calibrateWithFront();
@@ -621,6 +621,8 @@ void startCalibrate() {
 }
 
 void autoCalibrate(int force_calibrate) {
+  calibration_state = true;
+
   bool to_calibrate = false;
 
   double distTL = calibrateSensorValue(sensorTL.distance(), 1);
@@ -639,7 +641,7 @@ void autoCalibrate(int force_calibrate) {
     to_calibrate2 = ((distTM <= WALL_GAP + 4) && ((distTM <= (WALL_GAP - 2)) || (distTM >= (WALL_GAP + 2)))) ? true : false;
     to_calibrate3 = ((distTR <= WALL_GAP + 4) && ((distTR <= (WALL_GAP - 2)) || (distTR >= (WALL_GAP + 2)))) ? true : false;
     to_calibrate4 = ((distBRT <= WALL_GAP + 4) && ((distBRT <= (WALL_GAP - 2)) || (distBRT >= (WALL_GAP + 2)))) ? true : false;
-    to_calibrate5 = ((distBRB <= (2 * WALL_GAP) + 4) && ((distBRB <= (2* WALL_GAP - 1)) || (distBRB >= ((2 * WALL_GAP) + 2)))) ? true : false;
+    to_calibrate5 = ((distBRB <= (2 * WALL_GAP) + 4) && ((distBRB <= (2 * WALL_GAP - 1)) || (distBRB >= ((2 * WALL_GAP) + 2)))) ? true : false;
     to_calibrate6 = ((distBLT <= WALL_GAP + 4) && ((distBLT <= (WALL_GAP - 2)) || (distBLT >= (WALL_GAP + 2)))) ? true : false;
     to_calibrate = (to_calibrate1 || to_calibrate2 || to_calibrate3 || to_calibrate4 || to_calibrate5 || to_calibrate6);
     force_calibrate++;
@@ -946,6 +948,8 @@ void autoCalibrate(int force_calibrate) {
     }
     turnRight(90);
   }
+
+  calibration_state = false;
 }
 
 bool calibrateWithLeft() {
@@ -1026,7 +1030,7 @@ bool calibrateWithRight() {
   output = calibrateWithFront();
   delay(500);
   turnLeft(90);
-  
+
   return output; // return whether calibrated angle
 }
 
@@ -1037,7 +1041,7 @@ void calibrateAngle(SharpIR sensorTL, int arrL, SharpIR sensorR, int arrR, int d
   double diff = abs(distL - distR);
   int i = 0;
   double angle = 0;
-  
+
   for (i = 0; i < 9; i++) {
     if (diff < 0.25) {
       break;
@@ -1154,14 +1158,14 @@ void insertionsort(double array[], int length) {
 void readSensors() {
   int i;
   String output = "";
-/*
-  double distTL = calibrateSensorValue(sensorTL.distance(), 1);
-  double distTM = calibrateSensorValue(sensorTM.distance(), 2);
-  double distTR = calibrateSensorValue(sensorTR.distance(), 3);
-  double distBLT = calibrateSensorValue(sensorBLT.distance(), 5);
-  double distBRT = calibrateSensorValue(sensorBRT.distance(), 4);
-  double distBRB = calibrateSensorValue(sensorBRB.distance(), 0);
-  */
+  /*
+    double distTL = calibrateSensorValue(sensorTL.distance(), 1);
+    double distTM = calibrateSensorValue(sensorTM.distance(), 2);
+    double distTR = calibrateSensorValue(sensorTR.distance(), 3);
+    double distBLT = calibrateSensorValue(sensorBLT.distance(), 5);
+    double distBRT = calibrateSensorValue(sensorBRT.distance(), 4);
+    double distBRB = calibrateSensorValue(sensorBRB.distance(), 0);
+    */
   double distTL = final_MedianRead(irTL);
   double distTM = final_MedianRead(irTM);
   double distTR = final_MedianRead(irTR);
@@ -1264,7 +1268,7 @@ void readSensors() {
     }
   }
   */
-  
+
   // ensure that there are no "-1" sensor values
   /*
   posTL = (posTL == -1) ? 0 : posTL;
@@ -1274,7 +1278,7 @@ void readSensors() {
   posBRB = (posBRB == -1) ? 0 : posBRB;
   posBLT = (posBLT == -1) ? 0 : posBLT;
   */
-  
+
   // for checking how many obstacles are there on left
   /*
   if (!sensor_command) {
@@ -1347,20 +1351,20 @@ int obstaclePosition(double val, int shortrange) {
   if (shortrange == 1) {
     tmp = (val - SHORT_OFFSET) / 10;
     //Serial.println(tmp);
-    if ((tmp < MIN_RANGE_OF_SHORT_SENSOR)){
+    if ((tmp < MIN_RANGE_OF_SHORT_SENSOR)) {
       return tmp;
     }
     else if ((tmp >= MIN_RANGE_OF_SHORT_SENSOR) && (tmp <= MAX_RANGE_OF_SHORT_SENSOR)) {
       return tmp;
     }
-    else{
+    else {
       return -1;
     }
   }
   //Side
   else if (shortrange == 2) {
     tmp = (val - SHORT_OFFSET) / 10;
-    if ((tmp < MIN_RANGE_OF_SHORT_SENSOR)){
+    if ((tmp < MIN_RANGE_OF_SHORT_SENSOR)) {
       return tmp;
     }
     else if ((tmp >= MIN_RANGE_OF_SHORT_SENSOR) && (tmp <= MAX_RANGE_OF_SHORT_SENSOR)) {
@@ -1373,7 +1377,7 @@ int obstaclePosition(double val, int shortrange) {
   //Long
   else {
     tmp = (val - LONG_OFFSET) / 10;
-    if ((tmp < MIN_RANGE_OF_LONG_SENSOR)){
+    if ((tmp < MIN_RANGE_OF_LONG_SENSOR)) {
       return 0;
     }
     else if ((tmp >= MIN_RANGE_OF_LONG_SENSOR) && (tmp <= MAX_RANGE_OF_LONG_SENSOR)) {
@@ -1459,7 +1463,7 @@ void loop() {
     case 'w':
     {
       (movementValue == 0) ? moveForward(10) : moveForward(movementValue);
-      if(step_counter == STEPS_TO_CALIBRATE) {
+      if (step_counter == STEPS_TO_CALIBRATE) {
         autoCalibrate(1);
       }
       step_counter++;
@@ -1471,7 +1475,7 @@ void loop() {
     case 'a':
     {
       (movementValue == 0) ? turnLeft(90) : turnLeft(movementValue);
-      if(step_counter == STEPS_TO_CALIBRATE) {
+      if (step_counter == STEPS_TO_CALIBRATE) {
         autoCalibrate(1);
       }
       step_counter++;
@@ -1483,7 +1487,7 @@ void loop() {
     case 'd':
     {
       (movementValue == 0) ? turnRight(90) : turnRight(movementValue);
-      if(step_counter == STEPS_TO_CALIBRATE) {
+      if (step_counter == STEPS_TO_CALIBRATE) {
         autoCalibrate(1);
       }
       step_counter++;
@@ -1495,7 +1499,7 @@ void loop() {
     case 's':
     {
       (movementValue == 0) ? moveBack(10) : moveBack(movementValue);
-      if(step_counter == STEPS_TO_CALIBRATE) {
+      if (step_counter == STEPS_TO_CALIBRATE) {
         autoCalibrate(1);
       }
       step_counter++;

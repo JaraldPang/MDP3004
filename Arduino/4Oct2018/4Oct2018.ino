@@ -144,6 +144,7 @@ bool calibration_state = false;
 String robotRead;
 
 String messageHeader = "an";
+String messageTail = "";
 
 //E1
 void showEncode1() {
@@ -333,7 +334,7 @@ void moveForward(double cm) {
 
   md.setBrakes(Speed_Brake, Speed_Brake - 10);
 
-  Serial.println(messageHeader + "forward OK");
+  Serial.println(messageHeader + "ok" + messageTail);
 }
 
 void moveBack(int cm) {
@@ -374,7 +375,7 @@ void moveBack(int cm) {
 
   md.setBrakes(400, 400);
 
-  Serial.println("backward OK");
+  Serial.println(messageHeader + "ok" + messageTail);
 }
 
 void turnLeft(double deg) {
@@ -423,7 +424,7 @@ void turnLeft(double deg) {
 
   md.setBrakes(Speed_Brake, Speed_Brake);
 
-  Serial.println("left OK");
+  Serial.println(messageHeader + "ok" + messageTail);
 }
 
 void turnRight(double deg) {
@@ -475,7 +476,7 @@ void turnRight(double deg) {
 
   md.setBrakes(Speed_Brake, Speed_Brake);
 
-  Serial.println("right OK");
+  Serial.println(messageHeader + "ok" + messageTail);
 }
 
 void obstacleAvoid() {
@@ -1093,7 +1094,7 @@ void sensordata() {
   String resultBRT = String(final_MedianRead(irBRT)) + String(" , ");
   String resultBRB = String(final_MedianRead(irBRB)) + String(" , ");
   String resultBLT = String(final_MedianRead(irBLT));
-  Serial.println(messageHeader + resultTL + resultTM + resultTR + resultBRT + resultBRB + resultBLT);
+  Serial.println(messageHeader + resultTL + resultTM + resultTR + resultBRT + resultBRB + resultBLT + messageTail);
 }
 
 double final_MedianRead(int tpin) {
@@ -1302,7 +1303,7 @@ void readSensors() {
   output += String(posBRT); output += ",";
   output += String(posBRB); output += ",";
   output += String(posBLT);
-  Serial.println(messageHeader + output);
+  Serial.println("alsensor" + output + messageTail);
 }
 
 double calibrateSensorValue(double dist, int category) {
@@ -1416,7 +1417,7 @@ void serialEvent() {
       newData = true;
     }
     // add it to the inputString:
-    Serial.print(messageHeader + robotRead);
+    Serial.println(messageHeader + robotRead + messageTail);
   }
 }
 
@@ -1449,7 +1450,9 @@ void loop() {
   if (robotRead == "ok") {
     if (robotReady == false) {
       robotReady = true;
-      Serial.println("Ok");
+      readSensors();
+      //startCalibrate();
+      Serial.println(messageHeader + "ok" + messageTail);
     }
   }
   if (newData) {
@@ -1463,11 +1466,14 @@ void loop() {
     case 'w':
     {
       (movementValue == 0) ? moveForward(10) : moveForward(movementValue);
+      /*
       if (step_counter == STEPS_TO_CALIBRATE) {
         autoCalibrate(1);
       }
+      */
       step_counter++;
       step_best_calibrate++;
+      readSensors();
       break;
     }
 
@@ -1475,11 +1481,14 @@ void loop() {
     case 'a':
     {
       (movementValue == 0) ? turnLeft(90) : turnLeft(movementValue);
+      /*
       if (step_counter == STEPS_TO_CALIBRATE) {
         autoCalibrate(1);
       }
+      */
       step_counter++;
       step_best_calibrate++;
+      readSensors();
       break;
     }
 
@@ -1487,11 +1496,14 @@ void loop() {
     case 'd':
     {
       (movementValue == 0) ? turnRight(90) : turnRight(movementValue);
+      /*
       if (step_counter == STEPS_TO_CALIBRATE) {
         autoCalibrate(1);
       }
+      */
       step_counter++;
       step_best_calibrate++;
+      readSensors();
       break;
     }
 
@@ -1499,11 +1511,14 @@ void loop() {
     case 's':
     {
       (movementValue == 0) ? moveBack(10) : moveBack(movementValue);
+      /*
       if (step_counter == STEPS_TO_CALIBRATE) {
         autoCalibrate(1);
       }
+      */
       step_counter++;
       step_best_calibrate++;
+      readSensors();
       break;
     }
     case 'Z':

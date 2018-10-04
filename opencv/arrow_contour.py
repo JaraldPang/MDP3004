@@ -10,7 +10,9 @@ def main():
     cam.set(3, 1280)
     cam.set(4, 720)
 
+    #loop
     while True:
+        #for video
         _, img = cam.read()
 
         img1 = cv.imread('testbed/arrow_real.jpg', cv.IMREAD_UNCHANGED)

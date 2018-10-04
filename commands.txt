@@ -1,3 +1,0 @@
--data "haar" -vec "training.vec" -bg "negatives.txt" -numStages 5 -numPos 35 -numNeg 50 -w 80 -h 80 -numThreads -numStages=5 -mode ALL
-
--info "annotations.txt" -vec "training.vec" -bg "negatives.txt" -num45 -w 80 -h 80

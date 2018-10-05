@@ -30,7 +30,7 @@ class ArduinoWrapper():
         return self.ser
 
     def write(self, msg):
-        self.ser.write((str(msg).encode('UTF-8'))) #serial comms need to encode then can send
+        self.ser.write("{}\n".format(msg).encode('UTF-8')) #serial comms need to encode then can send
 
     def get_connection(self):
         return self.ser

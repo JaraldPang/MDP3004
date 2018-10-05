@@ -73,7 +73,7 @@ def listen_to_bluetooth(bt_wrapper,pc_wrapper=None,arduino_wrapper=None,):
         try:
             # encoding scheme is ASCII
             msg = conn.recv(1024).decode('utf-8')
-            print("RECEIVED FROM BT INTERFACE: {}".format(msg))
+            print("RECEIVED FROM BT INTERFACE: {}.".format(msg))
             if(msg.startswith("al_")):
                 print("BT writing to PC: {}".format(msg))
                 pc_wrapper.write(msg[3:])
@@ -94,8 +94,18 @@ def listen_to_arduino(ar_wrapper,pc_wrapper=None,bt_wrapper=None):
     ser = ar_wrapper.get_connection()
     while(1):
         try:
-            msg = ser.readline().decode('UTF-8').rstrip('\r\n') #aruino using println to send so need remove \r\n
-            print("RECEIVED FROM ARDUINO INTERFACE: {}".format(msg))
+            msg = ser.readline().decode('UTF-8').rstrip('\r').rstrip('\n') #aruino using println to send so need remove \r\n
+            #msg = ""
+            #while(1):
+            #   char = ser.read(1).decode('utf-8')
+            #   print("{}".format(char))
+            #   if(char is None or char is ""):
+            #       continue
+            #   msg += char
+            #  if(msg.endswith("\n")):
+            #       print("\n")
+            #       break
+            print("RECEIVED FROM ARDUINO INTERFACE: {}.".format(msg))
             if(msg.startswith("al")):
                 print("ARDUINO writing to PC: {}".format(msg))
                 pc_wrapper.write(msg[2:])

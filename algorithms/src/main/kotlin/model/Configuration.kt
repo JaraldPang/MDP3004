@@ -32,4 +32,15 @@ class ConfigurationModel : ViewModel() {
     override fun toString(): String {
         return "ConfigurationModel(speed=$speed, time=$time, coverage=$coverage, wayPointX=$wayPointX, wayPointY=$wayPointY, mapDescriptorPart1=$mapDescriptorPart1, mapDescriptorPart2=$mapDescriptorPart2, filename=$filename)"
     }
+
+    fun reset() {
+        speed = null
+        time = null
+        coverage = null
+        wayPointX = null
+        wayPointY = null
+        mapDescriptorPart1 = null
+        mapDescriptorPart2 = null
+        filename = null
+    }
 }

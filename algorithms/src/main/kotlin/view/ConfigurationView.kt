@@ -1,13 +1,22 @@
 package view
 
 import controller.MainController
-import javafx.beans.binding.Bindings
+import javafx.event.EventHandler
 import javafx.geometry.Pos
+import javafx.scene.Node
+import javafx.scene.input.MouseEvent
 import javafx.util.converter.DoubleStringConverter
 import javafx.util.converter.IntegerStringConverter
 import javafx.util.converter.LongStringConverter
+import kotlinx.coroutines.experimental.Dispatchers
+import kotlinx.coroutines.experimental.GlobalScope
+import kotlinx.coroutines.experimental.channels.Channel
+import kotlinx.coroutines.experimental.channels.ReceiveChannel
+import kotlinx.coroutines.experimental.channels.actor
+import kotlinx.coroutines.experimental.channels.produce
+import kotlinx.coroutines.experimental.javafx.JavaFx
+import kotlinx.coroutines.experimental.selects.whileSelect
 import tornadofx.*
-import java.util.concurrent.Callable
 
 class ConfigurationView : View() {
     val controller: MainController by inject()
@@ -111,9 +120,38 @@ class ConfigurationView : View() {
                 action { controller.runFastestPath() }
             }
             button("Connect") {
-                enableWhen(Bindings.createBooleanBinding(Callable { controller.connection.isConnected }).not())
-                action { controller.connect() }
+                enableWhen(controller.connection.socketProperty.booleanBinding { it == null })
+                onClick { controller.connect() }
+            }
+            button("Reset") {
+                action { controller.reset() }
             }
         }
     }
 }
+
+fun Node.onClick(action: suspend (MouseEvent) -> Unit) {
+    val eventActor = GlobalScope.actor<MouseEvent>(Dispatchers.JavaFx, capacity = Channel.CONFLATED) {
+        for (event in channel.debounce(300)) {
+            action(event)
+        }
+    }
+
+    onMouseClicked = EventHandler { eventActor.offer(it) }
+}
+
+fun <T> ReceiveChannel<T>.debounce(timeMillis: Long) =
+    GlobalScope.produce(Dispatchers.JavaFx) {
+        var value = receive()
+        whileSelect {
+            onTimeout(timeMillis) {
+                send(value)
+                value = receive()
+                true
+            }
+            onReceive {
+                value = it
+                true
+            }
+        }
+    }

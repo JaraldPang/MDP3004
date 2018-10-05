@@ -33,7 +33,7 @@ def main():
             approx = cv.approxPolyDP(c, 0.015 * peri, True)
             hull = cv.convexHull(c)
             hullArea = float(cv.contourArea(hull))
-            if (6 <= len(approx) <= 8 and hullArea > 10000 and cv.matchShapes(cnts1[0], c, 1, 0.0) < 0.1):
+            if (6 <= len(approx) <= 8 and hullArea >105000 and cv.matchShapes(cnts1[0], c, 1, 0.0) < 0.3):
                 numImg += 1
                 cv.drawContours(img, [c], -1, (0, 255, 0), 3)
                 cv.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)

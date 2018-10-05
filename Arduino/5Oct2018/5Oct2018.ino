@@ -56,6 +56,9 @@ SharpIR sensorBLT(irBLT, MODEL_SHORT);
 
 #define WALL_GAP 10
 
+#define TIMEOUT 2000;
+
+
 /*
      ******************************************************************************************************************************
      2Oct2018
@@ -195,40 +198,40 @@ void moveForward(double cm) {
       pid = computePID();
       //Serial.println("R/E1 : " + String((0.6 * Set_Speed) + pid) + " L/E2 : " + String((0.6 * Set_Speed) - pid));
       md.setSpeeds(
-        ((Set_Speed) - pid),
-        ((Set_Speed) + pid)
+          ((Set_Speed) - pid),
+          ((Set_Speed) + pid)
       );
     }
     while (encoderLeftCounter < targetTick - 50) {
       pid = computePID();
       //Serial.println("R/E1 : " + String((1.0 * Set_Speed) + pid) + " L/E2 : " + String((1.0 * Set_Speed) - pid));
       md.setSpeeds(
-        ((Set_Speed) - pid),
-        ((Set_Speed) + pid)
+          ((Set_Speed) - pid),
+          ((Set_Speed) + pid)
       );
     }
     while (encoderLeftCounter < targetTick - 25) {
       pid = computePID();
       //Serial.println("R/E1 : " + String((0.8 * Set_Speed) + pid) + " L/E2 : " + String((0.8 * Set_Speed) - pid));
       md.setSpeeds(
-        ((Set_Speed) - pid),
-        ((Set_Speed) + pid)
+          ((Set_Speed) - pid),
+          ((Set_Speed) + pid)
       );
     }
     while (encoderLeftCounter < targetTick - 15) {
       pid = computePID();
       //Serial.println("R/E1 : " + String((0.6 * Set_Speed) + pid) + " L/E2 : " + String((0.6 * Set_Speed) - pid));
       md.setSpeeds(
-        ((Set_Speed) - pid),
-        ((Set_Speed) + pid)
+          ((Set_Speed) - pid),
+          ((Set_Speed) + pid)
       );
     }
     while (encoderLeftCounter < targetTick) {
       pid = computePID();
       //Serial.println("R/E1 : " + String((0.5 * Set_Speed) + pid) + " L/E2 : " + String((0.5 * Set_Speed) - pid));
       md.setSpeeds(
-        ((Set_Speed) - pid),
-        ((Set_Speed) + pid)
+          ((Set_Speed) - pid),
+          ((Set_Speed) + pid)
       );
     }
   }
@@ -239,8 +242,8 @@ void moveForward(double cm) {
     while (encoderLeftCounter < targetTick) {
       pid = computePID();
       md.setSpeeds(
-        ((Set_Speed) - pid),
-        ((Set_Speed) + pid)
+          ((Set_Speed) - pid),
+          ((Set_Speed) + pid)
       );
     }
     //turnRight_sil(1);
@@ -253,30 +256,30 @@ void moveForward(double cm) {
       pid = computePID();
       //0.885
       md.setSpeeds(
-        ((Set_Speed) - pid),
-        ((Set_Speed) + pid)
+          ((Set_Speed) - pid),
+          ((Set_Speed) + pid)
       );
     }
 
     while (encoderLeftCounter < targetTick - 25) {
       pid = computePID();
       md.setSpeeds(
-        ((0.8 * Set_Speed) - pid),
-        ((0.8 * Set_Speed) + pid)
+          ((0.8 * Set_Speed) - pid),
+          ((0.8 * Set_Speed) + pid)
       );
     }
     while (encoderLeftCounter < targetTick - 15) {
       pid = computePID();
       md.setSpeeds(
-        ((Set_Speed) - pid),
-        ((Set_Speed) + pid)
+          ((Set_Speed) - pid),
+          ((Set_Speed) + pid)
       );
     }
     while (encoderLeftCounter < targetTick) {
       pid = computePID();
       md.setSpeeds(
-        ((Set_Speed) - pid),
-        ((Set_Speed) + pid)
+          ((Set_Speed) - pid),
+          ((Set_Speed) + pid)
       );
     }
     //to bypass the curve motion movement
@@ -289,30 +292,30 @@ void moveForward(double cm) {
     while (encoderLeftCounter < targetTick - 50) {
       pid = computePID();
       md.setSpeeds(
-        ((Set_Speed) - pid),
-        ((Set_Speed) + pid)
+          ((Set_Speed) - pid),
+          ((Set_Speed) + pid)
       );
     }
 
     while (encoderLeftCounter < targetTick - 25) {
       pid = computePID();
       md.setSpeeds(
-        ((Set_Speed) - pid),
-        ((Set_Speed) + pid)
+          ((Set_Speed) - pid),
+          ((Set_Speed) + pid)
       );
     }
     while (encoderLeftCounter < targetTick - 15) {
       pid = computePID();
       md.setSpeeds(
-        ((Set_Speed) - pid),
-        ((Set_Speed) + pid)
+          ((Set_Speed) - pid),
+          ((Set_Speed) + pid)
       );
     }
     while (encoderLeftCounter < targetTick) {
       pid = computePID();
       md.setSpeeds(
-        ((Set_Speed) - pid),
-        ((Set_Speed) + pid)
+          ((Set_Speed) - pid),
+          ((Set_Speed) + pid)
       );
     }
     //to bypass the curve motion movement
@@ -323,8 +326,8 @@ void moveForward(double cm) {
     while (encoderLeftCounter < targetTick) {
       pid = computePID();
       md.setSpeeds (
-        (Set_Speed - pid),
-        (Set_Speed + pid)
+          (Set_Speed - pid),
+          (Set_Speed + pid)
       );
       //Serial.println("M1setSpeed: " + String(int((Set_Speed - pid))) + ", M2setSpeed: " + String(int((Set_Speed + pid))));
       //Serial.println("M1Ticks: " + String(int((encoderRightCounter))) + ", M2Ticks: " + String(int((encoderLeftCounter))));
@@ -354,24 +357,24 @@ void moveBack(int cm) {
   while (encoderLeftCounter < min(50, targetTick)) {
     pid = computePID();
     md.setSpeeds(
-      -((Set_Speed) - pid),
-      -((Set_Speed) + pid)
+        -((Set_Speed) - pid),
+        -((Set_Speed) + pid)
     );
   }
 
   while (encoderLeftCounter < targetTick - 50) {
     pid = computePID();
     md.setSpeeds(
-      -((Set_Speed) - pid),
-      -((Set_Speed) + pid)
+        -((Set_Speed) - pid),
+        -((Set_Speed) + pid)
     );
   }
 
   while (encoderLeftCounter < targetTick) {
     pid = computePID();
     md.setSpeeds(
-      -((Set_Speed) - pid),
-      -((Set_Speed) + pid)
+        -((Set_Speed) - pid),
+        -((Set_Speed) + pid)
     );
   }
 
@@ -408,22 +411,22 @@ void turnLeft(double deg) {
   while ( encoderLeftCounter < min(50, targetTick)) {
     pid = computePID();
     md.setSpeeds(
-      ((Set_Speed) - pid),
-      -((Set_Speed) + pid)
+        ((Set_Speed) - pid),
+        -((Set_Speed) + pid)
     );
   }
   while ( encoderLeftCounter < targetTick - 50) {
     pid = computePID();
     md.setSpeeds(
-      ((Set_Speed) - pid),
-      -((Set_Speed) + pid)
+        ((Set_Speed) - pid),
+        -((Set_Speed) + pid)
     );
   }
   while ( encoderLeftCounter < targetTick) {
     pid = computePID();
     md.setSpeeds(
-      ((Set_Speed) - pid),
-      -((Set_Speed) + pid));
+        ((Set_Speed) - pid),
+        -((Set_Speed) + pid));
   }
 
   md.setBrakes(Speed_Brake, Speed_Brake);
@@ -460,23 +463,23 @@ void turnRight(double deg) {
   while ( encoderLeftCounter < min(50, targetTick)) {
     pid = computePID();
     md.setSpeeds(
-      -((Set_Speed) - pid),
-      ((Set_Speed) + pid)
+        -((Set_Speed) - pid),
+        ((Set_Speed) + pid)
     );
   }
 
   while (encoderLeftCounter < targetTick - 50) {
     pid = computePID();
     md.setSpeeds(
-      -((Set_Speed) - pid),
-      ((Set_Speed) + pid)
+        -((Set_Speed) - pid),
+        ((Set_Speed) + pid)
     );
   }
   while (encoderLeftCounter < targetTick) {
     pid = computePID();
     md.setSpeeds(
-      -((Set_Speed) - pid),
-      ((Set_Speed) + pid)
+        -((Set_Speed) - pid),
+        ((Set_Speed) + pid)
     );
   }
 
@@ -489,6 +492,8 @@ void turnRight(double deg) {
 
 void replyStop() {
   Serial.println("anok");
+  Serial.flush();
+  Serial.println("alok");
   Serial.flush();
 }
 
@@ -1331,7 +1336,26 @@ String getValue(String data, char separator, int index) {
 }
 
 void serialEvent() {
- while (Serial.available()) {
+  /*
+  }
+  char inData[20];
+  unsigned long timeout = millis() + TIMEOUT;
+  uint8_t inIndex = 0;
+  while ( ((int32_t)(millis() - timeout) < 0) && (inIndex < (sizeof(inData) / sizeof(inData[0])))) {
+    while (Serial.available()) {
+      // get the new byte:
+      inData[inIndex] = (char) Serial.read();
+
+      if (inData[inIndex] == '\n') || (inData[inIndex] == '\r'))  {
+        newData = true;
+        break;
+      }
+      // add it to the inputString:
+      Serial.writeln(inData[inIndex++]);
+      robotRead += inData[inIndex];
+    }
+    */
+  while (Serial.available()) {
     // get the new byte:
     char inChar = (char) Serial.read();
 
@@ -1342,6 +1366,7 @@ void serialEvent() {
     // add it to the inputString:
     robotRead += inChar;
   }
+
 }
 
 void blink_LED() {
@@ -1383,18 +1408,10 @@ void setup() {
 }
 
 void loop() {
-  if (Serial.available() > 0) {
-    // get the new byte:
-    robotRead = Serial.readString();
-    if (robotRead.length() != 0) {
-      newData = true;
-    }
-    // add it to the inputString:
-    Serial.print("an" + robotRead);
-    Serial.flush();
-  }
-  
+
   if (newData) {
+    Serial.println("an" + robotRead);
+    Serial.flush();
 
     double movementValue = getValue(robotRead, ';', 1).toInt();
     char condition = robotRead.charAt(0);

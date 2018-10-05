@@ -30,7 +30,7 @@ def main():
             if(key == ord("a")):
                 camera.resolution=(1920,1080)
                 camera.capture(rawCaptureHigh,splitter_port=1,format='bgr', use_video_port=True, resize=(1920,1080))
-                cv2.imwrite('robot/image{}0cm.jpg'.format(n),rawCaptureHigh.array)
+                cv2.imwrite('robot/image{}.jpg'.format(n),rawCaptureHigh.array)
                 n = n + 1
                 print("Captured")
                 rawCaptureHigh.truncate(0)

@@ -31,11 +31,21 @@ def listen_to_pc(pc_wrapper,arduino_wrapper=None,bt_wrapper=None):
     while(1):
         try:
             # encoding scheme is ASCII
-            msg = conn.recv(1024).decode()
-            print("RECEIVED FROM PC INTERFACE: {}".format(msg))
-            if(msg.startswith("AR")):
+            #msg = conn.recv(1024).decode('utf-8')
+            msg = ""
+            while(1):
+                char = conn.recv(1).decode('utf-8')
+                if(char is None or char is ""):
+                    raise ConnectionResetError("Malformed string received: {}".format(msg))
+                msg += char
+                if(msg.endswith("\n")):
+                    break
+            print("RECEIVED FROM PC INTERFACE: {}.".format(msg))
+            if(msg.startswith("ar")):
+                print("PC WRITING TO ARDUINO: {}".format(msg))
                 arduino_wrapper.write(msg[2:])
-            elif(msg.startswith("AN")):
+            elif(msg.startswith("an")):
+                print("PC WRITING TO ANDROID: {}".format(msg))
                 bt_wrapper.write(msg[2:])
             #raises a connectione error for the following situation
             #1) RPI resets while PC is connected
@@ -63,11 +73,13 @@ def listen_to_bluetooth(bt_wrapper,pc_wrapper=None,arduino_wrapper=None,):
         try:
             # encoding scheme is ASCII
             msg = conn.recv(1024).decode('utf-8')
-            print("RECEIVED FROM BT INTERFACE: {}".format(msg))
-            if(msg.startswith("AL")):
-                pc_wrapper.write(msg[2:])
-            elif(msg.startswith("AR")):
-                arduino_wrapper.write(msg[2:])
+            print("RECEIVED FROM BT INTERFACE: {}.".format(msg))
+            if(msg.startswith("al_")):
+                print("BT writing to PC: {}".format(msg))
+                pc_wrapper.write(msg[3:])
+            elif(msg.startswith("ar_")):
+                print("BT writing to ARDUINO: {}".format(msg))
+                arduino_wrapper.write(msg[3:])
         except (timeout,BluetoothError):
             print("Unexpected Disconnect for Bluetooth occurred. Awaiting reconnection...")
             conn.shutdown(SHUT_RDWR)
@@ -82,13 +94,26 @@ def listen_to_arduino(ar_wrapper,pc_wrapper=None,bt_wrapper=None):
     ser = ar_wrapper.get_connection()
     while(1):
         try:
-            msg = ser.readline().decode('UTF-8').rstrip('\r\n') #aruino using println to send so need remove \r\n
-            print("RECEIVED FROM ARDUINO INTERFACE: {}".format(msg))
-            if(msg.startswith("AL")):
+            msg = ser.readline().decode('UTF-8').rstrip('\r').rstrip('\n') #aruino using println to send so need remove \r\n
+            #msg = ""
+            #while(1):
+            #   char = ser.read(1).decode('utf-8')
+            #   print("{}".format(char))
+            #   if(char is None or char is ""):
+            #       continue
+            #   msg += char
+            #  if(msg.endswith("\n")):
+            #       print("\n")
+            #       break
+            print("RECEIVED FROM ARDUINO INTERFACE: {}.".format(msg))
+            if(msg.startswith("al")):
+                print("ARDUINO writing to PC: {}".format(msg))
                 pc_wrapper.write(msg[2:])
-            elif(msg.startswith("AN")):
+            elif(msg.startswith("an")):
+                print("ARDUINO writing to ANDROID: {}".format(msg))
                 bt_wrapper.write(msg[2:])
-        except Exception:
+        except Exception as e:
+            print(e)
             print("Unexpected Disconnect occurred from arduino, trying to reconnect...")
             ser.close()
             ser = ar_wrapper.reconnect()

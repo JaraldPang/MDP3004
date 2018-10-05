@@ -11,8 +11,11 @@ import javafx.util.converter.LongStringConverter
 import kotlinx.coroutines.experimental.Dispatchers
 import kotlinx.coroutines.experimental.GlobalScope
 import kotlinx.coroutines.experimental.channels.Channel
+import kotlinx.coroutines.experimental.channels.ReceiveChannel
 import kotlinx.coroutines.experimental.channels.actor
+import kotlinx.coroutines.experimental.channels.produce
 import kotlinx.coroutines.experimental.javafx.JavaFx
+import kotlinx.coroutines.experimental.selects.whileSelect
 import tornadofx.*
 
 class ConfigurationView : View() {
@@ -129,12 +132,26 @@ class ConfigurationView : View() {
 
 fun Node.onClick(action: suspend (MouseEvent) -> Unit) {
     val eventActor = GlobalScope.actor<MouseEvent>(Dispatchers.JavaFx, capacity = Channel.CONFLATED) {
-        for (event in channel) {
+        for (event in channel.debounce(300)) {
             action(event)
         }
     }
 
-    onMouseClicked = EventHandler {
-        eventActor.offer(it)
-    }
+    onMouseClicked = EventHandler { eventActor.offer(it) }
 }
+
+fun <T> ReceiveChannel<T>.debounce(timeMillis: Long) =
+    GlobalScope.produce(Dispatchers.JavaFx) {
+        var value = receive()
+        whileSelect {
+            onTimeout(timeMillis) {
+                send(value)
+                value = receive()
+                true
+            }
+            onReceive {
+                value = it
+                true
+            }
+        }
+    }

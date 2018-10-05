@@ -122,7 +122,7 @@ class MazeModel() : ViewModel() {
         return sum * 100.0 / (MAZE_ROWS * MAZE_COLUMNS)
     }
 
-    fun outputExploredUnexploredString(): String {
+    fun outputMapDescriptorPart1(): String {
         val result = StringBuilder()
         val binary = StringBuilder()
 
@@ -145,7 +145,7 @@ class MazeModel() : ViewModel() {
         return result.toString()
     }
 
-    fun outputEmptyObstacleString(): String {
+    fun outputMapDescriptorPart2(): String {
         val result = StringBuilder()
         val binary = StringBuilder()
         for (row in 0 until MAZE_ROWS) {

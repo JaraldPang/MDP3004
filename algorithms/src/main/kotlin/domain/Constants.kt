@@ -28,7 +28,7 @@ enum class Movement { TURN_RIGHT, MOVE_FORWARD, TURN_LEFT }
 const val MAZE_COLUMNS = 15
 const val MAZE_ROWS = 20
 
-val SENSE_RANGE_SHORT = 0..4
+val SENSE_RANGE_SHORT = 0..2
 val SENSE_RANGE_LONG = 3..7
 const val NUMBER_OF_SENSORS = 6
 
@@ -78,27 +78,27 @@ val SIDES = arrayOf(
 
 private val DIRECTION_TURNS = arrayOf(
     arrayOf(
-        listOf(),
-        listOf(Movement.TURN_LEFT, Movement.TURN_LEFT),
-        listOf(Movement.TURN_LEFT),
-        listOf(Movement.TURN_RIGHT)
+        arrayOf(),
+        arrayOf(Movement.TURN_LEFT, Movement.TURN_LEFT),
+        arrayOf(Movement.TURN_LEFT),
+        arrayOf(Movement.TURN_RIGHT)
     ),
     arrayOf(
-        listOf(Movement.TURN_LEFT, Movement.TURN_LEFT),
-        listOf(),
-        listOf(Movement.TURN_RIGHT),
-        listOf(Movement.TURN_LEFT)
+        arrayOf(Movement.TURN_LEFT, Movement.TURN_LEFT),
+        arrayOf(),
+        arrayOf(Movement.TURN_RIGHT),
+        arrayOf(Movement.TURN_LEFT)
     ),
     arrayOf(
-        listOf(Movement.TURN_RIGHT),
-        listOf(Movement.TURN_LEFT),
-        listOf(),
-        listOf(Movement.TURN_LEFT, Movement.TURN_LEFT)
+        arrayOf(Movement.TURN_RIGHT),
+        arrayOf(Movement.TURN_LEFT),
+        arrayOf(),
+        arrayOf(Movement.TURN_LEFT, Movement.TURN_LEFT)
     ),
     arrayOf(
-        listOf(Movement.TURN_LEFT),
-        listOf(Movement.TURN_RIGHT),
-        listOf(Movement.TURN_LEFT, Movement.TURN_RIGHT),
-        listOf()
+        arrayOf(Movement.TURN_LEFT),
+        arrayOf(Movement.TURN_RIGHT),
+        arrayOf(Movement.TURN_LEFT, Movement.TURN_RIGHT),
+        arrayOf()
     )
 )

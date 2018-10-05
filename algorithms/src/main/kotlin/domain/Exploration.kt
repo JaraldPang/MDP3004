@@ -60,7 +60,7 @@ open class Exploration(private val robot: Robot, private val connection: Connect
         // About to hit the wall, notify the Arduino to do calibration
         if (sides[Movement.MOVE_FORWARD.ordinal] == CELL_OBSTACLE) {
             if (connection.isConnected) {
-                connection.sendCalibrationCommand()
+                connection.sendCalibrationCommandAndWait()
             }
         }
         val choices = Movement.values().sortedWith(Comparator { o1, o2 ->
@@ -114,9 +114,9 @@ open class Exploration(private val robot: Robot, private val connection: Connect
 class TimeLimitedExploration(robot: Robot, connection: Connection, private val timeLimit: Long) :
     Exploration(robot, connection) {
     override suspend fun explore() {
-        withTimeoutOrNull(timeLimit, TimeUnit.SECONDS) {
+        withTimeoutOrNull(TimeUnit.SECONDS.toMillis(timeLimit), {
             super.explore()
-        }
+        })
     }
 }
 

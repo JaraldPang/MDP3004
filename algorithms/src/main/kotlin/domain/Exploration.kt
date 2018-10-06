@@ -57,12 +57,7 @@ open class Exploration(private val robot: Robot, private val connection: Connect
     private suspend fun makeMovingDecision() {
         val explorationMaze = robot.explorationMaze
         val sides = explorationMaze.getEnvironmentOnSides(robot.centerCell.copy())
-        // About to hit the wall, notify the Arduino to do calibration
-        if (sides[Movement.MOVE_FORWARD.ordinal] == CELL_OBSTACLE) {
-            if (connection.isConnected) {
-                connection.sendCalibrationCommandAndWait()
-            }
-        }
+        println("Center: ${robot.centerCell}, Sides: ${sides.joinToString()}")
         val choices = Movement.values().sortedWith(Comparator { o1, o2 ->
             when {
                 sides[o1.ordinal] == sides[o2.ordinal] -> 0
@@ -96,17 +91,17 @@ open class Exploration(private val robot: Robot, private val connection: Connect
     }
 
     private suspend fun moveForward() {
-        robot.moveForward()
+        robot.move(Movement.MOVE_FORWARD)
         stack += robot.centerCell.copy()
     }
 
     private suspend fun turnLeft() {
-        robot.turnLeft()
+        robot.move(Movement.TURN_LEFT)
         stack += robot.centerCell.copy()
     }
 
     private suspend fun turnRight() {
-        robot.turnRight()
+        robot.move(Movement.TURN_RIGHT)
         stack += robot.centerCell.copy()
     }
 }
@@ -114,9 +109,7 @@ open class Exploration(private val robot: Robot, private val connection: Connect
 class TimeLimitedExploration(robot: Robot, connection: Connection, private val timeLimit: Long) :
     Exploration(robot, connection) {
     override suspend fun explore() {
-        withTimeoutOrNull(TimeUnit.SECONDS.toMillis(timeLimit), {
-            super.explore()
-        })
+        withTimeoutOrNull(TimeUnit.SECONDS.toMillis(timeLimit)) { super.explore() }
     }
 }
 

@@ -14,7 +14,10 @@ class MazeModel() : ViewModel() {
     val mazeProperties = Array(MAZE_ROWS) { _ -> Array(MAZE_COLUMNS) { SimpleIntegerProperty(0) } }
 
     class PropertyArrayWrapper(private val row: Array<SimpleIntegerProperty>) {
+        @Synchronized
         operator fun get(col: Int): Int = row[col].value
+
+        @Synchronized
         operator fun set(col: Int, value: Int) {
             row[col].value = value
         }

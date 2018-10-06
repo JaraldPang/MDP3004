@@ -30,7 +30,7 @@ class Connection(
         const val PORT = 45000
         const val ANDROID_PREFIX = "an"
         const val ARDUINO_PREFIX = "ar"
-        const val RPI_PREFIX = "rp"
+        const val RPI_PREFIX = "rpi"
         const val MOVE_FORWARD_COMMAND = "w"
         const val TURN_LEFT_COMMAND = "a"
         const val TURN_RIGHT_COMMAND = "d"
@@ -38,6 +38,8 @@ class Connection(
         const val CALIBRATE_COMMAND = "c"
         const val START_EXPLORATION_COMMAND = "starte"
         const val START_FASTEST_PATH_COMMAND = "startf"
+        const val EXPLORATION_COMMAND = "explore"
+        const val FASTEST_PATH_COMMAND = "fastest"
         const val OK_COMMAND = "ok"
         fun obstacleCommand(x: Int, y: Int) = "obstacle{$x,$y}"
         fun arrowCommand(x: Int, y: Int, direction: Direction): String {
@@ -60,6 +62,18 @@ class Connection(
                 Direction.RIGHT -> "r"
             }
             return "${cellInfo.col},${cellInfo.row},$directionCommand"
+        }
+
+        /**
+         * @param parameter: Distance in cm when [movement] is [Movement.MOVE_FORWARD], or angle in degrees when [movement] is [Movement.TURN_RIGHT] or [Movement.TURN_LEFT]
+         */
+        fun movementWithParameterCommand(movement: Movement, parameter: Int): String {
+            val movementCommand = when (movement) {
+                Movement.TURN_RIGHT -> TURN_RIGHT_COMMAND
+                Movement.MOVE_FORWARD -> MOVE_FORWARD_COMMAND
+                Movement.TURN_LEFT -> TURN_LEFT_COMMAND
+            }
+            return "$movementCommand;$parameter"
         }
     }
 
@@ -90,7 +104,7 @@ class Connection(
         while (true) {
             val input = checkNotNull(input)
             try {
-                println("Reading...")
+//                println("Reading...")
                 val line = withTimeout(TimeUnit.SECONDS.toMillis(60)) { input.readUTF8Line() }
                 println("Line read: ${line ?: "<null>"}")
                 if (line == null) {
@@ -140,7 +154,7 @@ class Connection(
     }
 
     private suspend fun writeLine(line: String) {
-        println("Sending $line...")
+//        println("Sending $line...")
         while (true) {
             try {
                 val output = checkNotNull(output)
@@ -164,7 +178,7 @@ class Connection(
     }
 
     private suspend fun sendToRpi(line: String) {
-        writeLine("$RPI_PREFIX$line")
+//        writeLine("$RPI_PREFIX$line")
     }
 
     suspend fun sendMovementAndWait(movement: Movement) {
@@ -173,6 +187,16 @@ class Connection(
             Movement.MOVE_FORWARD -> sendToArduino(MOVE_FORWARD_COMMAND)
             Movement.TURN_LEFT -> sendToArduino(TURN_LEFT_COMMAND)
         }
+        okCommandChannel.receive()
+    }
+
+    suspend fun sendMoveForwardWithDistanceAndWait(numberOfGrids: Int) {
+        sendToArduino(movementWithParameterCommand(Movement.MOVE_FORWARD, numberOfGrids * 10))
+        okCommandChannel.receive()
+    }
+
+    suspend fun sendTurnCommandWithCountAndWait(movement: Movement, turns: Int) {
+        sendToArduino(movementWithParameterCommand(movement, turns * 90))
         okCommandChannel.receive()
     }
 
@@ -199,5 +223,13 @@ class Connection(
 
     suspend fun sendArrowCommand(x: Int, y: Int, face: Direction) {
         sendToAndroid(arrowCommand(x, y, face))
+    }
+
+    suspend fun sendExplorationCommand() {
+        sendToRpi(EXPLORATION_COMMAND)
+    }
+
+    suspend fun sendFastestPathCommand() {
+        sendToRpi(FASTEST_PATH_COMMAND)
     }
 }

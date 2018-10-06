@@ -54,10 +54,13 @@ class MainController : Controller() {
 
     fun runExploration() {
         GlobalScope.launch(Dispatchers.JavaFx) {
+            if (connection.isConnected) {
+                connection.sendExplorationCommand()
+            }
             val speed = configurationModel.speed
             val robot = Robot(centerCell, explorationMaze, speed, connection)
             val sensors = if (!connection.isConnected) {
-                listOf(2, 3, 4, 5, 6).map { SimulatedSensor(it, 0..2, robot, realMaze) }
+                listOf(2, 3, 4, 5, 6).map { SimulatedSensor(it, SENSE_RANGE_SHORT, robot, realMaze) }
             } else {
                 listOf(3, 4, 5, 6, 8, 2).zip(connection.sensedDataChannels).map { (position, channel) ->
                     val senseRange = if (position == 8) SENSE_RANGE_LONG else SENSE_RANGE_SHORT
@@ -94,6 +97,9 @@ class MainController : Controller() {
 
     fun runFastestPath() {
         GlobalScope.launch(Dispatchers.JavaFx) {
+            if (connection.isConnected) {
+                connection.sendFastestPathCommand()
+            }
             val speed = configurationModel.speed
             val robot = Robot(centerCell, explorationMaze, speed, connection)
             displayRealMaze.value = false

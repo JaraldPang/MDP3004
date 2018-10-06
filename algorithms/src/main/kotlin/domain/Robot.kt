@@ -19,8 +19,9 @@ class Robot(
 
     private var sensors = listOf<Sensor>()
 
-    var movementCount = 0
-        private set
+    private val arrowsFound = hashMapOf<Pair<Int, Int>, Direction>()
+
+    private var movementCount = 0
 
     init {
         startProcessingArrowFound()
@@ -41,15 +42,13 @@ class Robot(
                         "r" -> Direction.RIGHT
                         else -> throw IllegalStateException("Unknown arrow found direction: $directionCommand")
                     }
-                    val (rowDiff, colDiff) = SIDES[direction.ordinal][Movement.TURN_RIGHT.ordinal]
-                    if (explorationMaze[row + rowDiff][col + colDiff] == CELL_OBSTACLE) {
-                        // The face of the obstacle = direction of robot.turnLeft()
-                        val arrowX = col + colDiff
-                        val arrowY = row + rowDiff
-                        val arrowFace = direction.turnLeft()
+                    if (explorationMaze[row][col] == CELL_OBSTACLE) {
                         if (connection.isConnected) {
-                            connection.sendArrowCommand(arrowX, arrowY, arrowFace)
+                            connection.sendArrowCommand(col, row, direction)
                         }
+                    } else {
+                        // The corresponding grid is not an obstacle (yet), cache it and check later
+                        arrowsFound[row to col] = direction
                     }
                 }
             }
@@ -64,28 +63,38 @@ class Robot(
         if (connection.isConnected) {
             connection.sendGetSensorDataCommand()
         }
+//        delay(100)
         val (centerRow, centerCol, direction) = centerCell
         for (sensor in sensors) {
             val sensedDistance = sensor.sense()
             val (rowDiff, colDiff, rowInc, colInc) = SENSOR_INFO[sensor.position][direction.ordinal]
-            if (sensedDistance == -1) {
-                for (i in sensor.senseRange) {
-                    val row = centerRow + rowDiff + rowInc * i
-                    val col = centerCol + colDiff + colInc * i
-                    if (!MazeModel.isOutsideOfMaze(row, col) && explorationMaze[row][col] == CELL_UNKNOWN) {
-                        explorationMaze[row][col] = CELL_SENSED
+            if (sensedDistance == 0) {  // Found an obstacle next to the robot
+                val row = centerRow + rowDiff
+                val col = centerCol + colDiff
+                if (!MazeModel.isOutsideOfMaze(row, col)) {
+                    if (explorationMaze[row][col] != CELL_UNKNOWN && explorationMaze[row][col] != CELL_OBSTACLE) {
+                        println("Warning: maze[$row][$col] was ${explorationMaze[row][col]} but setting to CELL_OBSTACLE")
+                    } else {
+                        explorationMaze[row][col] = CELL_OBSTACLE
+                        // Find an obstacle, check if any arrows found on it
+                        val arrowDirection = arrowsFound.remove(row to col)
+                        if (arrowDirection != null) {
+                            if (connection.isConnected) {
+                                connection.sendArrowCommand(col, row, arrowDirection)
+                            }
+                        }
                     }
                 }
-            } else {
-                for (i in sensor.senseRange.first..sensedDistance) {
+            } else if (sensedDistance in sensor.senseRange) {   // Accurate reading from the sensor
+                // e.g., 2 means 2 grids away from the robot is empty
+                for (i in 0 until sensedDistance) {
                     val row = centerRow + rowDiff + rowInc * i
                     val col = centerCol + colDiff + colInc * i
-                    if (!MazeModel.isOutsideOfMaze(row, col) && explorationMaze[row][col] == CELL_UNKNOWN) {
-                        if (i == sensedDistance) {
-                            explorationMaze[row][col] = CELL_OBSTACLE
-                        } else {
-                            explorationMaze[row][col] = CELL_SENSED
-                        }
+                    if (MazeModel.isOutsideOfMaze(row, col) || explorationMaze[row][col] == CELL_OBSTACLE) {
+                        break
+                    }
+                    if (explorationMaze[row][col] == CELL_UNKNOWN) {
+                        explorationMaze[row][col] = CELL_SENSED
                     }
                 }
             }
@@ -97,34 +106,35 @@ class Robot(
         }
     }
 
-    suspend fun turnLeft() {
+    suspend fun move(movement: Movement) {
+        println("Command $movement")
         if (!connection.isConnected) {
-            delay(1000L / (speed ?: 1))
+            delay(1000L / (speed ?: 3))
         }
+        movementCount++
+        if (connection.isConnected) {
+            connection.sendRobotCenter(centerCell)
+            connection.sendMovementAndWait(movement)
+            if (movementCount % 5 == 0) {
+                connection.sendCalibrationCommandAndWait()
+            }
+        }
+        when (movement) {   // Update on UI
+            Movement.TURN_RIGHT -> turnRight()
+            Movement.TURN_LEFT -> turnLeft()
+            Movement.MOVE_FORWARD -> moveForward()
+        }
+    }
+
+    private fun turnLeft() {
         centerCell.direction = centerCell.direction.turnLeft()
-        movementCount++
-        if (connection.isConnected) {
-            connection.sendRobotCenter(centerCell)
-            connection.sendMovementAndWait(Movement.TURN_LEFT)
-        }
     }
 
-    suspend fun turnRight() {
-        if (!connection.isConnected) {
-            delay(1000L / (speed ?: 1))
-        }
+    private fun turnRight() {
         centerCell.direction = centerCell.direction.turnRight()
-        movementCount++
-        if (connection.isConnected) {
-            connection.sendRobotCenter(centerCell)
-            connection.sendMovementAndWait(Movement.TURN_RIGHT)
-        }
     }
 
-    suspend fun moveForward() {
-        if (!connection.isConnected) {
-            delay(1000L / (speed ?: 1))
-        }
+    private fun moveForward() {
         val (centerRow, centerCol, currentDirection) = centerCell
         val (rowDiff, colDiff) = NEXT_CELL[MovementInfo(Movement.MOVE_FORWARD, currentDirection)]
             ?: throw IllegalStateException()
@@ -141,11 +151,6 @@ class Robot(
                 explorationMaze[row][frontCol]++
             }
             centerCell.col += colDiff
-        }
-        movementCount++
-        if (connection.isConnected) {
-            connection.sendRobotCenter(centerCell)
-            connection.sendMovementAndWait(Movement.MOVE_FORWARD)
         }
     }
 
@@ -173,23 +178,69 @@ class Robot(
     suspend fun turnToFaceUp() {
         when (centerCell.direction) {
             Direction.DOWN -> {
-                turnLeft()
-                turnLeft()
+                move(Movement.TURN_LEFT)
+                move(Movement.TURN_LEFT)
             }
-            Direction.LEFT -> turnRight()
-            Direction.RIGHT -> turnLeft()
+            Direction.LEFT -> move(Movement.TURN_RIGHT)
+            Direction.RIGHT -> move(Movement.TURN_LEFT)
             else -> {
             }
         }
     }
 
     suspend fun moveFollowingMovements(movements: List<Movement>) {
-        for (movement in movements) {
-            when (movement) {
-                Movement.TURN_RIGHT -> turnRight()
-                Movement.MOVE_FORWARD -> moveForward()
-                Movement.TURN_LEFT -> turnLeft()
+        if (movements.isEmpty()) {
+            return
+        }
+        val compactList = movements.compact()
+        println("CompactList: $compactList")
+        for ((movement, count) in compactList) {
+            if (movement == Movement.MOVE_FORWARD) {
+                for (i in 0 until count) {
+                    if (!connection.isConnected) {
+                        delay(1000L / (speed ?: 3))
+                    }
+                    moveForward()
+                }
+                if (connection.isConnected) {
+                    connection.sendMoveForwardWithDistanceAndWait(count)
+                }
+            } else {
+                for (i in 0 until count) {
+                    if (!connection.isConnected) {
+                        delay(1000L / (speed ?: 3))
+                    }
+                    if (movement == Movement.TURN_LEFT) {
+                        turnLeft()
+                    } else {
+                        turnRight()
+                    }
+                }
+                if (connection.isConnected) {
+                    connection.sendTurnCommandWithCountAndWait(movement, count)
+                }
+            }
+            movementCount++
+            if (connection.isConnected) {
+                if (movementCount % 5 == 0) {
+                    connection.sendCalibrationCommandAndWait()
+                }
             }
         }
     }
+}
+
+private fun List<Movement>.compact(): List<Pair<Movement, Int>> {
+    val compactList = mutableListOf<Pair<Movement, Int>>()
+    compactList += first() to 1
+    for (i in 1 until size) {
+        val movement = this[i]
+        val (lastMovement, count) = compactList.last()
+        if (movement == lastMovement && count < 3) {
+            compactList[compactList.lastIndex] = lastMovement to count + 1
+        } else {
+            compactList += movement to 1
+        }
+    }
+    return compactList
 }

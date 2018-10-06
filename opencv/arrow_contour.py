@@ -146,10 +146,7 @@ def main():
                             1.0, (255, 0, 0), 2)
             elif objectAreaRatio > 0.07:
                 arrows.append((10, a))
-                cv.drawContours(img, [c], -1, (0, 255, 0), 3)
-                cv.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
-                cv.putText(img, a, (cx, cy), cv.FONT_HERSHEY_SIMPLEX,
-                            1.0, (255, 0, 0), 2)
+
             elif objectAreaRatio > 0.033:
                 arrows.append((20, a))
                 cv.drawContours(img, [c], -1, (0, 255, 0), 3)

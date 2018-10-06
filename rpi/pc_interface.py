@@ -54,7 +54,7 @@ class PcWrapper:
             try:
                 if(next_msg is None):
                     next_msg = self.queue.get()
-                print("Flushing...")
+                print("Flushing PC interface...")
                 conn.sendall("{}\n".format(next_msg).encode())
                 next_msg = None
             except(socket.timeout,socket.error,ConnectionResetError):

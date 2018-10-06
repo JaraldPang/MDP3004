@@ -1,3 +1,7 @@
--data "haar" -vec "training.vec" -bg "negatives.txt" -numStages 5 -numPos 35 -numNeg 50 -w 80 -h 80 -numThreads -numStages=5 -mode ALL
+-data "haar" -vec "training.vec" -bg "negatives.txt" -numStages 5 -numPos 35 -numNeg 50 -w 80 -h 80 -numThreads 8 -numStages=5 -mode ALL
 
 -info "annotations.txt" -vec "training.vec" -bg "negatives.txt" -num 45 -w 80 -h 80
+
+You will require 
+ - a text file of paths to each negative image
+ - a vector file of positive images

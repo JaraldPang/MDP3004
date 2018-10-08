@@ -1,7 +1,13 @@
--data "haar" -vec "training.vec" -bg "negatives.txt" -numStages 5 -numPos 35 -numNeg 50 -w 80 -h 80 -numThreads 8 -numStages=5 -mode ALL
+-data "haar" -vec "final.vec" -bg "negatives.txt" -numStages 5 -numPos 35 -numNeg 50 -w 80 -h 80 -numThreads 8 -precacValBufSize 512 -precacIdxBufSize 512 -acceptanceRatioBreakValue 0.00001 -minHiteRate 0.999 -maxFalseAlarmRate 0.5 -mode ALL
 
 -info "annotations.txt" -vec "training.vec" -bg "negatives.txt" -num 45 -w 80 -h 80
 
 You will require 
  - a text file of paths to each negative image
  - a vector file of positive images
+
+try relative filepaths and absolute filepaths
+
+
+
+opencv_traincascade -data "haar" -vec "training.vec" -bg "negatives.txt" -numStages 5 -numPos 55 -numNeg 120 -w 60 -h 60 -numThreads 8 -precalcValBufSize 256 -precalcIdxBufSize 256 -acceptanceRatioBreakValue 0.00001 -minHiteRate 0.999 -mode ALL

@@ -7,16 +7,20 @@ from timeit import default_timer as timer
 def main():
 
 	arrow_cascade = cv.CascadeClassifier('cascade.xml')
-	img = cv.imread('testbed/20cm.jpg')
+	img = cv.imread('20cm.jpg')
 	#gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
 
-	arrows = arrow_cascade.detectMultiScale(img, 1.1, 5)
+	start = timer()
+	arrows = arrow_cascade.detectMultiScale(img, 1.3, 6)
 	#arrows = arrow_cascade.detectMultiScale(gray, 1.3, 5)
+	end = timer()
 
+	print("Time taken to recognize: {} seconds".format(end - start))
+	print("Number of arrows found: {}".format(len(arrows)))
+	
 	for (x,y,w,h) in arrows:
 		cv.rectangle(img,(x,y),(x+w,y+h),(255,0,0),2)
-		roi_color = img[y:y+h, x:x+w]
-
+		
 	plt.imshow(img,'gray')
 	plt.show()
 	#cv.imshow('img',img)

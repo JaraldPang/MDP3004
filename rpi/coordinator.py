@@ -1,18 +1,42 @@
-import threading,multiprocessing
+import threading
+from multiprocessing import Process,Pipe
 from pc_interface import PcWrapper
 from bluetooth_interface import BluetoothWrapper
 from arduino_interface import ArduinoWrapper
 from socket import SHUT_RDWR,timeout
 from bluetooth.btcommon import BluetoothError
+from img_recognition import ImageProcessor
 
 #The main method
 def main():
+
+    listener_endpoint, opencv_endpoint = Pipe()
+    listener_process = Process(target=initialize_listeners,args=(listener_endpoint))
+    opencv_process = Process(target=initialize_opencv,args=(listener_endpoint))
+    
+    listener_process.start()
+    opencv_process.start()
+
+    listener_process.join()
+    opencv_process.join()
+    pass
+
+def initialize_opencv(endpoint=None):
+    opencv_pipe = endpoint
+    cv_process = ImageProcessor()
+    capture_thread = threading.Thread(target=cv_process.capture,args=())
+    process_thread = threading.Thread(target=cv_process.identify,args=())
+
+
+
+def initialize_listeners(endpoint=None):
     pc_wrapper = PcWrapper()
     bt_wrapper = BluetoothWrapper()
     ar_wrapper = ArduinoWrapper()
     pc_thread = threading.Thread(target=listen_to_pc,args=(pc_wrapper,ar_wrapper,bt_wrapper))
     bt_thread = threading.Thread(target=listen_to_bluetooth,args=(bt_wrapper,pc_wrapper,ar_wrapper))
     ar_thread = threading.Thread(target=listen_to_arduino,args=(ar_wrapper,pc_wrapper,bt_wrapper))
+    opencv_thread
 
     #we utilize 3 threads due to GIL contention. Any more than 3 will incur context and lock switch overheads
     pc_thread.start()
@@ -23,11 +47,14 @@ def main():
     ar_thread.join()
     bt_thread.join()
 
-def listen_to_pc(pc_wrapper,arduino_wrapper=None,bt_wrapper=None):
+#will receive rpi_status
+def listen_to_pc(pc_wrapper,arduino_wrapper=None,bt_wrapper=None,opencv_pipe=None):
 
     #gets the connection object, the client's ip address and outbound port
     conn = pc_wrapper.accept_connection_and_flush()
-    #handshake with client
+    #do not capture unless told to do so
+    exploration_mode = False
+    hold_arduino_commands = False
     while(1):
         try:
             # encoding scheme is ASCII
@@ -41,9 +68,36 @@ def listen_to_pc(pc_wrapper,arduino_wrapper=None,bt_wrapper=None):
                 if(msg.endswith("\n")):
                     break
             print("RECEIVED FROM PC INTERFACE: {}.".format(msg))
-            if(msg.startswith("ar")):
-                print("PC WRITING TO ARDUINO: {}".format(msg))
-                arduino_wrapper.write(msg[2:])
+            if(msg.startswith("rpi")})
+                #strip direction marker from message
+                msg = msg[3:]
+                #determine message
+
+                #if message is status we are receiving robot position and orientation. use this as file name and write to opencv process
+                if(msg.startswith("status"))
+                    #signal new capture job
+                    opencv_pipe().send(msg[6:])
+                    print("New Camera Capture Job received")
+                    #there are 2 approaches 
+                    #1) block all further messages until camera is done. unknown if there are other messages received before or after 
+                    #2) enqueue signal, then enqueue all received commands. abit moot because PC waits for ack
+                    # - we explore 1) first. less complexity
+                    opencv_pipe().recv()
+                if(msg == "explore")
+                    exploration_mode = True
+                    print("Mode set to: Fastest")
+                elif(msg == "fastest")
+                    exploration_mode = False
+                    print("Mode set to: Exploration")
+
+            elif(msg.startswith("ar")):
+                if(exploration_mode):
+                    print("PC HOLDING ARDUINO: {}".format(msg))
+                    #reroute all messsages to the opencv thread. opencv thread now has command authority to release instructions by algorithm to arduino
+                    arduino_wrapper.hold(msg[2:])
+                else
+                    print("PC WRITING TO ARDUINO: {}".format(msg))
+                    arduino_wrapper.write(msg[2:])
             elif(msg.startswith("an")):
                 print("PC WRITING TO ANDROID: {}".format(msg))
                 bt_wrapper.write(msg[2:])
@@ -66,6 +120,7 @@ def listen_to_pc(pc_wrapper,arduino_wrapper=None,bt_wrapper=None):
     conn.shutdown(SHUT_RDWR)
     conn.close()
     print("Closing PC Listener")
+
 
 def listen_to_bluetooth(bt_wrapper,pc_wrapper=None,arduino_wrapper=None,):
     conn = bt_wrapper.accept_connection_and_flush()
@@ -124,4 +179,4 @@ def listen_to_arduino(ar_wrapper,pc_wrapper=None,bt_wrapper=None):
 #required
 if __name__ == '__main__':
     # execute only if run as a script
-    main()
+    initialize_listeners()

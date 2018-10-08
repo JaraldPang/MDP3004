@@ -1,9 +1,11 @@
 import os
 import serial
 import time
+from Queue import Queue
 
 
 class ArduinoWrapper():
+
     def __init__(self):
         if os.path.exists('/dev/ttyACM0') == True:
             self.ser = serial.Serial('/dev/ttyACM0', 115200)
@@ -34,3 +36,9 @@ class ArduinoWrapper():
 
     def get_connection(self):
         return self.ser
+
+    def hold(self,msg):
+        self.queue.put(msg)
+
+    def get_queue():
+        return self.queue

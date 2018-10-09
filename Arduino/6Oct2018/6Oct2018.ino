@@ -386,7 +386,7 @@ void moveLeft(double deg) {
 
   double pid;
   float targetTick;
-  int Set_Speed = (calibration_state == true) ? Speed_Calibration : Speed_Spin;
+  int Set_Speed = (calibration_state == true) ? Speed_Spin : Speed_Spin;
 
   integral = 0;
   encoderLeftCounter = encoderRightCounter = prevTick = 0;
@@ -438,12 +438,12 @@ void moveRight(double deg) {
 
   double pid;
   float targetTick;
-  int Set_Speed = (calibration_state == true) ? Speed_Calibration : Speed_Spin;
+  int Set_Speed = (calibration_state == true) ? Speed_Spin : Speed_Spin;
 
   integral = 0;
   encoderLeftCounter = encoderRightCounter = prevTick = 0;
 
-  if (deg <= 90) targetTick = deg * 4.155;//4.155(on maze)//4.175M;//4.186M;//4.19M;//4.185;//4.175L;
+  if (deg <= 90) targetTick = deg * 4.255;//4.155(on maze)//4.175M;//4.186M;//4.19M;//4.185;//4.175L;
   //4.148L;//4.15M;//4.170M;//4.175M;//4.21M;//4.205;//4.185;//4.175;
   //4.2;//4.185;//4.175L;//4.17L;
   //4.165;//4.1545L;//4.154L;//4.153L;
@@ -663,7 +663,7 @@ void calibrate_Robot_Position() {
     }
     Serial.println("In");
     turn++;
-    moveLeft(90);
+    moveRight(90);
     delay(500);
   }
   Serial.println("alok");

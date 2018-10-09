@@ -1,10 +1,11 @@
 import numpy
 import cv2 as cv
-import imutils
 from matplotlib import pyplot as plt
+import time
 
 def main():
 
+    t0 = time.time()
     arrows = []
     cam = cv.VideoCapture(0)
     cam.set(3, 1280)
@@ -16,73 +17,10 @@ def main():
     gray1 = cv.cvtColor(img1, cv.COLOR_BGR2GRAY)
     ret1, th1 = cv.threshold(gray1, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
     cnts1 = cv.findContours(th1, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
-    cnts1 = cnts1[0] if imutils.is_cv2() else cnts1[1]
-
-    # #loop
-    # while True:
-    #     #for video
-    #     _, img = cam.read()
-    #
-    #     blur = cv.GaussianBlur(img, (5, 5), 2)
-    #     gray = cv.cvtColor(blur, cv.COLOR_BGR2GRAY)
-    #     imgX = gray.shape[1]
-    #     imgY = gray.shape[0]
-    #     imgArea = imgX * imgY
-    #     ret, th = cv.threshold(gray, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
-    #     cnts = cv.findContours(th, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
-    #     cnts = cnts[0] if imutils.is_cv2() else cnts[1]
-    #     cv.line(img, (int(imgX / 3), 0), (int(imgX / 3), 1080), (255, 0, 0), 2)
-    #     cv.line(img, (int(2 * imgX / 3), 0), (int(2 * imgX / 3), 1080), (255, 0, 0), 2)
-    #
-    #     for (i, c) in enumerate(cnts):
-    #         M = cv.moments(c)
-    #         if M["m00"] != 0:
-    #             cx = int(M["m10"] / M["m00"])
-    #             cy = int(M["m01"] / M["m00"])
-    #             if imgX / 3 < cx < 2 * (imgX / 3):
-    #                 a = "center"
-    #             elif cx < imgX / 3:
-    #                 a = "left"
-    #             else:
-    #                 a = "right"
-    #         x, y, w, h = cv.boundingRect(c)
-    #         peri = cv.arcLength(c, True)
-    #         approx = cv.approxPolyDP(c, 0.01 * peri, True)
-    #         hull = cv.convexHull(c)
-    #         hullArea = float(cv.contourArea(hull))
-    #         objectAreaRatio = hullArea / imgArea
-    #         if (6 <= len(approx) <= 8 and cv.matchShapes(cnts1[0], c, 1, 0.0) < 0.25):
-    #             if objectAreaRatio > 0.13:
-    #                 arrows.append((0, a))
-    #                 print(objectAreaRatio)
-    #                 cv.drawContours(img, [c], -1, (0, 255, 0), 3)
-    #                 cv.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
-    #                 cv.putText(img, a, (cx, cy), cv.FONT_HERSHEY_SIMPLEX,
-    #                            1.0, (255, 0, 0), 2)
-    #             elif objectAreaRatio > 0.07:
-    #                 arrows.append((10, a))
-    #                 print(objectAreaRatio)
-    #                 cv.drawContours(img, [c], -1, (0, 255, 0), 3)
-    #                 cv.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
-    #                 cv.putText(img, a, (cx, cy), cv.FONT_HERSHEY_SIMPLEX,
-    #                            1.0, (255, 0, 0), 2)
-    #             elif objectAreaRatio > 0.033:
-    #                 arrows.append((20, a))
-    #                 print(objectAreaRatio)
-    #                 cv.drawContours(img, [c], -1, (0, 255, 0), 3)
-    #                 cv.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
-    #                 cv.putText(img, a, (cx, cy), cv.FONT_HERSHEY_SIMPLEX,
-    #                            1.0, (255, 0, 0), 2)
-    #             elif objectAreaRatio > 0.02:
-    #                 arrows.append((30, a))
-    #                 print(objectAreaRatio)
-    #                 cv.drawContours(img, [c], -1, (0, 255, 0), 3)
-    #                 cv.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
-    #                 cv.putText(img, a, (cx, cy), cv.FONT_HERSHEY_SIMPLEX,
-    #                            1.0, (255, 0, 0), 2)
+    cnts1 = cnts1[1]
 
     #read image
-    img = cv.imread('test/image20l30c40r.jpg', cv.IMREAD_UNCHANGED)
+    img = cv.imread('test/image0c.jpg', cv.IMREAD_UNCHANGED)
     #image preprocessing
     blur = cv.GaussianBlur(img, (5, 5), 2)
     gray = cv.cvtColor(blur, cv.COLOR_BGR2GRAY)
@@ -96,7 +34,7 @@ def main():
     #find contours in image
     ret, th = cv.threshold(gray, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
     cnts = cv.findContours(th, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
-    cnts = cnts[0] if imutils.is_cv2() else cnts[1]
+    cnts = cnts[1]
 
     #for each contour found
     for (i, c) in enumerate(cnts):
@@ -118,10 +56,9 @@ def main():
         peri = cv.arcLength(c, True)
         approx = cv.approxPolyDP(c, 0.01 * peri, True)
         #find area of the object
-        hull = cv.convexHull(c)
-        hullArea = float(cv.contourArea(hull))
+        objectArea = float(cv.contourArea(c))
         #find ratio of the area of object to the area of whole image
-        objectAreaRatio = hullArea/imgArea
+        objectAreaRatio = objectArea/imgArea
 
         #test for 10cm left and right (half arrow)
         # if (3 <= len(approx) <= 5 and 0.003 < objectAreaRatio < 0.06
@@ -137,24 +74,30 @@ def main():
         #if contour matches any of the conditions we are looking for, we append the distance and location
         #condition: 6-8 edges; matches given shape up to 0.25 likeliness; object to image area ratio
         if (6 <= len(approx) <= 8 and cv.matchShapes(cnts1[0], c, 1, 0.0) < 0.25):
-            if objectAreaRatio > 0.13:
+            if objectAreaRatio > 0.127:
                 arrows.append((0, a))
-                #print(objectAreaRatio)
+                print(objectAreaRatio)
                 cv.drawContours(img, [c], -1, (0, 255, 0), 3)
                 cv.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
                 cv.putText(img, a, (cx, cy), cv.FONT_HERSHEY_SIMPLEX,
                             1.0, (255, 0, 0), 2)
-            elif objectAreaRatio > 0.07:
+            elif objectAreaRatio > 0.055:
                 arrows.append((10, a))
-
-            elif objectAreaRatio > 0.033:
+                print(objectAreaRatio)
+                cv.drawContours(img, [c], -1, (0, 255, 0), 3)
+                cv.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
+                cv.putText(img, a, (cx, cy), cv.FONT_HERSHEY_SIMPLEX,
+                           1.0, (255, 0, 0), 2)
+            elif objectAreaRatio > 0.027:
                 arrows.append((20, a))
+                print(objectAreaRatio)
                 cv.drawContours(img, [c], -1, (0, 255, 0), 3)
                 cv.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
                 cv.putText(img, a, (cx, cy), cv.FONT_HERSHEY_SIMPLEX,
                             1.0, (255, 0, 0), 2)
-            elif objectAreaRatio > 0.02:
+            elif objectAreaRatio > 0.015:
                 arrows.append((30, a))
+                print(objectAreaRatio)
                 cv.drawContours(img, [c], -1, (0, 255, 0), 3)
                 cv.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
                 cv.putText(img, a, (cx, cy), cv.FONT_HERSHEY_SIMPLEX,
@@ -166,6 +109,9 @@ def main():
     cv.imwrite('houghlines3.jpg', img)
     # cv.imshow('', img)
     # cv.waitKey(1)
+
+    t1 = time.time()
+    print(t1-t0, "Seconds")
 
 if __name__ == '__main__':
     main()

@@ -194,40 +194,40 @@ void moveForward(double cm) {
       pid = computePID();
       //Serial.println("R/E1 : " + String((0.6 * Set_Speed) + pid) + " L/E2 : " + String((0.6 * Set_Speed) - pid));
       md.setSpeeds(
-        ((Set_Speed) - pid),
-        ((Set_Speed) + pid)
+          ((Set_Speed) - pid),
+          ((Set_Speed) + pid)
       );
     }
     while (encoderLeftCounter < targetTick - 50) {
       pid = computePID();
       //Serial.println("R/E1 : " + String((1.0 * Set_Speed) + pid) + " L/E2 : " + String((1.0 * Set_Speed) - pid));
       md.setSpeeds(
-        ((Set_Speed) - pid),
-        ((Set_Speed) + pid)
+          ((Set_Speed) - pid),
+          ((Set_Speed) + pid)
       );
     }
     while (encoderLeftCounter < targetTick - 25) {
       pid = computePID();
       //Serial.println("R/E1 : " + String((0.8 * Set_Speed) + pid) + " L/E2 : " + String((0.8 * Set_Speed) - pid));
       md.setSpeeds(
-        ((Set_Speed) - pid),
-        ((Set_Speed) + pid)
+          ((Set_Speed) - pid),
+          ((Set_Speed) + pid)
       );
     }
     while (encoderLeftCounter < targetTick - 15) {
       pid = computePID();
       //Serial.println("R/E1 : " + String((0.6 * Set_Speed) + pid) + " L/E2 : " + String((0.6 * Set_Speed) - pid));
       md.setSpeeds(
-        ((Set_Speed) - pid),
-        ((Set_Speed) + pid)
+          ((Set_Speed) - pid),
+          ((Set_Speed) + pid)
       );
     }
     while (encoderLeftCounter < targetTick) {
       pid = computePID();
       //Serial.println("R/E1 : " + String((0.5 * Set_Speed) + pid) + " L/E2 : " + String((0.5 * Set_Speed) - pid));
       md.setSpeeds(
-        ((Set_Speed) - pid),
-        ((Set_Speed) + pid)
+          ((Set_Speed) - pid),
+          ((Set_Speed) + pid)
       );
     }
   }
@@ -238,8 +238,8 @@ void moveForward(double cm) {
     while (encoderLeftCounter < targetTick) {
       pid = computePID();
       md.setSpeeds(
-        ((Set_Speed) - pid),
-        ((Set_Speed) + pid)
+          ((Set_Speed) - pid),
+          ((Set_Speed) + pid)
       );
     }
     //moveRight_sil(1);
@@ -252,30 +252,30 @@ void moveForward(double cm) {
       pid = computePID();
       //0.885
       md.setSpeeds(
-        ((Set_Speed) - pid),
-        ((Set_Speed) + pid)
+          ((Set_Speed) - pid),
+          ((Set_Speed) + pid)
       );
     }
 
     while (encoderLeftCounter < targetTick - 25) {
       pid = computePID();
       md.setSpeeds(
-        ((0.8 * Set_Speed) - pid),
-        ((0.8 * Set_Speed) + pid)
+          ((0.8 * Set_Speed) - pid),
+          ((0.8 * Set_Speed) + pid)
       );
     }
     while (encoderLeftCounter < targetTick - 15) {
       pid = computePID();
       md.setSpeeds(
-        ((Set_Speed) - pid),
-        ((Set_Speed) + pid)
+          ((Set_Speed) - pid),
+          ((Set_Speed) + pid)
       );
     }
     while (encoderLeftCounter < targetTick) {
       pid = computePID();
       md.setSpeeds(
-        ((Set_Speed) - pid),
-        ((Set_Speed) + pid)
+          ((Set_Speed) - pid),
+          ((Set_Speed) + pid)
       );
     }
     //to bypass the curve motion movement
@@ -288,30 +288,30 @@ void moveForward(double cm) {
     while (encoderLeftCounter < targetTick - 50) {
       pid = computePID();
       md.setSpeeds(
-        ((Set_Speed) - pid),
-        ((Set_Speed) + pid)
+          ((Set_Speed) - pid),
+          ((Set_Speed) + pid)
       );
     }
 
     while (encoderLeftCounter < targetTick - 25) {
       pid = computePID();
       md.setSpeeds(
-        ((Set_Speed) - pid),
-        ((Set_Speed) + pid)
+          ((Set_Speed) - pid),
+          ((Set_Speed) + pid)
       );
     }
     while (encoderLeftCounter < targetTick - 15) {
       pid = computePID();
       md.setSpeeds(
-        ((Set_Speed) - pid),
-        ((Set_Speed) + pid)
+          ((Set_Speed) - pid),
+          ((Set_Speed) + pid)
       );
     }
     while (encoderLeftCounter < targetTick) {
       pid = computePID();
       md.setSpeeds(
-        ((Set_Speed) - pid),
-        ((Set_Speed) + pid)
+          ((Set_Speed) - pid),
+          ((Set_Speed) + pid)
       );
     }
     //to bypass the curve motion movement
@@ -322,8 +322,8 @@ void moveForward(double cm) {
     while (encoderLeftCounter < targetTick) {
       pid = computePID();
       md.setSpeeds (
-        (Set_Speed - pid),
-        (Set_Speed + pid)
+          (Set_Speed - pid),
+          (Set_Speed + pid)
       );
       //Serial.println("M1setSpeed: " + String(int((Set_Speed - pid))) + ", M2setSpeed: " + String(int((Set_Speed + pid))));
       //Serial.println("M1Ticks: " + String(int((encoderRightCounter))) + ", M2Ticks: " + String(int((encoderLeftCounter))));
@@ -354,24 +354,24 @@ void moveReverse(int cm) {
   while (encoderLeftCounter < min(50, targetTick)) {
     pid = computePID();
     md.setSpeeds(
-      -((Set_Speed) - pid),
-      -((Set_Speed) + pid)
+        -((Set_Speed) - pid),
+        -((Set_Speed) + pid)
     );
   }
 
   while (encoderLeftCounter < targetTick - 50) {
     pid = computePID();
     md.setSpeeds(
-      -((Set_Speed) - pid),
-      -((Set_Speed) + pid)
+        -((Set_Speed) - pid),
+        -((Set_Speed) + pid)
     );
   }
 
   while (encoderLeftCounter < targetTick) {
     pid = computePID();
     md.setSpeeds(
-      -((Set_Speed) - pid),
-      -((Set_Speed) + pid)
+        -((Set_Speed) - pid),
+        -((Set_Speed) + pid)
     );
   }
 
@@ -409,22 +409,22 @@ void moveLeft(double deg) {
   while ( encoderLeftCounter < min(50, targetTick)) {
     pid = computePID();
     md.setSpeeds(
-      ((Set_Speed) - pid),
-      -((Set_Speed) + pid)
+        ((Set_Speed) - pid),
+        -((Set_Speed) + pid)
     );
   }
   while ( encoderLeftCounter < targetTick - 50) {
     pid = computePID();
     md.setSpeeds(
-      ((Set_Speed) - pid),
-      -((Set_Speed) + pid)
+        ((Set_Speed) - pid),
+        -((Set_Speed) + pid)
     );
   }
   while ( encoderLeftCounter < targetTick) {
     pid = computePID();
     md.setSpeeds(
-      ((Set_Speed) - pid),
-      -((Set_Speed) + pid));
+        ((Set_Speed) - pid),
+        -((Set_Speed) + pid));
   }
 
   md.setBrakes(Speed_Brake, Speed_Brake);
@@ -462,23 +462,23 @@ void moveRight(double deg) {
   while ( encoderLeftCounter < min(50, targetTick)) {
     pid = computePID();
     md.setSpeeds(
-      -((Set_Speed) - pid),
-      ((Set_Speed) + pid)
+        -((Set_Speed) - pid),
+        ((Set_Speed) + pid)
     );
   }
 
   while (encoderLeftCounter < targetTick - 50) {
     pid = computePID();
     md.setSpeeds(
-      -((Set_Speed) - pid),
-      ((Set_Speed) + pid)
+        -((Set_Speed) - pid),
+        ((Set_Speed) + pid)
     );
   }
   while (encoderLeftCounter < targetTick) {
     pid = computePID();
     md.setSpeeds(
-      -((Set_Speed) - pid),
-      ((Set_Speed) + pid)
+        -((Set_Speed) - pid),
+        ((Set_Speed) + pid)
     );
   }
 
@@ -618,155 +618,117 @@ void calibrate_Robot_Position() {
   int counterLeft = 0, counterRight = 0;
   calibration_state = true;
 
-  print_Median_SensorData_Grids();
-
-  // Angle Calibraton
-  while (abs(distTL - distTR) > ANGLE_TOL ||
-         (distTL > 0 && distTL < (WALL_GAP + wall_offset)) ||
-         (distTM > 0 && distTM < (WALL_GAP + wall_offset)) ||
-         (distTR > 0 && distTR < (WALL_GAP + wall_offset))) {
-
-    print_Median_SensorData_Grids();
-
-    // Front Wall Calibration
-    if ((distTL > 0 && distTL < WALL_GAP + wall_offset) ||
-        (distTM > 0 && distTM < WALL_GAP + wall_offset) ||
-        (distTR > 0 && distTR < 10)) {
-      moveReverse(calibrate_reverse_steps);
-    }
-    else{
-      break;
-    }
-
-    // if (counterLeft == 4 || counterRight == 4) {
-    //   break;
-    // }
-
-    //print_Median_SensorData_Grids();
-
-    // // Left > Right
-    // if (abs(distTL) > abs(distTR)) {
-    //   // Left More than 0 Less than 40
-    //   if (distTL < 0 || distTR > 40) {
-    //     moveRight(90);
-    //     counterRight++;
-    //   }
-    //   // Left Less than 0 or more than 40
-    //   else {
-    //     if (abs(distTL - distTR) > ANGLE_TOL &&
-    //         abs(distTL - distTR) < 0.75) {
-    //       moveRight(1);
-    //     } else
-    //       moveRight(((distTL - distTR) * 45) / (27.19 - 18.96));
-    //   }
-    // }
-    // // Right > Left
-    // else {
-    //   if (distTR < 0 || distTR > 40) {
-
-    //     moveLeft(90);
-    //     counterLeft++;
-    //   } else if (abs(distTR - distTL) > ANGLE_TOL &&
-    //              abs(distTR - distTL) < 0.75) {
-    //     moveLeft(1);
-    //   } else
-    //     moveLeft(((distTR - distTL) * 45) / (27.19 - 18.943));
-    // }
-
-  }
-
-  //updateSensorData();
-
-  calibration_state = false;
-
-  Serial.println("alok");
-  Serial.flush();
-  /*
-  calibration_state = true;
   int turn = 0;
   calibrated = false;
 
-
+  // while (abs(distTL - distTR) > ANGLE_TOL ||
+  //          (distTL > 0 && distTL < (WALL_GAP + wall_offset)) ||
+  //          (distTM > 0 && distTM < (WALL_GAP + wall_offset)) ||
+  //          (distTR > 0 && distTR < (WALL_GAP + wall_offset))) {
 
   //distance TL to TM = 7
   //distance TM to TR = 9
   //distance TL to TR = 16
 
   while (turn != 4) {
-    print_Calibrate_SensorData();
-    Serial.println("in");
+    print_Median_SensorData_Grids();
     //as long as can detect left, mid or right not in position
-    while ((dis1 > 0 && dis1 < (WALL_GAP - WALL_MIN_TOL)) ||
-          (dis2 > 0 && dis2 < (WALL_GAP - WALL_MIN_TOL)) ||
-          (dis3 > 0 && dis3 < (WALL_GAP - WALL_MIN_TOL)) ||
-           (dis1 > (WALL_GAP + WALL_MIN_TOL) && dis1 < (WALL_GAP + WALL_MAX_TOL)) ||
-            (dis2 > (WALL_GAP + WALL_MIN_TOL) && dis2 < (WALL_GAP + WALL_MAX_TOL)) ||
-             (dis3 > (WALL_GAP + WALL_MIN_TOL) && dis1 < (WALL_GAP + WALL_MAX_TOL))) {
-      //detects left and mid, not in position
-      if (((dis1 > 0 && dis1 < (WALL_GAP - WALL_MIN_TOL)) && (dis2 > 0 && dis2 < (WALL_GAP - WALL_MIN_TOL))) ||
-          ((dis1 > (WALL_GAP + WALL_MIN_TOL) && dis1 < (WALL_GAP + WALL_MAX_TOL)) && (dis2 > (WALL_GAP + WALL_MIN_TOL) && dis2 < (WALL_GAP + WALL_MAX_TOL)))) {
-        Serial.println("in2");
-        if (abs(dis1 - dis2) > ANGLE_TOL) {
-          Serial.println("in22");
-          calibrate_Robot_Angle(sensorTL, 1, sensorTM, 2, 8);
-          calibrateDistance(sensorTM, 2);
-          calibrate_Robot_Angle(sensorTL, 1, sensorTM, 2, 8);
-        } else {
-          calibrateDistance(sensorTM, 2);
-          calibrate_Robot_Angle(sensorTL, 1, sensorTM, 2, 8);
-        }
-      }
-      //detects mid and right, not in position
-      else if (((dis2 > 0 && dis2 < (WALL_GAP - WALL_MIN_TOL)) && (dis3 > 0 && dis3 < (WALL_GAP - WALL_MIN_TOL))) ||
-               ((dis2 > (WALL_GAP + WALL_MIN_TOL) && dis2 < (WALL_GAP + WALL_MAX_TOL)) && (dis3 > (WALL_GAP + WALL_MIN_TOL) && dis3 < (WALL_GAP + WALL_MAX_TOL)))) {
-        Serial.println("in3");
-        if (abs(dis2 - dis3) > ANGLE_TOL) {
-          calibrate_Robot_Angle(sensorTM, 2, sensorTR, 3, 9);
-          calibrateDistance(sensorTM, 2);
-          calibrate_Robot_Angle(sensorTM, 2, sensorTR, 3, 9);
-        } else {
-          calibrateDistance(sensorTM, 2);
-          calibrate_Robot_Angle(sensorTM, 2, sensorTR, 3, 9);
-        }
-      }
-      //detects left and right, not in position
-      else if (((dis1 > 0 && dis1 < (WALL_GAP - WALL_MIN_TOL)) && (dis3 > 0 && dis3 < (WALL_GAP - WALL_MIN_TOL))) ||
-               ((dis1 > (WALL_GAP + WALL_MIN_TOL) && dis1 < (WALL_GAP + WALL_MAX_TOL)) && (dis3 > (WALL_GAP + WALL_MIN_TOL) && dis3 < (WALL_GAP + WALL_MAX_TOL)))) {
-        Serial.println("in4");
-        if (abs(dis1 - dis3) > ANGLE_TOL) {
-          calibrate_Robot_Angle(sensorTL, 1, sensorTR, 3, 17);
-          calibrateDistance(sensorTL, 1);
-          calibrate_Robot_Angle(sensorTL, 1, sensorTR, 3, 17);
-        } else {
-          calibrateDistance(sensorTL, 1);
-          calibrate_Robot_Angle(sensorTL, 1, sensorTR, 3, 17);
-        }
-      }
-      //detects only left, not in position
-      else if ((dis1 > 0 && dis1 < (WALL_GAP - WALL_MIN_TOL)) || (dis1 > (WALL_GAP + WALL_MIN_TOL) && dis1 < (WALL_GAP + WALL_MAX_TOL))) {
-        calibrateDistance(sensorTL, 1);
-      }
-      //detects only mid, not in position
-      else if ((dis2 > 0 && dis2 < (WALL_GAP - WALL_MIN_TOL)) || (dis2 > (WALL_GAP + WALL_MIN_TOL) && dis2 < (WALL_GAP + WALL_MAX_TOL))) {
-        calibrateDistance(sensorTM, 2);
-      }
-      //detects only right, not in position
-      else if ((dis3 > 0 && dis3 < (WALL_GAP - WALL_MIN_TOL)) || (dis3 > (WALL_GAP + WALL_MIN_TOL) && dis3 < (WALL_GAP + WALL_MAX_TOL))) {
-        calibrateDistance(sensorTR, 3);
-      }
-      calibrated = true;
-    }
-    Serial.println("done");
-    moveLeft(90);
-    delay(500);
-    print_Calibrate_SensorData();
-    turn++;
-  }
-  Serial.println("alok");
-  Serial.flush();
-  calibration_state = false;
+    while ((distTL > 0 && distTL < (WALL_GAP - WALL_MIN_TOL)) ||
+            (distTM > 0 && distTM < (WALL_GAP - WALL_MIN_TOL)) ||
+            (distTR > 0 && distTR < (WALL_GAP - WALL_MIN_TOL)) ||
+            (distTL > (WALL_GAP + WALL_MIN_TOL) && distTL < (WALL_GAP + WALL_MAX_TOL)) ||
+            (distTM > (WALL_GAP + WALL_MIN_TOL) && distTM < (WALL_GAP + WALL_MAX_TOL)) ||
+            (distTR > (WALL_GAP + WALL_MIN_TOL) && distTL < (WALL_GAP + WALL_MAX_TOL))) {
 
-    */
+      //detects left and right, not in position
+      if (((distTL > 0 && distTL < (WALL_GAP - WALL_MIN_TOL)) && (distTR > 0 && distTR < (WALL_GAP - WALL_MIN_TOL))) ||
+              ((distTL > (WALL_GAP + WALL_MIN_TOL) && distTL < (WALL_GAP + WALL_MAX_TOL)) && (distTR > (WALL_GAP + WALL_MIN_TOL) && distTR < (WALL_GAP + WALL_MAX_TOL)))) {
+        if (abs(distTL - distTR) > ANGLE_TOL) {
+          calibrate_Robot_Angle(sensorTL, 1, sensorTR, 3, 17);
+          calibrateDistance(sensorTL, 1);
+          calibrate_Robot_Angle(sensorTL, 1, sensorTR, 3, 17);
+        } else {
+          calibrateDistance(sensorTL, 1);
+          calibrate_Robot_Angle(sensorTL, 1, sensorTR, 3, 17);
+        }
+
+        calibrated = true;
+      }
+      Serial.println("done");
+      moveLeft(90);
+      delay(500);
+      print_Calibrate_SensorData();
+      turn++;
+    }
+    Serial.println("alok");
+    Serial.flush();
+    calibration_state = false;
+
+    /*
+      while (abs(distTL - distTR) > ANGLE_TOL ||
+              (distTL > 0 && distTL < (WALL_GAP + wall_offset)) ||
+              (distTM > 0 && distTM < (WALL_GAP + wall_offset)) ||
+              (distTR > 0 && distTR < (WALL_GAP + wall_offset))) {
+
+        print_Median_SensorData_Grids();
+
+        // Front Wall Calibration
+        if ((distTL > 0 && distTL < WALL_GAP + wall_offset) ||
+                (distTM > 0 && distTM < WALL_GAP + wall_offset) ||
+                (distTR > 0 && distTR < 10)) {
+          moveReverse(calibrate_reverse_steps);
+        }
+        else {
+          break;
+        }
+
+        // if (counterLeft == 4 || counterRight == 4) {
+        //   break;
+        // }
+
+        //print_Median_SensorData_Grids();
+
+        // // Left > Right
+        // if (abs(distTL) > abs(distTR)) {
+        //   // Left More than 0 Less than 40
+        //   if (distTL < 0 || distTR > 40) {
+        //     moveRight(90);
+        //     counterRight++;
+        //   }
+        //   // Left Less than 0 or more than 40
+        //   else {
+        //     if (abs(distTL - distTR) > ANGLE_TOL &&
+        //         abs(distTL - distTR) < 0.75) {
+        //       moveRight(1);
+        //     } else
+        //       moveRight(((distTL - distTR) * 45) / (27.19 - 18.96));
+        //   }
+        // }
+        // // Right > Left
+        // else {
+        //   if (distTR < 0 || distTR > 40) {
+
+        //     moveLeft(90);
+        //     counterLeft++;
+        //   } else if (abs(distTR - distTL) > ANGLE_TOL &&
+        //              abs(distTR - distTL) < 0.75) {
+        //     moveLeft(1);
+        //   } else
+        //     moveLeft(((distTR - distTL) * 45) / (27.19 - 18.943));
+        // }
+
+      }
+
+      //updateSensorData();
+
+      calibration_state = false;
+
+      Serial.println("alok");
+      Serial.flush();
+      /*
+
+        */
+  }
 }
 
 void calibrate_Robot_Angle(SharpIR sensorL, int arrL, SharpIR sensorR, int arrR, int dist) {
@@ -819,6 +781,11 @@ void calibrateDistance(SharpIR sensor, int arr) {
   }
 }
 
+void calibration_Step() {
+
+  moveRight(90);
+
+}
 /*
      ********************************************************************************************************************************
 */

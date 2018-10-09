@@ -630,8 +630,8 @@ void calibrate_Robot_Position() {
   //distance TM to TR = 9
   //distance TL to TR = 16
 
-  while (turn != 4) {
-    print_Median_SensorData_Grids();
+  while (turn < 4) {
+    print_Median_SensorData();
     //as long as can detect left, mid or right not in position
     while ((distTL > 0 && distTL < (WALL_GAP - WALL_MIN_TOL)) ||
             (distTM > 0 && distTM < (WALL_GAP - WALL_MIN_TOL)) ||
@@ -641,8 +641,10 @@ void calibrate_Robot_Position() {
             (distTR > (WALL_GAP + WALL_MIN_TOL) && distTL < (WALL_GAP + WALL_MAX_TOL))) {
 
       //detects left and right, not in position
-      if (((distTL > 0 && distTL < (WALL_GAP - WALL_MIN_TOL)) && (distTR > 0 && distTR < (WALL_GAP - WALL_MIN_TOL))) ||
-              ((distTL > (WALL_GAP + WALL_MIN_TOL) && distTL < (WALL_GAP + WALL_MAX_TOL)) && (distTR > (WALL_GAP + WALL_MIN_TOL) && distTR < (WALL_GAP + WALL_MAX_TOL)))) {
+      if (((distTL > 0 && distTL < (WALL_GAP - WALL_MIN_TOL)) &&
+              (distTR > 0 && distTR < (WALL_GAP - WALL_MIN_TOL))) ||
+              ((distTL > (WALL_GAP + WALL_MIN_TOL) && distTL < (WALL_GAP + WALL_MAX_TOL)) &&
+               (distTR > (WALL_GAP + WALL_MIN_TOL) && distTR < (WALL_GAP + WALL_MAX_TOL)))) {
         if (abs(distTL - distTR) > ANGLE_TOL) {
           calibrate_Robot_Angle(sensorTL, 1, sensorTR, 3, 17);
           calibrateDistance(sensorTL, 1);
@@ -651,84 +653,88 @@ void calibrate_Robot_Position() {
           calibrateDistance(sensorTL, 1);
           calibrate_Robot_Angle(sensorTL, 1, sensorTR, 3, 17);
         }
-
         calibrated = true;
+        break;
       }
-      Serial.println("done");
-      moveLeft(90);
-      delay(500);
-      print_Calibrate_SensorData();
-      turn++;
+      else{
+        Serial.println("Break Break");
+        break;
+      }
     }
-    Serial.println("alok");
-    Serial.flush();
+    Serial.println("In");
+    turn++;
+    moveLeft(90);
+    delay(500);
+  }
+  Serial.println("alok");
+  Serial.flush();
+  calibration_state = false;
+
+  /*
+    while (abs(distTL - distTR) > ANGLE_TOL ||
+            (distTL > 0 && distTL < (WALL_GAP + wall_offset)) ||
+            (distTM > 0 && distTM < (WALL_GAP + wall_offset)) ||
+            (distTR > 0 && distTR < (WALL_GAP + wall_offset))) {
+
+      print_Median_SensorData_Grids();
+
+      // Front Wall Calibration
+      if ((distTL > 0 && distTL < WALL_GAP + wall_offset) ||
+              (distTM > 0 && distTM < WALL_GAP + wall_offset) ||
+              (distTR > 0 && distTR < 10)) {
+        moveReverse(calibrate_reverse_steps);
+      }
+      else {
+        break;
+      }
+
+      // if (counterLeft == 4 || counterRight == 4) {
+      //   break;
+      // }
+
+      //print_Median_SensorData_Grids();
+
+      // // Left > Right
+      // if (abs(distTL) > abs(distTR)) {
+      //   // Left More than 0 Less than 40
+      //   if (distTL < 0 || distTR > 40) {
+      //     moveRight(90);
+      //     counterRight++;
+      //   }
+      //   // Left Less than 0 or more than 40
+      //   else {
+      //     if (abs(distTL - distTR) > ANGLE_TOL &&
+      //         abs(distTL - distTR) < 0.75) {
+      //       moveRight(1);
+      //     } else
+      //       moveRight(((distTL - distTR) * 45) / (27.19 - 18.96));
+      //   }
+      // }
+      // // Right > Left
+      // else {
+      //   if (distTR < 0 || distTR > 40) {
+
+      //     moveLeft(90);
+      //     counterLeft++;
+      //   } else if (abs(distTR - distTL) > ANGLE_TOL &&
+      //              abs(distTR - distTL) < 0.75) {
+      //     moveLeft(1);
+      //   } else
+      //     moveLeft(((distTR - distTL) * 45) / (27.19 - 18.943));
+      // }
+
+    }
+
+    //updateSensorData();
+
     calibration_state = false;
 
+    Serial.println("alok");
+    Serial.flush();
     /*
-      while (abs(distTL - distTR) > ANGLE_TOL ||
-              (distTL > 0 && distTL < (WALL_GAP + wall_offset)) ||
-              (distTM > 0 && distTM < (WALL_GAP + wall_offset)) ||
-              (distTR > 0 && distTR < (WALL_GAP + wall_offset))) {
 
-        print_Median_SensorData_Grids();
+      */
 
-        // Front Wall Calibration
-        if ((distTL > 0 && distTL < WALL_GAP + wall_offset) ||
-                (distTM > 0 && distTM < WALL_GAP + wall_offset) ||
-                (distTR > 0 && distTR < 10)) {
-          moveReverse(calibrate_reverse_steps);
-        }
-        else {
-          break;
-        }
-
-        // if (counterLeft == 4 || counterRight == 4) {
-        //   break;
-        // }
-
-        //print_Median_SensorData_Grids();
-
-        // // Left > Right
-        // if (abs(distTL) > abs(distTR)) {
-        //   // Left More than 0 Less than 40
-        //   if (distTL < 0 || distTR > 40) {
-        //     moveRight(90);
-        //     counterRight++;
-        //   }
-        //   // Left Less than 0 or more than 40
-        //   else {
-        //     if (abs(distTL - distTR) > ANGLE_TOL &&
-        //         abs(distTL - distTR) < 0.75) {
-        //       moveRight(1);
-        //     } else
-        //       moveRight(((distTL - distTR) * 45) / (27.19 - 18.96));
-        //   }
-        // }
-        // // Right > Left
-        // else {
-        //   if (distTR < 0 || distTR > 40) {
-
-        //     moveLeft(90);
-        //     counterLeft++;
-        //   } else if (abs(distTR - distTL) > ANGLE_TOL &&
-        //              abs(distTR - distTL) < 0.75) {
-        //     moveLeft(1);
-        //   } else
-        //     moveLeft(((distTR - distTL) * 45) / (27.19 - 18.943));
-        // }
-
-      }
-
-      //updateSensorData();
-
-      calibration_state = false;
-
-      Serial.println("alok");
-      Serial.flush();
-      /*
-
-        */
-  }
 }
 
 void calibrate_Robot_Angle(SharpIR sensorL, int arrL, SharpIR sensorR, int arrR, int dist) {
@@ -932,8 +938,11 @@ void print_Median_SensorData() {
   output += String(distBRB); output += ",";
   output += String(distBLT);
 
-  Serial.println("an" + output);
-  Serial.flush();
+  // Output to Serial
+  if (calibration_state == false) {
+    Serial.println("alsensor" + output);
+    Serial.flush();
+  }
 }
 
 double calibrate_SensorValue(double dist, int category) {

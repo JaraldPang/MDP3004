@@ -11,8 +11,12 @@ from img_recognition import ImageProcessor
 def main():
 
     listener_endpoint, opencv_endpoint = Pipe()
-    listener_process = Process(target=initialize_listeners,args=(listener_endpoint))
-    opencv_process = Process(target=initialize_opencv,args=(listener_endpoint))
+    pc_wrapper = PcWrapper()
+    bt_wrapper = BluetoothWrapper()
+    ar_wrapper = ArduinoWrapper()
+
+    listener_process = Process(target=initialize_listeners,args=(listener_endpoint,pc_wrapper,bt_wrapper,ar_wrapper))
+    opencv_process = Process(target=initialize_opencv,args=(listener_endpoint,pc_wrapper))
     
     listener_process.start()
     opencv_process.start()
@@ -21,22 +25,21 @@ def main():
     opencv_process.join()
     pass
 
-def initialize_opencv(endpoint=None):
-    opencv_pipe = endpoint
+def initialize_opencv(pipe_endpoint=None,pc_wrapper=None):
     cv_process = ImageProcessor()
-    capture_thread = threading.Thread(target=cv_process.capture,args=())
-    process_thread = threading.Thread(target=cv_process.identify,args=())
+    capture_thread = threading.Thread(target=cv_process.capture,args=(pipe_endpoint,))
+    process_thread = threading.Thread(target=cv_process.identify,args=(pipe_endpoint,pc_wrapper))
 
+    capture_thread.start()
+    process_thread.start()
 
+    capture_thread.join()
+    process_thread.join()
 
-def initialize_listeners(endpoint=None):
-    pc_wrapper = PcWrapper()
-    bt_wrapper = BluetoothWrapper()
-    ar_wrapper = ArduinoWrapper()
+def initialize_listeners(pipe_endpoint,pc_wrapper,bt_wrapper,ar_wrapper):
     pc_thread = threading.Thread(target=listen_to_pc,args=(pc_wrapper,ar_wrapper,bt_wrapper))
     bt_thread = threading.Thread(target=listen_to_bluetooth,args=(bt_wrapper,pc_wrapper,ar_wrapper))
     ar_thread = threading.Thread(target=listen_to_arduino,args=(ar_wrapper,pc_wrapper,bt_wrapper))
-    opencv_thread
 
     #we utilize 3 threads due to GIL contention. Any more than 3 will incur context and lock switch overheads
     pc_thread.start()
@@ -72,9 +75,16 @@ def listen_to_pc(pc_wrapper,arduino_wrapper=None,bt_wrapper=None,opencv_pipe=Non
                 #strip direction marker from message
                 msg = msg[3:]
                 #determine message
-
-                #if message is status we are receiving robot position and orientation. use this as file name and write to opencv process
-                if(msg.startswith("status"))
+                if(msg == "explore")
+                    exploration_mode = True
+                    print("Mode set to: Fastest")
+                    continue
+                elif(msg == "fastest")
+                    exploration_mode = False
+                    print("Mode set to: Exploration")
+                    continue
+                #if msg is not empty, then it is robot's location and orientation
+                elif(msg is not None)
                     #signal new capture job
                     opencv_pipe().send(msg[6:])
                     print("New Camera Capture Job received")
@@ -83,13 +93,6 @@ def listen_to_pc(pc_wrapper,arduino_wrapper=None,bt_wrapper=None,opencv_pipe=Non
                     #2) enqueue signal, then enqueue all received commands. abit moot because PC waits for ack
                     # - we explore 1) first. less complexity
                     opencv_pipe().recv()
-                if(msg == "explore")
-                    exploration_mode = True
-                    print("Mode set to: Fastest")
-                elif(msg == "fastest")
-                    exploration_mode = False
-                    print("Mode set to: Exploration")
-
             elif(msg.startswith("ar")):
                 if(exploration_mode):
                     print("PC HOLDING ARDUINO: {}".format(msg))

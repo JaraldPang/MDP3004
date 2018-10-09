@@ -16,8 +16,12 @@ def main():
     ar_wrapper = ArduinoWrapper()
 
     listener_process = Process(target=initialize_listeners,args=(listener_endpoint,pc_wrapper,bt_wrapper,ar_wrapper))
-    opencv_process = Process(target=initialize_opencv,args=(listener_endpoint,pc_wrapper))
+    opencv_process = Process(target=initialize_opencv,args=(listener_endpoint,bt_wrapper))
     
+    #set daemon so that when main process ends the child processeswill die also
+    listener_process.daemon = True
+    opencv_process = True
+
     listener_process.start()
     opencv_process.start()
 
@@ -25,10 +29,10 @@ def main():
     opencv_process.join()
     pass
 
-def initialize_opencv(pipe_endpoint=None,pc_wrapper=None):
+def initialize_opencv(pipe_endpoint=None,bt_wrapper=None):
     cv_process = ImageProcessor()
     capture_thread = threading.Thread(target=cv_process.capture,args=(pipe_endpoint,))
-    process_thread = threading.Thread(target=cv_process.identify,args=(pipe_endpoint,pc_wrapper))
+    process_thread = threading.Thread(target=cv_process.identify,args=(pipe_endpoint,bt_wrapper))
 
     capture_thread.start()
     process_thread.start()
@@ -72,8 +76,6 @@ def listen_to_pc(pc_wrapper,arduino_wrapper=None,bt_wrapper=None,opencv_pipe=Non
                     break
             print("RECEIVED FROM PC INTERFACE: {}.".format(msg))
             if(msg.startswith("rpi")})
-                #strip direction marker from message
-                msg = msg[3:]
                 #determine message
                 if(msg == "explore")
                     exploration_mode = True
@@ -86,13 +88,13 @@ def listen_to_pc(pc_wrapper,arduino_wrapper=None,bt_wrapper=None,opencv_pipe=Non
                 #if msg is not empty, then it is robot's location and orientation
                 elif(msg is not None)
                     #signal new capture job
-                    opencv_pipe().send(msg[6:])
+                    opencv_pipe().send(msg[3:])
                     print("New Camera Capture Job received")
                     #there are 2 approaches 
                     #1) block all further messages until camera is done. unknown if there are other messages received before or after 
                     #2) enqueue signal, then enqueue all received commands. abit moot because PC waits for ack
                     # - we explore 1) first. less complexity
-                    opencv_pipe().recv()
+                    print(opencv_pipe().recv())
             elif(msg.startswith("ar")):
                 if(exploration_mode):
                     print("PC HOLDING ARDUINO: {}".format(msg))

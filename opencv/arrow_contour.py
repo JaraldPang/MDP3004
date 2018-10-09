@@ -44,7 +44,8 @@ def getArrowLocation(arrows, robotLocation, robotDir):
     return arrowLocArray
 
 
-def getImageLocation(sampleImg, actualImage, arrows):
+def getImageLocation(sampleImg, actualImage):
+    arrows = []
     # get sample image contours
     ret, th = cv.threshold(actualImage, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
     cnts = cv.findContours(th, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
@@ -89,6 +90,7 @@ def getImageLocation(sampleImg, actualImage, arrows):
                 arrows.append((2, a))
             elif objectAreaRatio > 0.015:
                 arrows.append((3, a))
+    return arrows
 
 
 def main():
@@ -105,7 +107,7 @@ def main():
     # image preprocessing
     blur = cv.GaussianBlur(capturedImage, (5, 5), 2)
     gray = cv.cvtColor(blur, cv.COLOR_BGR2GRAY)
-    getImageLocation(img, gray, arrows)
+    arrows = getImageLocation(img, gray)
     if arrows:
         arrowLoc = getArrowLocation(arrows, robotLocation, robotDir)
 

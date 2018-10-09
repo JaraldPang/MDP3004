@@ -141,6 +141,6 @@ class ImageProcessor():
 			arrows.append((2, a))
 		    elif objectAreaRatio > 0.015:
 	    		arrows.append((3, a))
-            return arrows
+            	return arrows
 
 

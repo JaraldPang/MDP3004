@@ -109,8 +109,7 @@ class ImageProcessor():
 			if (6 <= len(approx) <= 8 and cv.matchShapes(cnts1[0], c, 1, 0.0) < 0.25):
 				# find X-axis of contour
 				M = cv.moments(c)
-				if M["m00"] != 0:
-					cx = int(M["m10"] / M["m00"])
+				cx = int(M["m10"] / M["m00"])
 				# find which part of the image the contour is on
 				if imgX / 3 < cx < 2 * (imgX / 3):
 					a = "center"

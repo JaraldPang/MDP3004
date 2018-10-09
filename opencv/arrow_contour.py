@@ -19,7 +19,7 @@ def main():
     cnts1 = cnts1[1]
 
     #read image
-    img = cv.imread('test/image20c.jpg', cv.IMREAD_UNCHANGED)
+    img = cv.imread('test/image40c.jpg', cv.IMREAD_UNCHANGED)
     #image preprocessing
     blur = cv.GaussianBlur(img, (5, 5), 2)
     gray = cv.cvtColor(blur, cv.COLOR_BGR2GRAY)
@@ -37,18 +37,6 @@ def main():
     t0 = time.time()
     #for each contour found
     for (i, c) in enumerate(cnts):
-        #find X-axis of contour
-        M = cv.moments(c)
-        if M["m00"] != 0:
-            cx = int(M["m10"] / M["m00"])
-            cy = int(M["m01"] / M["m00"])
-            #find which part of the image the contour is on
-            if imgX/3 < cx < 2*(imgX/3):
-                a = "center"
-            elif cx < imgX/3:
-                a = "left"
-            else:
-                a = "right"
         #get info to draw bounding rectagle
         x, y, w, h = cv.boundingRect(c)
         #find number of edges the object has
@@ -73,6 +61,17 @@ def main():
         #if contour matches any of the conditions we are looking for, we append the distance and location
         #condition: 6-8 edges; matches given shape up to 0.25 likeliness; object to image area ratio
         if (6 <= len(approx) <= 8 and cv.matchShapes(cnts1[0], c, 1, 0.0) < 0.25):
+            # find X-axis of contour
+            M = cv.moments(c)
+            cx = int(M["m10"] / M["m00"])
+            cy = int(M["m01"] / M["m00"])
+            # find which part of the image the contour is on
+            if imgX / 3 < cx < 2 * (imgX / 3):
+                a = "center"
+            elif cx < imgX / 3:
+                a = "left"
+            else:
+                a = "right"
             if objectAreaRatio > 0.127:
                 arrows.append((0, a))
                 print(objectAreaRatio)

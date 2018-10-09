@@ -16,11 +16,11 @@ def main():
     ar_wrapper = ArduinoWrapper()
 
     listener_process = Process(target=initialize_listeners,args=(listener_endpoint,pc_wrapper,bt_wrapper,ar_wrapper))
-    opencv_process = Process(target=initialize_opencv,args=(listener_endpoint,bt_wrapper))
+    opencv_process = Process(target=initialize_opencv,args=(opencv_endpoint,bt_wrapper))
     
     #set daemon so that when main process ends the child processeswill die also
     listener_process.daemon = True
-    opencv_process = True
+    opencv_process.daemon = True
 
     listener_process.start()
     opencv_process.start()
@@ -32,16 +32,16 @@ def main():
 def initialize_opencv(pipe_endpoint=None,bt_wrapper=None):
     cv_process = ImageProcessor()
     capture_thread = threading.Thread(target=cv_process.capture,args=(pipe_endpoint,))
-    process_thread = threading.Thread(target=cv_process.identify,args=(pipe_endpoint,bt_wrapper))
+    #process_thread = threading.Thread(target=cv_process.identify,args=(pipe_endpoint,bt_wrapper))
 
     capture_thread.start()
-    process_thread.start()
+    #process_thread.start()
 
     capture_thread.join()
-    process_thread.join()
+    #process_thread.join()
 
 def initialize_listeners(pipe_endpoint,pc_wrapper,bt_wrapper,ar_wrapper):
-    pc_thread = threading.Thread(target=listen_to_pc,args=(pc_wrapper,ar_wrapper,bt_wrapper))
+    pc_thread = threading.Thread(target=listen_to_pc,args=(pc_wrapper,ar_wrapper,bt_wrapper,pipe_endpoint))
     bt_thread = threading.Thread(target=listen_to_bluetooth,args=(bt_wrapper,pc_wrapper,ar_wrapper))
     ar_thread = threading.Thread(target=listen_to_arduino,args=(ar_wrapper,pc_wrapper,bt_wrapper))
 
@@ -61,7 +61,6 @@ def listen_to_pc(pc_wrapper,arduino_wrapper=None,bt_wrapper=None,opencv_pipe=Non
     conn = pc_wrapper.accept_connection_and_flush()
     #do not capture unless told to do so
     exploration_mode = False
-    hold_arduino_commands = False
     while(1):
         try:
             # encoding scheme is ASCII
@@ -71,36 +70,37 @@ def listen_to_pc(pc_wrapper,arduino_wrapper=None,bt_wrapper=None,opencv_pipe=Non
                 char = conn.recv(1).decode('utf-8')
                 if(char is None or char is ""):
                     raise ConnectionResetError("Malformed string received: {}".format(msg))
-                msg += char
-                if(msg.endswith("\n")):
+                if(char == "\n"):
                     break
+                msg += char
             print("RECEIVED FROM PC INTERFACE: {}.".format(msg))
-            if(msg.startswith("rpi")})
+            if(msg.startswith("rpi")):
                 #determine message
-                if(msg == "explore")
+                msg = msg[3:]
+                if(msg == "explore"):
                     exploration_mode = True
-                    print("Mode set to: Fastest")
-                    continue
-                elif(msg == "fastest")
-                    exploration_mode = False
                     print("Mode set to: Exploration")
                     continue
+                elif(msg == "fastest"):
+                    exploration_mode = False
+                    print("Mode set to: Fastest")
+                    continue
                 #if msg is not empty, then it is robot's location and orientation
-                elif(msg is not None)
+                elif(msg):
                     #signal new capture job
-                    opencv_pipe().send(msg[3:])
+                    opencv_pipe.send(msg)
                     print("New Camera Capture Job received")
                     #there are 2 approaches 
                     #1) block all further messages until camera is done. unknown if there are other messages received before or after 
                     #2) enqueue signal, then enqueue all received commands. abit moot because PC waits for ack
                     # - we explore 1) first. less complexity
-                    print(opencv_pipe().recv())
+                    print(opencv_pipe.recv())
             elif(msg.startswith("ar")):
-                if(exploration_mode):
-                    print("PC HOLDING ARDUINO: {}".format(msg))
+                #if(exploration_mode):
+                #   print("PC HOLDING ARDUINO: {}".format(msg))
                     #reroute all messsages to the opencv thread. opencv thread now has command authority to release instructions by algorithm to arduino
-                    arduino_wrapper.hold(msg[2:])
-                else
+                #   arduino_wrapper.hold(msg[2:])
+                #else:
                     print("PC WRITING TO ARDUINO: {}".format(msg))
                     arduino_wrapper.write(msg[2:])
             elif(msg.startswith("an")):
@@ -184,4 +184,4 @@ def listen_to_arduino(ar_wrapper,pc_wrapper=None,bt_wrapper=None):
 #required
 if __name__ == '__main__':
     # execute only if run as a script
-    initialize_listeners()
+    main()

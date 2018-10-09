@@ -1,7 +1,7 @@
 import os
 import serial
 import time
-from Queue import Queue
+from queue import Queue
 
 
 class ArduinoWrapper():
@@ -14,7 +14,7 @@ class ArduinoWrapper():
             self.ser = serial.Serial('/dev/ttyACM1', 115200)
             print("Listening to Arduino interface....")
         else:
-            raise Exception("Arduino interface not detected...")
+           raise Exception("Arduino interface not detected...")
 
     def reconnect(self):
         while(1):
@@ -36,9 +36,3 @@ class ArduinoWrapper():
 
     def get_connection(self):
         return self.ser
-
-    def hold(self,msg):
-        self.queue.put(msg)
-
-    def get_queue():
-        return self.queue

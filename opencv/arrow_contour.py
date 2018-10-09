@@ -4,7 +4,6 @@ from matplotlib import pyplot as plt
 import time
 
 def main():
-
     t0 = time.time()
     arrows = []
     cam = cv.VideoCapture(0)
@@ -20,7 +19,7 @@ def main():
     cnts1 = cnts1[1]
 
     #read image
-    img = cv.imread('test/image0c.jpg', cv.IMREAD_UNCHANGED)
+    img = cv.imread('test/image20c.jpg', cv.IMREAD_UNCHANGED)
     #image preprocessing
     blur = cv.GaussianBlur(img, (5, 5), 2)
     gray = cv.cvtColor(blur, cv.COLOR_BGR2GRAY)
@@ -35,7 +34,7 @@ def main():
     ret, th = cv.threshold(gray, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
     cnts = cv.findContours(th, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
     cnts = cnts[1]
-
+    t0 = time.time()
     #for each contour found
     for (i, c) in enumerate(cnts):
         #find X-axis of contour

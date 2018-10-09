@@ -3,6 +3,7 @@ import numpy
 from picamera import PiCamera
 from picamera.array import PiRGBArray
 from Queue import queue
+from timeit import default_timer as timer
 
 #for debugging only
 import matplotlib
@@ -12,10 +13,6 @@ class ImageProcessor():
 	def __init__(self):
 		self.jobs = queue()
 		self.camera = PiCamera()
-		# get sample image, used to check likeliness of arrow later
-		ret1, th1 = cv.threshold(gray1, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
-		cnts1 = cv.findContours(th1, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
-		cnts1 = cnts1[1]
 
 	def capture(endpoint):
 		print("Capturing...")
@@ -46,14 +43,6 @@ class ImageProcessor():
 		#if(getImageLoc has arrow
 			pc_endpoint.write("arrFound{}")
 		pass
-
-	def CameraDir(robotDir):
-		cameraSwitch = {
-			"U" : "R",
-			"R" : "D",
-			"D" : "L",
-			"L" : "U"
-		}
 
 	def getArrowLocation(self, arrows, robotLocation, robotDir, arrowLocArray):
 		arrowLoc = []
@@ -137,3 +126,21 @@ class ImageProcessor():
 					arrows.append((2, a))
 				elif objectAreaRatio > 0.015:
 					arrows.append((3, a))
+
+	def capture(pipe_endpoint):
+		try:
+			while 1:
+				start = timer()
+				img_name = pipe_endpoint.recv()
+				print("Capturing...")
+				rawCaptureHigh = PiRGBArray(camera, size=(1920,1080))
+        		camera.capture(rawCaptureHigh,format='bgr', use_video_port=True)
+        		pipe_endpoint.send("Captured")
+        		end = timer()
+        		print("Time taken for {} : {}".format(img_name, end - start))
+        		cv2.imwrite('capture/image{}.jpg'.format(n),rawCaptureHigh.array)
+				print("Terminating Capture...")
+		finally:
+			pass
+
+

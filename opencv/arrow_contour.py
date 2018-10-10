@@ -47,11 +47,11 @@ def getArrowLocation(arrows, robotLocation, robotDir):
 def getImageLocation(sampleImg, actualImage):
     arrows = []
     # get sample image contours
-    ret, th = cv.threshold(actualImage, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
+    ret, th = cv.threshold(actualImage, 50, 255, cv.THRESH_BINARY)
     cnts = cv.findContours(th, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
     cnts = cnts[1]
     # get sample image contours
-    ret1, th1 = cv.threshold(sampleImg, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
+    ret1, th1 = cv.threshold(sampleImg, 50, 255, cv.THRESH_BINARY)
     cnts1 = cv.findContours(th1, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
     cnts1 = cnts1[1]
     # get image size
@@ -103,7 +103,7 @@ def main():
     # get sample image, used to check likeliness of arrow later
     img = cv.imread('testbed/arrow_real.jpg', cv.IMREAD_GRAYSCALE)
     # read image
-    capturedImage = cv.imread('test/image10l20c30r.jpg', cv.IMREAD_UNCHANGED)
+    capturedImage = cv.imread('test/10c20l.jpg', cv.IMREAD_UNCHANGED)
     # image preprocessing
     blur = cv.GaussianBlur(capturedImage, (5, 5), 2)
     gray = cv.cvtColor(blur, cv.COLOR_BGR2GRAY)

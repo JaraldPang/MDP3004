@@ -56,7 +56,7 @@ class ImageProcessor():
     def identify(self, pc_endpoint):
         print("Starting Arrow Recognition Thread...")
         reference_img = cv.imread('reference_arrow.jpg', cv.IMREAD_GRAYSCALE)
-        ret, th = cv.threshold(referenceImg, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
+        ret, th = cv.threshold(reference_img, 50, 255, cv.THRESH_BINARY)
         cnts = cv.findContours(th, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)[1]
         while 1:
             if(self.jobs.empty() is False):
@@ -119,7 +119,7 @@ class ImageProcessor():
         captured_image = cv2.imread("capture/{}.jpg".format(captured_image_location), cv.IMREAD_GRAYSCALE)
         blur = cv.GaussianBlur(capturedImage, (5, 5), 2)
         gray = cv.cvtColor(blur, cv.COLOR_BGR2GRAY)
-        ret, thresholded_img = cv.threshold(gray, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
+        ret, thresholded_img = cv.threshold(gray, 50, 255, cv.THRESH_BINARY)
         captured_cnts = cv.findContours(thresholded_img, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)[1]
         # get image size
         imgX = actualImage.shape[1]

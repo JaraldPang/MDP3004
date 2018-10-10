@@ -54,21 +54,21 @@ class ImageProcessor():
 
 
     def identify(self, pc_endpoint):
-    	print("Starting Arrow Recognition Thread...")
+        print("Starting Arrow Recognition Thread...")
         reference_img = cv.imread('reference_arrow.jpg', cv.IMREAD_GRAYSCALE)
         ret, th = cv.threshold(referenceImg, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
         cnts = cv.findContours(th, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)[1]
         while 1:
-        	if(self.jobs.empty() is False):
-        		robot_status = self.jobs.get()
-        		robot_x,robot_y,robot_dir = robot_status.split(",")
-        		arrowsWithPartition = self.getImageLocation(cnts,robot_status)
-        		if(arrowsWithPartition):
-        			continue
-        		else:
-	        		arrowLocAndFace = self.getArrowLocation(arrowsWithPartition,(robot_x,robot_y),robot_dir)
-	        		for entry in arrowLocAndFace:
-	        			pc_endpoint.write("arrFound{}".format(entry))
+            if(self.jobs.empty() is False):
+                robot_status = self.jobs.get()
+                robot_x,robot_y,robot_dir = robot_status.split(",")
+                arrowsWithPartition = self.getImageLocation(cnts,robot_status)
+                if(arrowsWithPartition):
+                    continue
+                else:
+                    arrowLocAndFace = self.getArrowLocation(arrowsWithPartition,(robot_x,robot_y),robot_dir)
+                    for entry in arrowLocAndFace:
+                        pc_endpoint.write("arrFound{}".format(entry))
 
         print("Terminating identification...")
 

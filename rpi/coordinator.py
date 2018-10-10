@@ -75,34 +75,19 @@ def listen_to_pc(pc_wrapper,arduino_wrapper=None,bt_wrapper=None,opencv_pipe=Non
                 msg += char
             print("RECEIVED FROM PC INTERFACE: {}.".format(msg))
             if(msg.startswith("rpi")):
-                #determine message
-                msg = msg[3:]
-                if(msg == "explore"):
-                    exploration_mode = True
-                    print("Mode set to: Exploration")
-                    continue
-                elif(msg == "fastest"):
-                    exploration_mode = False
-                    print("Mode set to: Fastest")
-                    continue
-                #if msg is not empty, then it is robot's location and orientation
-                elif(msg):
-                    #signal new capture job
-                    opencv_pipe.send(msg)
-                    print("New Camera Capture Job received")
-                    #there are 2 approaches 
-                    #1) block all further messages until camera is done. unknown if there are other messages received before or after 
-                    #2) enqueue signal, then enqueue all received commands. abit moot because PC waits for ack
-                    # - we explore 1) first. less complexity
-                    print(opencv_pipe.recv())
+                #signal new capture job
+                opencv_pipe.send(msg[3:])
+                print("New Camera Capture Job received")
+                #block thread until received job finished from camera
+                print(opencv_pipe.recv())
             elif(msg.startswith("ar")):
                 #if(exploration_mode):
                 #   print("PC HOLDING ARDUINO: {}".format(msg))
                     #reroute all messsages to the opencv thread. opencv thread now has command authority to release instructions by algorithm to arduino
                 #   arduino_wrapper.hold(msg[2:])
                 #else:
-                    print("PC WRITING TO ARDUINO: {}".format(msg))
-                    arduino_wrapper.write(msg[2:])
+                print("PC WRITING TO ARDUINO: {}".format(msg))
+                arduino_wrapper.write(msg[2:])
             elif(msg.startswith("an")):
                 print("PC WRITING TO ANDROID: {}".format(msg))
                 bt_wrapper.write(msg[2:])

@@ -1,8 +1,7 @@
-import java.math.
 import java.net.*;
 import java.io.*;
 import java.util.*;
-import java.util.random;
+import java.util.Random;
 
 public class RpiConnection
 {
@@ -106,7 +105,7 @@ public class RpiConnection
       emulateAlgo();
    }
    
-   public void emulateAlgo()
+   public static void emulateAlgo()
    {
       try
       {
@@ -114,7 +113,7 @@ public class RpiConnection
          RpiConnection conn = new RpiConnection("192.168.17.1", 45000);
          for(int i = 0; i < 5; i++)
          {
-            switch()
+            switch(ran.nextInt(4))
             {
                case 0:
                   conn.write("arw");
@@ -145,7 +144,7 @@ public class RpiConnection
       }
    }
 
-   public void provideInput()
+   public static void provideInput()
    {
       try
       {

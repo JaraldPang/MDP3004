@@ -15,8 +15,7 @@ class ImageProcessor():
 
     def capture(self,listener_endpoint):
         try:
-            camera = PiCamera()
-            camera.resolution = (1920,1080)
+            camera = PiCamera(resolution=(1920,1080))
             print("Starting Capture Thread...")
             while 1:
                 img_name = listener_endpoint.recv()
@@ -31,6 +30,7 @@ class ImageProcessor():
         finally:
             pass
 
+    #old capture
     def capture_old(self,listener_endpoint):
         try:
             camera = PiCamera()

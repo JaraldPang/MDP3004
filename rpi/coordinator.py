@@ -16,7 +16,7 @@ def main():
     ar_wrapper = ArduinoWrapper()
 
     listener_process = Process(target=initialize_listeners,args=(listener_endpoint,pc_wrapper,bt_wrapper,ar_wrapper))
-    opencv_process = Process(target=initialize_opencv,args=(opencv_endpoint,bt_wrapper))
+    opencv_process = Process(target=initialize_opencv,args=(opencv_endpoint,pc_wrapper))
     
     #set daemon so that when main process ends the child processeswill die also
     listener_process.daemon = True
@@ -29,10 +29,10 @@ def main():
     opencv_process.join()
     pass
 
-def initialize_opencv(pipe_endpoint=None,bt_wrapper=None):
+def initialize_opencv(pipe_endpoint=None,pc_wrapper=None):
     cv_process = ImageProcessor()
     capture_thread = threading.Thread(target=cv_process.capture,args=(pipe_endpoint,))
-    #process_thread = threading.Thread(target=cv_process.identify,args=(pipe_endpoint,bt_wrapper))
+    #process_thread = threading.Thread(target=cv_process.identify,args=(pc_wrapper,))
 
     capture_thread.start()
     #process_thread.start()

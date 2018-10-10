@@ -1,7 +1,8 @@
-
+import java.math.
 import java.net.*;
 import java.io.*;
 import java.util.*;
+import java.util.random;
 
 public class RpiConnection
 {
@@ -38,7 +39,7 @@ public class RpiConnection
    
    public void write(String s)
    {
-      socketOut.write(s);
+      socketOut.write(s + "\n");
       socketOut.flush();   
    }
    
@@ -102,20 +103,64 @@ public class RpiConnection
    //basic connection program
    public static void main(String[] args)
    {
+      emulateAlgo();
+   }
+   
+   public void emulateAlgo()
+   {
       try
       {
-         RpiConnection conn = new RpiConnection("192.168.1.11", 45000);
+         Random ran = new Random();
+         RpiConnection conn = new RpiConnection("192.168.17.1", 45000);
+         for(int i = 0; i < 5; i++)
+         {
+            switch()
+            {
+               case 0:
+                  conn.write("arw");
+                  System.out.println("Forward");
+                  break;
+               case 1:
+                  conn.write("ara");
+                  System.out.println("Turn Left");
+                  break;
+               case 2:
+                  conn.write("ars");
+                  System.out.println("Backwards");
+                  break;
+               case 3:
+                  conn.write("ard");
+                  System.out.println("Turn Right");
+                  break;                  
+            }
+            //emulate ack from algo
+            conn.read();
+            conn.write("rpic"+1);
+         }
+         conn.close();
+      }
+      catch(IOException ioe)
+      {
+         ioe.printStackTrace();
+      }
+   }
+
+   public void provideInput()
+   {
+      try
+      {
+         RpiConnection conn = new RpiConnection("192.168.17.1", 45000);
          Scanner scn = new Scanner(System.in);
          String input = "";
          do
          {
             try
             {
-               System.out.print("ENTER MSG TO SEND: ");
-               input = scn.nextLine();
-               System.out.println("");
-               conn.write(input);
-               System.out.println("RECEIVED: " + conn.read());
+              System.out.print("ENTER MSG TO SEND: ");
+              input = scn.nextLine();
+              System.out.println("");
+              conn.write(input);
+              System.out.println("RECEIVED: " + conn.read());
             }
             catch(SocketTimeoutException ste)
             {
@@ -123,7 +168,6 @@ public class RpiConnection
             }
          
          }while(input != "END" || conn.getConnected() == false);
-         
          conn.close();
       }
       catch(IOException ioe)

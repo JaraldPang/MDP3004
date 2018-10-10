@@ -182,11 +182,9 @@ void moveForward(double cm) {
 
   integral = 0;
   encoderLeftCounter = encoderRightCounter = prevTick = 0;
-
   // Caliberated to 30.25 ticks per cm
   //29.2; //29.3; //29.35; //29.38; //29.4; //29; //29.5; //29.85; //30.05; //30.15; //30.20; //30.35;
   targetTick = cm * 29.65;
-
 
   // Move Forward 1 grid
   if (cm <= 10) {
@@ -340,7 +338,7 @@ void moveForward(double cm) {
   }
 }
 
-void moveReverse(int cm) {
+void moveReverse(double cm) {
 
   double pid;
   int targetTick;
@@ -352,6 +350,7 @@ void moveReverse(int cm) {
   // Calibrated to 30.25 ticks per cm
   //30.35;
   targetTick = cm * 29.5;
+
 
   while (encoderLeftCounter < min(50, targetTick)) {
     pid = computePID();
@@ -382,7 +381,7 @@ void moveReverse(int cm) {
   if (calibration_state != true) {
     replyStop();
   }
-}
+  }
 
 void moveLeft(double deg) {
 
@@ -874,11 +873,11 @@ void calibrateDistance(SharpIR sensor, int arr) {
   for (int i = 0; i < 10; i++) {
     dist = calibrate_SensorValue(sensor.distance(), arr);
     if (dist < WALL_GAP) {
-      moveReverse(1);
+      moveReverse(0.3);
       delay(200);
     }
     else if (dist > WALL_GAP) {
-      moveForward(1);
+      moveForward(0.3);
       delay(200);
     }
   }
@@ -1231,7 +1230,7 @@ void loop() {
     Serial.println("an" + robotRead);
     Serial.flush();
 
-    double movementValue = getValue(robotRead, ';', 1).toInt();
+    double movementValue = getValue(robotRead, ';', 1).toFloat();
     char condition = robotRead.charAt(0);
 
     switch (condition) {

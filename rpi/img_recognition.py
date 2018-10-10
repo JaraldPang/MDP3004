@@ -22,7 +22,7 @@ class ImageProcessor():
                 print("Capturing...")
                 start = timer()
                 camera.capture("capture/{}.jpg".format(img_name), use_video_port=True)
-                #listener_endpoint.send("Captured")
+                listener_endpoint.send("Captured")
                 end = timer()                
                 print("Time taken for {} : {}".format(img_name, end - start))
                 self.jobs.put(img_name)

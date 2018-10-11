@@ -67,6 +67,7 @@ bool calibration_state = false;
 bool calibration_angle = false;
 bool calibrated = false;
 bool recalibrate = false;
+bool fastest_path = false;
 
 /*
      ******************************************************************************************************************************
@@ -118,6 +119,9 @@ double arrMapping5[] = {8.98, 20.59, 32.39, 44.60, 53.33};
 // Calibration speed
 #define Speed_Calibration 200
 #define Speed_Calibration_Angle 60
+
+//Fastest path speed
+#define Speed_Move_Fastest 375
 
 //E1 Right Side
 const int M1A = 3;
@@ -179,6 +183,7 @@ void moveForward(double cm) {
   double pid;
   int targetTick;
   int Set_Speed = (calibration_state == true) ? Speed_Calibration : Speed_Move;
+  Set_Speed = (fastest_path == true) ? Speed_Move_Fastest : Set_Speed;
 
   integral = 0;
   encoderLeftCounter = encoderRightCounter = prevTick = 0;
@@ -336,6 +341,10 @@ void moveForward(double cm) {
   if (calibration_state != true) {
     replyStop();
   }
+  if (fastest_path == true) {
+    delay(250);
+    replyStop();
+  }
 }
 
 void moveReverse(double cm) {
@@ -343,6 +352,7 @@ void moveReverse(double cm) {
   double pid;
   int targetTick;
   int Set_Speed = (calibration_state == true) ? Speed_Calibration : Speed_Move;
+  Set_Speed = (fastest_path == true) ? Speed_Move_Fastest : Set_Speed;
 
   integral = 0;
   encoderLeftCounter = encoderRightCounter = prevTick = 0;
@@ -381,7 +391,11 @@ void moveReverse(double cm) {
   if (calibration_state != true) {
     replyStop();
   }
+  if (fastest_path == true) {
+    delay(250);
+    replyStop();
   }
+}
 
 void moveLeft(double deg) {
 
@@ -433,6 +447,10 @@ void moveLeft(double deg) {
   if (calibration_state != true) {
     replyStop();
   }
+  if (fastest_path == true) {
+    delay(250);
+    replyStop();
+  }
 }
 
 void moveRight(double deg) {
@@ -453,7 +471,7 @@ void moveRight(double deg) {
   //4.187L;//4.185;//4.1825;//4.175L;//4.17225L;//4.1715L;//4.17L;//4.165L;//4.1725M;
   //4.17L;//4.185M;//4.19M;//4.2;//4.22M;z//4.24M;//4.25;//4.335; //24/10/17
 
-  else if (deg <= 180) targetTick = deg * 4.33;//4.33(test)//4.333M;//4.335M;//4.336M;//4.338M;//4.342M;//4.335;
+  else if (deg <= 180) targetTick = deg * 4.36;//4.33(test)//4.333M;//4.335M;//4.336M;//4.338M;//4.342M;//4.335;
   //4.32L;//4.35M;
   //4.34;//4.33;
   //4.34;//4.35M;//4.36;//4.415;//4.63;
@@ -486,6 +504,10 @@ void moveRight(double deg) {
   md.setBrakes(Speed_Brake, Speed_Brake);
 
   if (calibration_state != true) {
+    replyStop();
+  }
+  if (fastest_path == true) {
+    delay(250);
     replyStop();
   }
 }
@@ -642,12 +664,12 @@ void calibrate_Robot_Position() {
     bool rightTooClose = distTR > 0 && distTR < (WALL_GAP - WALL_MIN_TOL);
     bool rightTooFar = distTR > (WALL_GAP + WALL_MIN_TOL) && distTR < (WALL_GAP + WALL_MAX_TOL);
     
-    Serial.println(String(leftTooClose));
-    Serial.println(String(leftTooFar));
-    Serial.println(String(midTooClose));
-    Serial.println(String(midTooFar));
-    Serial.println(String(rightTooClose));
-    Serial.println(String(rightTooFar));
+//    Serial.println(String(leftTooClose));
+//    Serial.println(String(leftTooFar));
+//    Serial.println(String(midTooClose));
+//    Serial.println(String(midTooFar));
+//    Serial.println(String(rightTooClose));
+//    Serial.println(String(rightTooFar));
     
     while (leftTooClose || midTooClose || rightTooClose || leftTooFar || midTooFar || rightTooFar) {
         if ((leftTooClose && rightTooClose) || (leftTooFar && rightTooFar) || (leftTooClose && rightTooFar) || (leftTooFar && rightTooClose)) {
@@ -676,41 +698,41 @@ void calibrate_Robot_Position() {
         calibrated = true;
         break;
       }
-      //detects left and mid, not in position
-      else if((leftTooClose && midTooClose) || (leftTooFar && midTooFar) || (leftTooClose && midTooFar) || (leftTooFar && midTooClose)) {  
-//      else if (((distTL > 0 && distTL < (WALL_GAP - WALL_MIN_TOL)) && (distTM > 0 && distTM < (WALL_GAP - WALL_MIN_TOL))) ||          
-//           ((distTL > (WALL_GAP + WALL_MIN_TOL) && distTL < (WALL_GAP + WALL_MAX_TOL)) &&
-//            (distTM > (WALL_GAP + WALL_MIN_TOL) && distTM < (WALL_GAP + WALL_MAX_TOL)))) {
-        if (abs(distTL - distTM) > ANGLE_TOL) {
-          //Serial.println("calibrate3");
-          calibrate_Robot_Angle(sensorTL, 1, sensorTM, 2, 8);
-          calibrateDistance(sensorTM, 2);
-          calibrate_Robot_Angle(sensorTL, 1, sensorTM, 2, 8);
-        } else {
-          //Serial.println("calibrate3.5");
-          calibrateDistance(sensorTM, 2);
-          calibrate_Robot_Angle(sensorTL, 1, sensorTM, 2, 8);
-        }
-        calibrated = true;
-        break;
-       }
-       //detects mid and right, not in position
-       else if((midTooClose && rightTooClose) || (midTooFar && rightTooFar) || (midTooClose && rightTooFar) || (midTooFar && rightTooClose)) {
-//       else if (((distTM > 0 && distTM < (WALL_GAP - WALL_MIN_TOL)) && (distTR > 0 && distTR < (WALL_GAP - WALL_MIN_TOL))) ||
-//                ((distTM > (WALL_GAP + WALL_MIN_TOL) && distTM < (WALL_GAP + WALL_MAX_TOL)) && (distTR > (WALL_GAP + WALL_MIN_TOL) && distTR < (WALL_GAP + WALL_MAX_TOL)))) {
-        if (abs(distTM - distTR) > ANGLE_TOL) {
-          //Serial.println("calibrate4");
-          calibrate_Robot_Angle(sensorTM, 2, sensorTR, 3, 9);
-          calibrateDistance(sensorTM, 2);
-          calibrate_Robot_Angle(sensorTM, 2, sensorTR, 3, 9);
-        } else {
-          //Serial.println("calibrate5");
-          calibrateDistance(sensorTM, 2);
-          calibrate_Robot_Angle(sensorTM, 2, sensorTR, 3, 9);
-        }
-        calibrated = true;
-        break;
-       }
+//      //detects left and mid, not in position
+//      else if((leftTooClose && midTooClose) || (leftTooFar && midTooFar) || (leftTooClose && midTooFar) || (leftTooFar && midTooClose)) {  
+////      else if (((distTL > 0 && distTL < (WALL_GAP - WALL_MIN_TOL)) && (distTM > 0 && distTM < (WALL_GAP - WALL_MIN_TOL))) ||          
+////           ((distTL > (WALL_GAP + WALL_MIN_TOL) && distTL < (WALL_GAP + WALL_MAX_TOL)) &&
+////            (distTM > (WALL_GAP + WALL_MIN_TOL) && distTM < (WALL_GAP + WALL_MAX_TOL)))) {
+//        if (abs(distTL - distTM) > ANGLE_TOL) {
+//          //Serial.println("calibrate3");
+//          calibrate_Robot_Angle(sensorTL, 1, sensorTM, 2, 8);
+//          calibrateDistance(sensorTM, 2);
+//          calibrate_Robot_Angle(sensorTL, 1, sensorTM, 2, 8);
+//        } else {
+//          //Serial.println("calibrate3.5");
+//          calibrateDistance(sensorTM, 2);
+//          calibrate_Robot_Angle(sensorTL, 1, sensorTM, 2, 8);
+//        }
+//        calibrated = true;
+//        break;
+//       }
+//       //detects mid and right, not in position
+//       else if((midTooClose && rightTooClose) || (midTooFar && rightTooFar) || (midTooClose && rightTooFar) || (midTooFar && rightTooClose)) {
+////       else if (((distTM > 0 && distTM < (WALL_GAP - WALL_MIN_TOL)) && (distTR > 0 && distTR < (WALL_GAP - WALL_MIN_TOL))) ||
+////                ((distTM > (WALL_GAP + WALL_MIN_TOL) && distTM < (WALL_GAP + WALL_MAX_TOL)) && (distTR > (WALL_GAP + WALL_MIN_TOL) && distTR < (WALL_GAP + WALL_MAX_TOL)))) {
+//        if (abs(distTM - distTR) > ANGLE_TOL) {
+//          //Serial.println("calibrate4");
+//          calibrate_Robot_Angle(sensorTM, 2, sensorTR, 3, 9);
+//          calibrateDistance(sensorTM, 2);
+//          calibrate_Robot_Angle(sensorTM, 2, sensorTR, 3, 9);
+//        } else {
+//          //Serial.println("calibrate5");
+//          calibrateDistance(sensorTM, 2);
+//          calibrate_Robot_Angle(sensorTM, 2, sensorTR, 3, 9);
+//        }
+//        calibrated = true;
+//        break;
+//       }
        //detects only left, not in position
        else if(leftTooClose || leftTooFar) {
 //       else if ((distTL > 0 && distTL < (WALL_GAP - WALL_MIN_TOL)) ||
@@ -846,8 +868,8 @@ void calibrate_Robot_Angle(SharpIR sensorL, int arrL, SharpIR sensorR, int arrR,
     angle = (atan(diff / dist) * (180 / 3.14159265));
     //angle = (diff > 0.5) ? angle : angle/2;
     angle = angle/2;
-    Serial.println("Angle: " + (String)angle);
-    Serial.println("Diff: " + (String)diff);
+    //Serial.println("Angle: " + (String)angle);
+    //Serial.println("Diff: " + (String)diff);
     // Serial.println("angle: " + String(angle));
     if (distL > distR) {
       moveRight(angle);
@@ -881,12 +903,6 @@ void calibrateDistance(SharpIR sensor, int arr) {
       delay(200);
     }
   }
-}
-
-void calibration_Step() {
-
-  moveRight(90);
-
 }
 /*
      ********************************************************************************************************************************
@@ -1329,7 +1345,10 @@ void loop() {
     }
     case 'X':
     case 'x': {
-      obstacleAvoid();
+      //obstacleAvoid();
+      fastest_path = true;
+     // Serial.println("alok");
+      Serial.flush();
       break;
     }
     case 'C':
@@ -1369,6 +1388,22 @@ void loop() {
     robotRead = "";
     newData = false;
   }
+//  delay(1000);
+//  moveForward(30);
+//  delay(250);
+//  moveRight(180);
+//  delay(250);
+//  moveForward(30);
+//  delay(250);
+//  moveLeft(180);
+//  delay(250);
+//  moveForward(30);
+//  delay(250);
+//  moveLeft(180);
+//  delay(250);
+//  moveForward(30);
+//  delay(250);
+//  moveRight(180);
   //delay(2000);
   //calibrate_Robot_Position();
 }

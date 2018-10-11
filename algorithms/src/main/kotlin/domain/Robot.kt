@@ -59,11 +59,12 @@ class Robot(
         this.sensors = sensors
     }
 
-    suspend fun sense() {
+    suspend fun sense(): Boolean {
         if (connection.isConnected) {
             connection.sendGetSensorDataCommand()
         }
 //        delay(100)
+        var hasUpdateInMaze = false
         val (centerRow, centerCol, direction) = centerCell
         for (sensor in sensors) {
             val sensedDistance = sensor.sense()
@@ -76,6 +77,7 @@ class Robot(
                         println("Warning: maze[$row][$col] was ${explorationMaze[row][col]} but setting to CELL_OBSTACLE")
                     } else {
                         explorationMaze[row][col] = CELL_OBSTACLE
+                        hasUpdateInMaze = true
                         // Find an obstacle, check if any arrows found on it
                         val arrowDirection = arrowsFound.remove(row to col)
                         if (arrowDirection != null) {
@@ -95,6 +97,7 @@ class Robot(
                     }
                     if (explorationMaze[row][col] == CELL_UNKNOWN) {
                         explorationMaze[row][col] = CELL_SENSED
+                        hasUpdateInMaze = true
                     }
                 }
             }
@@ -104,6 +107,7 @@ class Robot(
             val part2 = explorationMaze.outputMapDescriptorPart2()
             connection.sendMdfString(part1, part2)
         }
+        return hasUpdateInMaze
     }
 
     suspend fun move(movement: Movement) {

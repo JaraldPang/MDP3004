@@ -16,48 +16,30 @@ open class Exploration(private val robot: Robot, private val connection: Connect
     }
 
     protected suspend fun exploreInternal(coverageLimit: Double): Boolean {
+        var coverage: Double
+        var shouldBacktrack: Boolean
         do {
             robot.sense()
-            makeMovingDecision()
-        } while (robot.explorationMaze.calculateCoverage() < coverageLimit && !robot.isAtStartZone)
-        when {
-            robot.explorationMaze.isFullyExplored -> {
-                if (!robot.isAtStartZone) {
-                    robot.goToStartZone()
-                }
-                return true
+            val explorationMaze = robot.explorationMaze
+            val sides = explorationMaze.getEnvironmentOnSides(robot.centerCell.copy())
+            println("Center: ${robot.centerCell}, Sides: ${sides.joinToString()}")
+            shouldBacktrack = sides.all { it > 0 }
+            if (!shouldBacktrack) {
+                makeMovingDecision(sides)
             }
-            robot.explorationMaze.calculateCoverage() >= coverageLimit -> return true
-            else -> {
-                while (stack.isNotEmpty()) {
-                    val cell = stack.pop()
-                    val sides = robot.explorationMaze.getEnvironmentOnSides(cell)
-                    println("Checking $cell, sides=${sides.joinToString()}")
-                    if (sides.any { it == CELL_UNKNOWN || it == CELL_SENSED }) {
-                        val pathsToCell = findFastestPathToDestination(
-                            robot.explorationMaze.copy(),
-                            robot.centerCell.copy(),
-                            cell.row to cell.col
-                        )
-                        if (pathsToCell.size <= cell.direction.ordinal || pathsToCell[cell.direction.ordinal].isEmpty()) {
-                            throw IllegalStateException("Unable to go back to cell $cell")
-                        }
-                        val pathToCell = pathsToCell[cell.direction.ordinal]
-                        val movements = pathToCell.toMovements()
-                        robot.moveFollowingMovements(movements)
-                        return false
-                    }
-                }
-                robot.turnToFaceUp()
-                return true
+            coverage = explorationMaze.calculateCoverage()
+        } while (coverage < coverageLimit && !shouldBacktrack)
+        return if (shouldBacktrack) {
+            backtrack()
+        } else {
+            if (!robot.isAtStartZone) {
+                robot.goToStartZone()
             }
+            true
         }
     }
 
-    private suspend fun makeMovingDecision() {
-        val explorationMaze = robot.explorationMaze
-        val sides = explorationMaze.getEnvironmentOnSides(robot.centerCell.copy())
-        println("Center: ${robot.centerCell}, Sides: ${sides.joinToString()}")
+    private suspend fun makeMovingDecision(sides: IntArray) {
         val choices = Movement.values().sortedWith(Comparator { o1, o2 ->
             when {
                 sides[o1.ordinal] == sides[o2.ordinal] -> 0
@@ -88,6 +70,31 @@ open class Exploration(private val robot: Robot, private val connection: Connect
             }
             finalChoice == Movement.MOVE_FORWARD -> moveForward()
         }
+    }
+
+    private suspend fun backtrack(): Boolean {
+        println("Backtracking")
+        while (stack.isNotEmpty()) {
+            val cell = stack.pop()
+            val sides = robot.explorationMaze.getEnvironmentOnSides(cell)
+            println("Checking $cell, sides=${sides.joinToString()}")
+            if (sides.any { it == CELL_UNKNOWN || it == CELL_SENSED }) {
+                val pathsToCell = findFastestPathToDestination(
+                    robot.explorationMaze.copy(),
+                    robot.centerCell.copy(),
+                    cell.row to cell.col
+                )
+                if (pathsToCell.size <= cell.direction.ordinal || pathsToCell[cell.direction.ordinal].isEmpty()) {
+                    throw IllegalStateException("Unable to go back to cell $cell")
+                }
+                val pathToCell = pathsToCell[cell.direction.ordinal]
+                val movements = pathToCell.toMovements()
+                robot.moveFollowingMovements(movements)
+                return false
+            }
+        }
+        robot.turnToFaceUp()
+        return true
     }
 
     private suspend fun moveForward() {

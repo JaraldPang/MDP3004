@@ -1,5 +1,6 @@
 import cv2 as cv
 import numpy
+import time
 from picamera import PiCamera
 from picamera.array import PiRGBArray
 from queue import Queue
@@ -13,18 +14,17 @@ class ImageProcessor():
     def __init__(self):
         self.jobs = Queue()
 
-    def capture(self,listener_endpoint):
+    def capture(self,listener_endpoint_pc):
         try:
             camera = PiCamera(resolution=(1920,1080))
             print("Starting Capture Thread...")
             while 1:
-                img_name = listener_endpoint.recv()
-                print("Capturing...")
+                img_name = listener_endpoint_pc.recv()
                 start = timer()
                 camera.capture("capture/{}.jpg".format(img_name), use_video_port=True)
-                listener_endpoint.send("Captured")
+                listener_endpoint_pc.send("Captured")
                 end = timer()                
-                print("Time taken for {} : {}".format(img_name, end - start))
+                print("Time taken for capturing {} : {}".format(img_name, end - start))
                 self.jobs.put(img_name)
             print("Terminating Capture...")
         finally:
@@ -39,41 +39,48 @@ class ImageProcessor():
             rawCapture = PiRGBArray(camera, size=(1920,1080))
             while 1:
                 img_name = listener_endpoint.recv()
-                print("Capturing...")
                 start = timer()
                 camera.capture(rawCapture,format='bgr', use_video_port=True)
                 #listener_endpoint.send("Captured")
                 cv2.imwrite('capture/{}.jpg'.format(img_name),rawCapture.array)
                 rawCapture.truncate(0)
                 end = timer()                
-                print("Time taken for {} : {}".format(img_name, end - start))
+                print("Time taken for capturing {} : {}".format(img_name, end - start))
                 self.jobs.put(img_name)
             print("Terminating Capture...")
         finally:
             pass
 
 
-    def identify(self, pc_endpoint):
+    def identify(self, listener_endpoint_rpi):
         print("Starting Arrow Recognition Thread...")
         reference_img = cv.imread('reference_arrow.jpg', cv.IMREAD_GRAYSCALE)
-        ret, th = cv.threshold(referenceImg, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
+        ret, th = cv.threshold(reference_img, 0, 255, cv.THRESH_BINARY)
         cnts = cv.findContours(th, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)[1]
         while 1:
             if(self.jobs.empty() is False):
                 robot_status = self.jobs.get()
                 robot_x,robot_y,robot_dir = robot_status.split(",")
+                start = timer()
                 arrowsWithPartition = self.getImageLocation(cnts,robot_status)
+                end = timer()
+                print("Time taken for arrow analysis of {}: {}. Arrows Found: {}".format(robot_status,end - start, len(arrowsWithPartition)))
                 if(arrowsWithPartition):
-                    continue
-                else:
-                    arrowLocAndFace = self.getArrowLocation(arrowsWithPartition,(robot_x,robot_y),robot_dir)
+                    arrowLocAndFace = self.getArrowLocation(arrowsWithPartition,(int(robot_x),int(robot_y)),robot_dir)
                     for entry in arrowLocAndFace:
-                        pc_endpoint.write("arrFound{}".format(entry))
+                        print("FOUND! For Status: {}, writing to endpoint arrow location: {}".format(robot_status,entry))
+                        listener_endpoint_rpi.send("arrfound{}".format(entry))
+                    print(arrowsWithPartition)
+                    print(arrowLocAndFace)
+                else:
+                    continue
+            else:
+                time.sleep(1)
 
         print("Terminating identification...")
 
 
-    def getArrowLocation(arrows, robotLocation, robotDir):
+    def getArrowLocation(self,arrows, robotLocation, robotDir):
         arrowLocArray = []
         #robot relative direction
         dirMatrix = [[0, 1], [1, 0], [0, -1], [-1, 0]]
@@ -114,16 +121,17 @@ class ImageProcessor():
         #list of strings with x,y,face
         return arrowLocArray
 
-    def getImageLocation(reference_contours, captured_image_location):
+    def getImageLocation(self,reference_contours, captured_image_location):
         arrows = []
-        captured_image = cv2.imread("capture/{}.jpg".format(captured_image_location), cv.IMREAD_GRAYSCALE)
-        blur = cv.GaussianBlur(capturedImage, (5, 5), 2)
-        gray = cv.cvtColor(blur, cv.COLOR_BGR2GRAY)
-        ret, thresholded_img = cv.threshold(gray, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
+        captured_image = cv.imread("capture/{}.jpg".format(captured_image_location), cv.IMREAD_UNCHANGED)
+        gray = cv.cvtColor(captured_image, cv.COLOR_RGB2GRAY)
+        blur = cv.GaussianBlur(gray, (5, 5), 2)
+        ret, thresholded_img = cv.threshold(gray, 50, 255, cv.THRESH_BINARY)
+        #cv.imwrite("capture/{}_th.jpg".format(captured_image_location),thresholded_img)
         captured_cnts = cv.findContours(thresholded_img, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)[1]
         # get image size
-        imgX = actualImage.shape[1]
-        imgY = actualImage.shape[0]
+        imgX = captured_image.shape[1]
+        imgY = captured_image.shape[0]
         imgArea = imgX * imgY
         # for each contour found
         for (i, c) in enumerate(captured_cnts):
@@ -138,7 +146,9 @@ class ImageProcessor():
             # conditional check
             # if contour matches any of the conditions we are looking for, we append the distance and location
             # condition: 6-8 edges; matches given shape up to 0.25 likeliness; object to image area ratio
-            if (6 <= len(approx) <= 8 and cv.matchShapes(reference_contours, c, 1, 0.0) < 0.25):
+            if (6 <= len(approx) <= 8 and cv.matchShapes(reference_contours[0], c, 1, 0.0) < 0.25):
+                cv.drawContours(captured_image, [c], -1, (0,255,0), 3)
+                #cv.imwrite("capture/{}_cnt.jpg".format(captured_image_location),captured_image)
                 # find X-axis of contour
                 M = cv.moments(c)
                 cx = int(M["m10"] / M["m00"])

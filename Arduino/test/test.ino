@@ -533,7 +533,7 @@ void calibrate_Robot_Position() {
     if ((leftTooClose && rightTooClose) || (leftTooFar && rightTooFar) || (leftTooClose && rightTooFar) || (leftTooFar && rightTooClose)) {
       while (!calibrated) {
         calibrate_Robot_Angle(irTL, irTR);
-        if (abs(distTL - distTR) > ANGLE_TOL) {
+        if (abs(distTL - distTR) < ANGLE_TOL) {
           calibrated = true;
           break;
         }
@@ -547,7 +547,7 @@ void calibrate_Robot_Position() {
     else if ((leftTooClose && midTooClose) || (leftTooFar && midTooFar) || (leftTooClose && midTooFar) || (leftTooFar && midTooClose)) {
       while (!calibrated) {
         calibrate_Robot_Angle(irTL, irTM);
-        if (abs(distTL - distTM) > ANGLE_TOL) {
+        if (abs(distTL - distTM) < ANGLE_TOL) {
           calibrated = true;
           break;
         }
@@ -561,7 +561,7 @@ void calibrate_Robot_Position() {
     else if ((leftTooClose && midTooClose) || (leftTooFar && midTooFar) || (leftTooClose && midTooFar) || (leftTooFar && midTooClose)) {
       while (!calibrated) {
         calibrate_Robot_Angle(irTM, irTR);
-        if (abs(distTM - distTR) > ANGLE_TOL) {
+        if (abs(distTM - distTR) < ANGLE_TOL) {
           calibrated = true;
           break;
         }

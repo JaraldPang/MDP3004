@@ -52,9 +52,9 @@ double distTL = 0.0, distTM = 0.0, distTR = 0.0, distBLT = 0.0, distBRT = 0.0, d
 #define LONG_OFFSET 20
 
 #define WALL_GAP 10
-#define WALL_MIN_TOL 0.25
+#define WALL_MIN_TOL 0.5
 #define WALL_MAX_TOL 3
-#define ANGLE_TOL 0.1
+#define ANGLE_TOL 0.25
 
 //position calibration variables
 #define STEPS_TO_CALIBRATE 5
@@ -530,42 +530,39 @@ void calibrate_Robot_Position() {
 
     //detects left and right, not in position
     if ((leftTooClose && rightTooClose) || (leftTooFar && rightTooFar) || (leftTooClose && rightTooFar) || (leftTooFar && rightTooClose)) {
-      if (abs(distTL - distTR) > ANGLE_TOL) {
+      while (abs(distTL - distTR) > ANGLE_TOL) {
         calibrate_Robot_Angle(irTL, irTR);
         calibrateDistance(irTL);
-        calibrate_Robot_Angle(irTL, irTR);
-      } else {
-        calibrateDistance(irTL);
-        calibrate_Robot_Angle(irTL, irTR);
       }
+      calibrateDistance(irTL);
+      calibrate_Robot_Angle(irTL, irTR);
+      
       calibrated = true;
       break;
     }
 
     //detects left and mid, not in position
     else if ((leftTooClose && midTooClose) || (leftTooFar && midTooFar) || (leftTooClose && midTooFar) || (leftTooFar && midTooClose)) {
-      if (abs(distTL - distTM) > ANGLE_TOL) {
+      while (abs(distTL - distTM) > ANGLE_TOL) {
         calibrate_Robot_Angle(irTL, irTM);
         calibrateDistance(irTL);
-        calibrate_Robot_Angle(irTL, irTM);
-      } else {
-        calibrateDistance(irTL);
-        calibrate_Robot_Angle(irTL, irTM);
       }
+      calibrateDistance(irTL);
+      calibrate_Robot_Angle(irTL, irTM);
+      
       calibrated = true;
       break;
     }
 
     //detects mid and right, not in position
     else if ((leftTooClose && midTooClose) || (leftTooFar && midTooFar) || (leftTooClose && midTooFar) || (leftTooFar && midTooClose)) {
-      if (abs(distTM - distTR) > ANGLE_TOL) {
+      while (abs(distTM - distTR) > ANGLE_TOL) {
         calibrate_Robot_Angle(irTM, irTR);
         calibrateDistance(irTM);
-        calibrate_Robot_Angle(irTM, irTR);
-      } else {
-        calibrateDistance(irTM);
-        calibrate_Robot_Angle(irTM, irTR);
       }
+      calibrateDistance(irTM);
+      calibrate_Robot_Angle(irTM, irTR);
+      
       calibrated = true;
       break;
     }
@@ -604,7 +601,9 @@ void calibrate_Robot_Position() {
       }
     }
   }
-
+  if (turn == 1) {
+    moveLeft(90);
+  }
   Serial.println("alok");
   Serial.flush();
   calibration_state = false;
@@ -615,20 +614,22 @@ void calibrate_Robot_Angle(int tpinL, int tpinR) {
   double distL;
   double distR;
   double diff;
-
-  for (int i = 0; i < 5; i++) {
-    distL = final_MedianRead(tpinL);
+  
+  distL = final_MedianRead(tpinL);
+  distR = final_MedianRead(tpinR);
+  diff = abs(distL - distR);
+  while (diff > ANGLE_TOL) {
+	if (distL > distR) {
+		moveRight(diff/2);
+	}
+	else if (distR > distL) {
+		moveLeft(diff/2);
+	}
+	distL = final_MedianRead(tpinL);
     distR = final_MedianRead(tpinR);
     diff = abs(distL - distR);
-	while (diff > ANGLE_TOL) {
-		if (distL > distR) {
-		  moveRight(diff);
-		}
-		else if (distR > distL) {
-		  moveLeft(diff);
-		}
-	}
   }
+
   delay(200);
   calibration_angle = false;
 }
@@ -636,14 +637,15 @@ void calibrate_Robot_Angle(int tpinL, int tpinR) {
 void calibrateDistance(int tpin) {
   //use only one of the 3 front sensors
   double dist;
-  for (int i = 0; i < 2; i++) {
-    dist = final_MedianRead(tpin);
+  dist = final_MedianRead(tpin);
+  while(dist < WALL_GAP || dist > WALL_GAP){
     if (dist < WALL_GAP) {
-      moveReverse(WALL_GAP - dist);
+      moveReverse(WALL_GAP - dist/2);
     }
-    else if (dist > WALL_GAP) {
-      moveForward(dist - WALL_GAP);
+    if (dist > WALL_GAP) {
+      moveForward(dist/2 - WALL_GAP);
     }
+	dist = final_MedianRead(tpin);
   }
   delay(200);
 }
@@ -979,33 +981,22 @@ void loop() {
     robotRead = "";
     newData = false;
   }
- delay(1000);
- moveForward(30);
- delay(250);
- moveLeft(180);
- delay(250);
- moveForward(30);
- delay(250);
- moveLeft(180);
- delay(250);
- moveForward(30);
- delay(500);
- calibrate_Robot_Position();
- delay(250);
- moveLeft(180);
- delay(250);
- moveForward(30);
- delay(250);
- moveLeft(180);
- delay(250);
- moveForward(30);
- delay(500);
- calibrate_Robot_Position();
- delay(250);
- moveLeft(90);
-  delay(500);
- calibrate_Robot_Position();
- delay(250);
- moveLeft(90);
- delay(250);
+//  delay(1000);
+//  moveForward(30);
+//  delay(250);
+//  moveRight(180);
+//  delay(250);
+//  moveForward(30);
+//  delay(250);
+//  moveLeft(180);
+//  delay(250);
+//  moveForward(30);
+//  delay(250);
+//  moveLeft(180);
+//  delay(250);
+//  moveForward(30);
+//  delay(250);
+//  moveRight(180);
+  //delay(2000);
+  //calibrate_Robot_Position();
 }

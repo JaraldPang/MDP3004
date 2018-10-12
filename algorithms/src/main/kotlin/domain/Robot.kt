@@ -42,12 +42,17 @@ class Robot(
                         "r" -> Direction.RIGHT
                         else -> throw IllegalStateException("Unknown arrow found direction: $directionCommand")
                     }
+                    if (MazeModel.isOutsideOfMaze(row, col)) {
+                        continue
+                    }
                     if (explorationMaze[row][col] == CELL_OBSTACLE) {
+                        println("Received arrow at ($col,$row,$directionCommand)")
                         if (connection.isConnected) {
                             connection.sendArrowCommand(col, row, direction)
                         }
                     } else {
                         // The corresponding grid is not an obstacle (yet), cache it and check later
+                        println("Received arrow at ($col,$row,$directionCommand) but caching")
                         arrowsFound[row to col] = direction
                     }
                 }
@@ -75,15 +80,14 @@ class Robot(
                 if (!MazeModel.isOutsideOfMaze(row, col)) {
                     if (explorationMaze[row][col] != CELL_UNKNOWN && explorationMaze[row][col] != CELL_OBSTACLE) {
                         println("Warning: maze[$row][$col] was ${explorationMaze[row][col]} but setting to CELL_OBSTACLE")
-                    } else {
-                        explorationMaze[row][col] = CELL_OBSTACLE
-                        hasUpdateInMaze = true
-                        // Find an obstacle, check if any arrows found on it
-                        val arrowDirection = arrowsFound.remove(row to col)
-                        if (arrowDirection != null) {
-                            if (connection.isConnected) {
-                                connection.sendArrowCommand(col, row, arrowDirection)
-                            }
+                    }
+                    explorationMaze[row][col] = CELL_OBSTACLE
+                    hasUpdateInMaze = true
+                    // Find an obstacle, check if any arrows found on it
+                    val arrowDirection = arrowsFound.remove(row to col)
+                    if (arrowDirection != null) {
+                        if (connection.isConnected) {
+                            connection.sendArrowCommand(col, row, arrowDirection)
                         }
                     }
                 }
@@ -117,16 +121,25 @@ class Robot(
         }
         movementCount++
         if (connection.isConnected) {
-            connection.sendRobotCenter(centerCell)
-            connection.sendMovementAndWait(movement)
-            if (movementCount % 5 == 0) {
-                connection.sendCalibrationCommandAndWait()
+            when (movement) {
+                Movement.TURN_LEFT, Movement.TURN_RIGHT -> connection.sendTurnCommandWithCountAndWait(movement, 1)
+                Movement.MOVE_FORWARD -> connection.sendMoveForwardWithDistanceAndWait(1)
+            }
+            if (movementCount >= 5) {
+                val sides = explorationMaze.getEnvironmentOnSides(centerCell.copy())
+                if (sides.any { it == CELL_OBSTACLE }) {
+                    connection.sendCalibrationCommandAndWait()
+                    movementCount = 0
+                }
             }
         }
         when (movement) {   // Update on UI
             Movement.TURN_RIGHT -> turnRight()
             Movement.TURN_LEFT -> turnLeft()
             Movement.MOVE_FORWARD -> moveForward()
+        }
+        if (connection.isConnected) {
+            connection.sendRobotCenter(centerCell)
         }
     }
 
@@ -222,12 +235,17 @@ class Robot(
                 }
                 if (connection.isConnected) {
                     connection.sendTurnCommandWithCountAndWait(movement, count)
+                    delay(1000L)
                 }
             }
             movementCount++
             if (connection.isConnected) {
-                if (movementCount % 5 == 0) {
-                    connection.sendCalibrationCommandAndWait()
+                if (movementCount >= 5) {
+                    val sides = explorationMaze.getEnvironmentOnSides(centerCell.copy())
+                    if (sides.any { it == CELL_OBSTACLE }) {
+                        connection.sendCalibrationCommandAndWait()
+                        movementCount = 0
+                    }
                 }
             }
         }
@@ -240,7 +258,11 @@ private fun List<Movement>.compact(): List<Pair<Movement, Int>> {
     for (i in 1 until size) {
         val movement = this[i]
         val (lastMovement, count) = compactList.last()
-        if (movement == lastMovement && count < 3) {
+        val countThreshold = when (movement) {
+            Movement.TURN_LEFT, Movement.TURN_RIGHT -> 2
+            Movement.MOVE_FORWARD -> 3
+        }
+        if (movement == lastMovement && count < countThreshold) {
             compactList[compactList.lastIndex] = lastMovement to count + 1
         } else {
             compactList += movement to 1

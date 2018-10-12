@@ -36,12 +36,10 @@ class Connection(
         const val TURN_RIGHT_COMMAND = "d"
         const val GET_SENSOR_DATA_COMMAND = "g"
         const val CALIBRATE_COMMAND = "c"
+        const val FASTEST_PATH_COMMAND = "x"
         const val START_EXPLORATION_COMMAND = "starte"
         const val START_FASTEST_PATH_COMMAND = "startf"
-        const val EXPLORATION_COMMAND = "explore"
-        const val FASTEST_PATH_COMMAND = "fastest"
         const val OK_COMMAND = "ok"
-        fun obstacleCommand(x: Int, y: Int) = "obstacle{$x,$y}"
         fun arrowCommand(x: Int, y: Int, direction: Direction): String {
             val directionCommand = when (direction) {
                 Direction.UP -> "u"
@@ -62,6 +60,10 @@ class Connection(
                 Direction.RIGHT -> "r"
             }
             return "${cellInfo.col},${cellInfo.row},$directionCommand"
+        }
+
+        fun robotCenterCommandAndroid(cellInfo: CellInfoModel): String {
+            return "center{${robotCenterCommand(cellInfo)}}"
         }
 
         /**
@@ -178,16 +180,7 @@ class Connection(
     }
 
     private suspend fun sendToRpi(line: String) {
-//        writeLine("$RPI_PREFIX$line")
-    }
-
-    suspend fun sendMovementAndWait(movement: Movement) {
-        when (movement) {
-            Movement.TURN_RIGHT -> sendToArduino(TURN_RIGHT_COMMAND)
-            Movement.MOVE_FORWARD -> sendToArduino(MOVE_FORWARD_COMMAND)
-            Movement.TURN_LEFT -> sendToArduino(TURN_LEFT_COMMAND)
-        }
-        okCommandChannel.receive()
+        writeLine("$RPI_PREFIX$line")
     }
 
     suspend fun sendMoveForwardWithDistanceAndWait(numberOfGrids: Int) {
@@ -198,10 +191,6 @@ class Connection(
     suspend fun sendTurnCommandWithCountAndWait(movement: Movement, turns: Int) {
         sendToArduino(movementWithParameterCommand(movement, turns * 90))
         okCommandChannel.receive()
-    }
-
-    suspend fun sendObstacle(row: Int, col: Int) {
-        sendToAndroid(obstacleCommand(col, row))
     }
 
     suspend fun sendMdfString(part1: String, part2: String) {
@@ -219,17 +208,15 @@ class Connection(
 
     suspend fun sendRobotCenter(cellInfo: CellInfoModel) {
         sendToRpi(robotCenterCommand(cellInfo))
+        sendToAndroid(robotCenterCommandAndroid(cellInfo))
     }
 
     suspend fun sendArrowCommand(x: Int, y: Int, face: Direction) {
         sendToAndroid(arrowCommand(x, y, face))
     }
 
-    suspend fun sendExplorationCommand() {
-        sendToRpi(EXPLORATION_COMMAND)
-    }
-
-    suspend fun sendFastestPathCommand() {
-        sendToRpi(FASTEST_PATH_COMMAND)
+    suspend fun sendFastestPathCommandAndWait() {
+        sendToArduino(FASTEST_PATH_COMMAND)
+        okCommandChannel.receive()
     }
 }

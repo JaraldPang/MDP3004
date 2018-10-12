@@ -138,7 +138,7 @@ void showEncode2() {
 }
 
 /*
- *  Pololu Dual VNH5019 Motor Driver Shield Functions & Robot Calibrations 
+ *  Pololu Dual VNH5019 Motor Driver Shield Functions & Robot Calibrations
  */
 
 double computePID() {
@@ -620,14 +620,15 @@ void calibrate_Robot_Angle(int tpinL, int tpinR) {
     distL = final_MedianRead(tpinL);
     distR = final_MedianRead(tpinR);
     diff = abs(distL - distR);
-	while (diff > ANGLE_TOL) {
-		if (distL > distR) {
-		  moveRight(diff);
-		}
-		else if (distR > distL) {
-		  moveLeft(diff);
-		}
-	}
+    if (diff < ANGLE_TOL) {
+      break;
+    }
+    if (distL > distR) {
+      moveRight(diff);
+    }
+    else if (distR > distL) {
+      moveLeft(diff);
+    }
   }
   delay(200);
   calibration_angle = false;
@@ -979,33 +980,37 @@ void loop() {
     robotRead = "";
     newData = false;
   }
- delay(1000);
- moveForward(30);
- delay(250);
- moveLeft(180);
- delay(250);
- moveForward(30);
- delay(250);
- moveLeft(180);
- delay(250);
- moveForward(30);
- delay(500);
- calibrate_Robot_Position();
- delay(250);
- moveLeft(180);
- delay(250);
- moveForward(30);
- delay(250);
- moveLeft(180);
- delay(250);
- moveForward(30);
- delay(500);
- calibrate_Robot_Position();
- delay(250);
- moveLeft(90);
+  delay(1000);
+  moveForward(30);
+  delay(250);
+  moveRight(180);
+  delay(250);
+  moveForward(30);
+  delay(250);
+  moveRight(180);
+  delay(250);
+  moveForward(30);
   delay(500);
- calibrate_Robot_Position();
- delay(250);
- moveLeft(90);
- delay(250);
+  calibrate_Robot_Position();
+  delay(250);
+  moveRight(180);
+  delay(250);
+  moveForward(30);
+  delay(250);
+  moveRight(180);
+  delay(250);
+  moveForward(30);
+  delay(250);
+  moveRight(180);
+  delay(250);
+  moveForward(30);
+  delay(500);
+  calibrate_Robot_Position();
+  delay(250);
+  moveRight(90);
+  delay(500);
+  calibrate_Robot_Position();
+  delay(250);
+  moveRight(90);
+  delay(250);
 }

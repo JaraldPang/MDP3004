@@ -5,13 +5,16 @@ import model.CellInfoModel
 import java.util.*
 import java.util.concurrent.TimeUnit
 
-open class Exploration(private val robot: Robot, private val connection: Connection) {
+open class Exploration(private val robot: Robot) {
     private val stack = Stack<CellInfoModel>().apply {
         push(robot.centerCell.copy())
     }
 
     open suspend fun explore() {
         while (!exploreInternal(100.0)) {
+        }
+        if (!robot.isAtStartZone) {
+            robot.goToStartZone()
         }
     }
 
@@ -23,19 +26,20 @@ open class Exploration(private val robot: Robot, private val connection: Connect
             val explorationMaze = robot.explorationMaze
             val sides = explorationMaze.getEnvironmentOnSides(robot.centerCell.copy())
             println("Center: ${robot.centerCell}, Sides: ${sides.joinToString()}")
-            shouldBacktrack = sides.all { it > 0 }
+//            shouldBacktrack = sides.all { it > 0 || it == CELL_OBSTACLE } && !sides.all { it == CELL_OBSTACLE }
+            shouldBacktrack = sides.all { it > 0 || it == CELL_OBSTACLE }
             if (!shouldBacktrack) {
                 makeMovingDecision(sides)
             }
             coverage = explorationMaze.calculateCoverage()
         } while (coverage < coverageLimit && !shouldBacktrack)
-        return if (shouldBacktrack) {
-            backtrack()
-        } else {
+        return if (coverage >= coverageLimit) {
             if (!robot.isAtStartZone) {
                 robot.goToStartZone()
             }
             true
+        } else {
+            backtrack()
         }
     }
 
@@ -51,11 +55,11 @@ open class Exploration(private val robot: Robot, private val connection: Connect
         })
         val finalChoice = choices.first()
         when {
-            sides[finalChoice.ordinal] == CELL_OBSTACLE -> {
-                turnLeft()
-                turnLeft()
-                moveForward()
-            }
+//            sides[finalChoice.ordinal] == CELL_OBSTACLE -> {
+//                turnLeft()
+//                turnLeft()
+//                moveForward()
+//            }
             sides[finalChoice.ordinal] == CELL_UNKNOWN -> when (finalChoice) {
                 Movement.TURN_RIGHT, Movement.MOVE_FORWARD -> turnRight()
                 Movement.TURN_LEFT -> turnLeft()
@@ -87,7 +91,13 @@ open class Exploration(private val robot: Robot, private val connection: Connect
                 if (pathsToCell.size <= cell.direction.ordinal || pathsToCell[cell.direction.ordinal].isEmpty()) {
                     throw IllegalStateException("Unable to go back to cell $cell")
                 }
-                val pathToCell = pathsToCell[cell.direction.ordinal]
+                val movement = Movement.values()[sides.indexOfFirst { it == CELL_UNKNOWN || it == CELL_SENSED }]
+                val direction = when (movement) {
+                    Movement.TURN_RIGHT -> cell.direction.turnRight()
+                    Movement.TURN_LEFT -> cell.direction.turnLeft()
+                    Movement.MOVE_FORWARD -> cell.direction
+                }
+                val pathToCell = pathsToCell[direction.ordinal]
                 val movements = pathToCell.toMovements()
                 robot.moveFollowingMovements(movements)
                 return false
@@ -113,15 +123,15 @@ open class Exploration(private val robot: Robot, private val connection: Connect
     }
 }
 
-class TimeLimitedExploration(robot: Robot, connection: Connection, private val timeLimit: Long) :
-    Exploration(robot, connection) {
+class TimeLimitedExploration(robot: Robot, private val timeLimit: Long) :
+    Exploration(robot) {
     override suspend fun explore() {
         withTimeoutOrNull(TimeUnit.SECONDS.toMillis(timeLimit)) { super.explore() }
     }
 }
 
-class CoverageLimitedExploration(robot: Robot, connection: Connection, private val coverageLimit: Double) :
-    Exploration(robot, connection) {
+class CoverageLimitedExploration(robot: Robot, private val coverageLimit: Double) :
+    Exploration(robot) {
     override suspend fun explore() {
         while (!exploreInternal(coverageLimit)) {
         }

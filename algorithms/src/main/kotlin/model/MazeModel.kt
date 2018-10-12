@@ -81,34 +81,39 @@ class MazeModel() : ViewModel() {
         }
     }
 
-    fun getEnvironmentOnSides(cellInfoModel: CellInfoModel): IntArray {
-        val (centerRow, centerCol, direction) = cellInfoModel
-        val minSides = IntArray(3)
-        val sides = SIDES[direction.ordinal]
-        for (movement in Movement.values()) {
-            val (rowDiff, colDiff) = sides[movement.ordinal]
-            if (rowDiff != 0) {
-                val rowOfSide = centerRow + rowDiff
-                if (rowOfSide < 0 || rowOfSide >= MAZE_ROWS) {
-                    minSides[movement.ordinal] = CELL_OBSTACLE
-                } else {
-                    val state1 = this[rowOfSide][centerCol - 1]
-                    val state2 = this[rowOfSide][centerCol]
-                    val state3 = this[rowOfSide][centerCol + 1]
-                    minSides[movement.ordinal] = min3(state1, state2, state3)
-                }
+    fun getSide(centerCell: CellInfoModel, movement: Movement): IntArray {
+        val (centerRow, centerCol, direction) = centerCell
+        val (rowDiff, colDiff) = SIDES[direction.ordinal][movement.ordinal]
+        val side = IntArray(3)
+        if (rowDiff != 0) {
+            val rowOfSide = centerRow + rowDiff
+            if (rowOfSide < 0 || rowOfSide >= MAZE_ROWS) {
+                side.fill(CELL_OBSTACLE)
             } else {
-                check(colDiff != 0)
-                val columnOfSide = centerCol + colDiff
-                if (columnOfSide < 0 || columnOfSide >= MAZE_COLUMNS) {
-                    minSides[movement.ordinal] = CELL_OBSTACLE
-                } else {
-                    val state1 = this[centerRow - 1][columnOfSide]
-                    val state2 = this[centerRow][columnOfSide]
-                    val state3 = this[centerRow + 1][columnOfSide]
-                    minSides[movement.ordinal] = min3(state1, state2, state3)
-                }
+                side[0] = this[rowOfSide][centerCol - 1]
+                side[1] = this[rowOfSide][centerCol]
+                side[2] = this[rowOfSide][centerCol + 1]
             }
+        } else {
+            check(colDiff != 0)
+            val columnOfSide = centerCol + colDiff
+            if (columnOfSide < 0 || columnOfSide >= MAZE_COLUMNS) { // Outside of maze, fill with CELL_OBSTACLES
+                side.fill(CELL_OBSTACLE)
+            } else {
+                side[0] = this[centerRow - 1][columnOfSide]
+                side[1] = this[centerRow][columnOfSide]
+                side[2] = this[centerRow + 1][columnOfSide]
+            }
+        }
+        return side
+    }
+
+    fun getEnvironmentOnSides(cellInfoModel: CellInfoModel): IntArray {
+        val minSides = IntArray(3)
+        for (movement in Movement.values()) {
+            val side = getSide(cellInfoModel, movement)
+            val min = min3(side[0], side[1], side[2])
+            minSides[movement.ordinal] = min
         }
         return minSides
     }

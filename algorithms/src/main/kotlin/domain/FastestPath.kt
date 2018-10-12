@@ -13,6 +13,7 @@ open class FastestPath(protected val robot: Robot) {
     open fun findFastestPathMovements(): List<Movement> {
         val start = robot.centerCell.copy()
         val dest = MAZE_ROWS - 1 - 1 to MAZE_COLUMNS - 1 - 1
+//        val dest = 11 to 5
         val paths = findFastestPathToDestination(robot.explorationMaze.copy(), start, dest)
         val minPath = paths.asSequence()
             .filter { it.isNotEmpty() }
@@ -30,6 +31,7 @@ class FastestPathWithWayPoint(robot: Robot, private val wayPoint: Pair<Int, Int>
             return super.findFastestPathMovements()
         }
         val dest = MAZE_ROWS - 1 - 1 to MAZE_COLUMNS - 1 - 1
+//        val dest = 11 to 5
         val pathsToDest = Direction.values().flatMap { direction ->
             val wayPointCell = CellInfoModel(wayPoint.first, wayPoint.second, direction)
             findFastestPathToDestination(realMaze, wayPointCell, dest).filter { it.isNotEmpty() }

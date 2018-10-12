@@ -54,13 +54,10 @@ class MainController : Controller() {
 
     fun runExploration() {
         GlobalScope.launch(Dispatchers.JavaFx) {
-            if (connection.isConnected) {
-                connection.sendExplorationCommand()
-            }
             val speed = configurationModel.speed
             val robot = Robot(centerCell, explorationMaze, speed, connection)
             val sensors = if (!connection.isConnected) {
-                listOf(2, 3, 4, 5, 6).map { SimulatedSensor(it, SENSE_RANGE_SHORT, robot, realMaze) }
+                listOf(2, 3, 4, 5, 6).map { SimulatedSensor(it, 0..2, robot, realMaze) }
             } else {
                 listOf(3, 4, 5, 6, 8, 2).zip(connection.sensedDataChannels).map { (position, channel) ->
                     val senseRange = if (position == 8) SENSE_RANGE_LONG else SENSE_RANGE_SHORT
@@ -71,17 +68,20 @@ class MainController : Controller() {
             displayRealMaze.value = false
             val coverageLimit = configurationModel.coverage
             val timeLimit = configurationModel.time
+            if (connection.isConnected) {
+                connection.sendRobotCenter(robot.centerCell)
+            }
             when {
                 speed != null && coverageLimit != null -> {
-                    val exploration = CoverageLimitedExploration(robot, connection, coverageLimit)
+                    val exploration = CoverageLimitedExploration(robot, coverageLimit)
                     exploration.explore()
                 }
                 speed != null && timeLimit != null -> {
-                    val exploration = TimeLimitedExploration(robot, connection, timeLimit)
+                    val exploration = TimeLimitedExploration(robot, timeLimit)
                     exploration.explore()
                 }
                 else -> {
-                    val exploration = Exploration(robot, connection)
+                    val exploration = Exploration(robot)
                     exploration.explore()
                 }
             }
@@ -91,6 +91,7 @@ class MainController : Controller() {
             configurationModel.mapDescriptorPart2 = part2
             if (connection.isConnected) {
                 connection.sendMdfString(part1, part2)
+                connection.sendCalibrationCommandAndWait()
             }
         }
     }
@@ -98,7 +99,7 @@ class MainController : Controller() {
     fun runFastestPath() {
         GlobalScope.launch(Dispatchers.JavaFx) {
             if (connection.isConnected) {
-                connection.sendFastestPathCommand()
+                connection.sendFastestPathCommandAndWait()
             }
             val speed = configurationModel.speed
             val robot = Robot(centerCell, explorationMaze, speed, connection)

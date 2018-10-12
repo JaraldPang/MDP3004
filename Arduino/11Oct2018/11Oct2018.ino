@@ -56,7 +56,7 @@ double distTL = 0.0, distTM = 0.0, distTR = 0.0, distBLT = 0.0, distBRT = 0.0, d
 
 #define WALL_GAP 10
 #define WALL_MIN_TOL 0.5
-#define WALL_MAX_TOL 3
+#define WALL_MAX_TOL 5
 #define ANGLE_TOL 0.25
 
 //position calibration variables
@@ -117,7 +117,7 @@ double arrMapping5[] = {8.98, 20.59, 32.39, 44.60, 53.33};
 #define Speed_Brake 400
 
 // Calibration speed
-#define Speed_Calibration 200
+#define Speed_Calibration 100
 #define Speed_Calibration_Angle 60
 
 //Fastest path speed
@@ -714,15 +714,13 @@ void calibrate_Robot_Position() {
 
     //doesn't detect, assume nothing to calibrate to
     else {
-      if(turn == 1) {
-        moveLeft(90);
-        delay(500);
-        break;
-      } else {
+      if(turn == 0) {
         turn++;
         moveRight(90);
         delay(500);
-      }    
+      } else {
+        break;    
+      }
     }
   } 
   if(turn == 1) {
@@ -739,7 +737,7 @@ void calibrate_Robot_Angle(int tpinL, int tpinR) {
   double distR;
   double diff;
   
-  for (int i = 0; i < 2; i++) {
+  for (int i = 0; i < 10; i++) {
     distL = final_MedianRead(tpinL);
     distR = final_MedianRead(tpinR);
     diff = abs(distL - distR);
@@ -760,7 +758,7 @@ void calibrate_Robot_Angle(int tpinL, int tpinR) {
 void calibrateDistance(int tpin) {
   //use only one of the 3 front sensors
   double dist;
-  for (int i = 0; i < 2; i++) {
+  for (int i = 0; i < 10; i++) {
     dist = final_MedianRead(tpin);
     if (dist < WALL_GAP) {
       moveReverse(WALL_GAP - dist);
@@ -1110,8 +1108,6 @@ void setup() {
 void loop() {
 
   if (newData) {
-    Serial.println("an" + robotRead);
-    Serial.flush();
 
     double movementValue = getValue(robotRead, ';', 1).toFloat();
     char condition = robotRead.charAt(0);
@@ -1191,6 +1187,8 @@ void loop() {
     case 'G':
     case 'g':
     {
+      Serial.println("an" + robotRead);
+      Serial.flush();
       print_Median_SensorData_Grids();
       break;
     }
@@ -1214,13 +1212,15 @@ void loop() {
     case 'x': {
       //obstacleAvoid();
       fastest_path = true;
-     // Serial.println("alok");
+      Serial.println("alok");
       Serial.flush();
       break;
     }
     case 'C':
     case 'c':
     {
+      Serial.println("an" + robotRead);
+      Serial.flush();
       calibrate_Robot_Position();
       //calibrate_Robot_Angle(sensorTL, 1, sensorTR, 3, 17);
       //print_Calibrate_SensorData();

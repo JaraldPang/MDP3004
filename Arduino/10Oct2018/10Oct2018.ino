@@ -1243,9 +1243,6 @@ void setup() {
 void loop() {
 
   if (newData) {
-    Serial.println("an" + robotRead);
-    Serial.flush();
-
     double movementValue = getValue(robotRead, ';', 1).toFloat();
     char condition = robotRead.charAt(0);
 
@@ -1324,6 +1321,8 @@ void loop() {
     case 'G':
     case 'g':
     {
+      Serial.println("an" + robotRead);
+      Serial.flush();
       print_Median_SensorData_Grids();
       break;
     }
@@ -1347,13 +1346,15 @@ void loop() {
     case 'x': {
       //obstacleAvoid();
       fastest_path = true;
-     // Serial.println("alok");
+      Serial.println("alok");
       Serial.flush();
       break;
     }
     case 'C':
     case 'c':
     {
+      Serial.println("an" + robotRead);
+      Serial.flush();
       calibrate_Robot_Position();
       //calibrate_Robot_Angle(sensorTL, 1, sensorTR, 3, 17);
       //print_Calibrate_SensorData();

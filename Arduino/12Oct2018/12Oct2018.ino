@@ -52,9 +52,9 @@ double distTL = 0.0, distTM = 0.0, distTR = 0.0, distBLT = 0.0, distBRT = 0.0, d
 #define LONG_OFFSET 20
 
 #define WALL_GAP 10
-#define WALL_MIN_TOL 0.5
+#define WALL_MIN_TOL 0.25
 #define WALL_MAX_TOL 3
-#define ANGLE_TOL 0.25
+#define ANGLE_TOL 0.1
 
 //position calibration variables
 #define STEPS_TO_CALIBRATE 5
@@ -604,9 +604,7 @@ void calibrate_Robot_Position() {
       }
     }
   }
-  if (turn == 1) {
-    moveLeft(90);
-  }
+
   Serial.println("alok");
   Serial.flush();
   calibration_state = false;
@@ -618,7 +616,7 @@ void calibrate_Robot_Angle(int tpinL, int tpinR) {
   double distR;
   double diff;
 
-  for (int i = 0; i < 2; i++) {
+  for (int i = 0; i < 5; i++) {
     distL = final_MedianRead(tpinL);
     distR = final_MedianRead(tpinR);
     diff = abs(distL - distR);
@@ -981,22 +979,33 @@ void loop() {
     robotRead = "";
     newData = false;
   }
-//  delay(1000);
-//  moveForward(30);
-//  delay(250);
-//  moveRight(180);
-//  delay(250);
-//  moveForward(30);
-//  delay(250);
-//  moveLeft(180);
-//  delay(250);
-//  moveForward(30);
-//  delay(250);
-//  moveLeft(180);
-//  delay(250);
-//  moveForward(30);
-//  delay(250);
-//  moveRight(180);
-  //delay(2000);
-  //calibrate_Robot_Position();
+ delay(1000);
+ moveForward(30);
+ delay(250);
+ moveLeft(180);
+ delay(250);
+ moveForward(30);
+ delay(250);
+ moveLeft(180);
+ delay(250);
+ moveForward(30);
+ delay(500);
+ calibrate_Robot_Position();
+ delay(250);
+ moveLeft(180);
+ delay(250);
+ moveForward(30);
+ delay(250);
+ moveLeft(180);
+ delay(250);
+ moveForward(30);
+ delay(500);
+ calibrate_Robot_Position();
+ delay(250);
+ moveLeft(90);
+  delay(500);
+ calibrate_Robot_Position();
+ delay(250);
+ moveLeft(90);
+ delay(250);
 }

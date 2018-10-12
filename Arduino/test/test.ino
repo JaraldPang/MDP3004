@@ -651,7 +651,7 @@ void calibrateDistance(int tpin) {
       moveForward(dist/2 - WALL_GAP);
     }
 	dist = final_MedianRead(tpin);
-	if (dist > 10 && dist < 13){
+	if (dist > 8 && dist < 13){
 		calibration_dist = false;
 		break;
 	}

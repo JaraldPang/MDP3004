@@ -539,8 +539,6 @@ void calibrate_Robot_Position() {
           break;
         }
       }
-      calibrateDistance(irTL);
-      calibrate_Robot_Angle(irTL, irTR);
 
       break;
     }
@@ -555,8 +553,6 @@ void calibrate_Robot_Position() {
           break;
         }
 	  }
-      calibrateDistance(irTL);
-      calibrate_Robot_Angle(irTL, irTM);
 
       break;
     }
@@ -571,8 +567,6 @@ void calibrate_Robot_Position() {
           break;
         }
 	  }
-      calibrateDistance(irTM);
-      calibrate_Robot_Angle(irTM, irTR);
 
       break;
     }

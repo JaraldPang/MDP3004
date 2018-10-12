@@ -554,11 +554,11 @@ void calibrate_Robot_Position() {
           calibrated = true;
           break;
         }
-        calibrateDistance(irTL);
-        calibrate_Robot_Angle(irTL, irTM);
+	  }
+      calibrateDistance(irTL);
+      calibrate_Robot_Angle(irTL, irTM);
 
-        break;
-      }
+      break;
     }
 
     //detects mid and right, not in position
@@ -570,11 +570,11 @@ void calibrate_Robot_Position() {
           calibrated = true;
           break;
         }
-        calibrateDistance(irTM);
-        calibrate_Robot_Angle(irTM, irTR);
+	  }
+      calibrateDistance(irTM);
+      calibrate_Robot_Angle(irTM, irTR);
 
-        break;
-      }
+      break;
     }
 
     //detects only left, not in position

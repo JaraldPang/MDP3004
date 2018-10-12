@@ -632,7 +632,7 @@ void calibrate_Robot_Angle(int tpinL, int tpinR) {
     distL = final_MedianRead(tpinL);
     distR = final_MedianRead(tpinR);
     diff = abs(distL - distR);
-    if (diff > ANGLE_TOL) {
+    if (diff < ANGLE_TOL) {
       calibration_angle = false;
       break;
     }

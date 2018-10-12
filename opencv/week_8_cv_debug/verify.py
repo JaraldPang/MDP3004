@@ -1,11 +1,38 @@
-import numpy
 import cv2 as cv
-#from matplotlib import pyplot as plt
+import numpy
 import time
+import os
+from timeit import default_timer as timer
+
+
+def main():
+    f = open("log.txt","w")
+    print("Starting Arrow Recognition...")
+    reference_img = cv.imread('reference_arrow.jpg', cv.IMREAD_GRAYSCALE)
+    ret, th = cv.threshold(reference_img, 0, 255, cv.THRESH_BINARY)
+    cnts = cv.findContours(th, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)[1]
+    #for image in os.listdir('photos'):
+    for image in ['2,1,r.jpg']:
+        robot_status = image[:-4]
+        print("Processing {}...".format(robot_status))
+        robot_x,robot_y,robot_dir = robot_status.split(",")
+        start = timer()
+        arrowsWithPartition = getImageLocation(cnts,robot_status)
+        end = timer()
+        print("Time taken for arrow analysis of {}: {}. Arrows Found: {}".format(robot_status,end - start, len(arrowsWithPartition)))
+        if(arrowsWithPartition):
+            arrowLocAndFace = getArrowLocation(arrowsWithPartition,(int(robot_x),int(robot_y)),robot_dir)
+            for entry in arrowLocAndFace:
+                print("FOUND! For Status: {}, writing to endpoint arrow location: {}".format(robot_status,entry))
+                f.write("FOUND! For Status: {}, writing to endpoint arrow location: {}\n".format(robot_status,entry))
+
+    f.close()
+    print("Terminating identification...")
 
 
 def getArrowLocation(arrows, robotLocation, robotDir):
     arrowLocArray = []
+    #robot relative direction
     dirMatrix = [[0, 1], [1, 0], [0, -1], [-1, 0]]
     arrowSwitch = {
         "u": "d",
@@ -41,25 +68,23 @@ def getArrowLocation(arrows, robotLocation, robotDir):
             arrowLoc.append(str(robotLocation[1] + (arrow[0] + 2) * cameraDir[1][1] + robotDir[1][1]))
         arrowLoc.append(dir)
         arrowLocArray.append(','.join(arrowLoc))
+    #list of strings with x,y,face
     return arrowLocArray
 
-
-def getImageLocation(sampleImg, actualImage):
+def getImageLocation(reference_contours, captured_image_location):
     arrows = []
-    # get sample image contours
-    ret, th = cv.threshold(actualImage, 50, 255, cv.THRESH_BINARY)
-    cnts = cv.findContours(th, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
-    cnts = cnts[1]
-    # get sample image contours
-    ret1, th1 = cv.threshold(sampleImg, 50, 255, cv.THRESH_BINARY)
-    cnts1 = cv.findContours(th1, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
-    cnts1 = cnts1[1]
+    captured_image = cv.imread("photos/{}.jpg".format(captured_image_location), cv.IMREAD_UNCHANGED)
+    gray = cv.cvtColor(captured_image, cv.COLOR_RGB2GRAY)
+    blur = cv.GaussianBlur(gray, (5, 5), 2)
+    ret, thresholded_img = cv.threshold(gray, 50, 255, cv.THRESH_BINARY)
+    cv.imwrite("debug/{}_th.jpg".format(captured_image_location),thresholded_img)
+    captured_cnts = cv.findContours(thresholded_img, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)[1]
     # get image size
-    imgX = actualImage.shape[1]
-    imgY = actualImage.shape[0]
+    imgX = captured_image.shape[1]
+    imgY = captured_image.shape[0]
     imgArea = imgX * imgY
     # for each contour found
-    for (i, c) in enumerate(cnts):
+    for (i, c) in enumerate(captured_cnts):
         # find number of edges the object has
         peri = cv.arcLength(c, True)
         approx = cv.approxPolyDP(c, 0.01 * peri, True)
@@ -71,7 +96,9 @@ def getImageLocation(sampleImg, actualImage):
         # conditional check
         # if contour matches any of the conditions we are looking for, we append the distance and location
         # condition: 6-8 edges; matches given shape up to 0.25 likeliness; object to image area ratio
-        if (6 <= len(approx) <= 8 and cv.matchShapes(cnts1[0], c, 1, 0.0) < 0.25):
+        if (6 <= len(approx) <= 8 and cv.matchShapes(reference_contours[0], c, 1, 0.0) < 0.05):
+            cv.drawContours(captured_image, [c], -1, (0,255,0), 3)
+            cv.imwrite("debug/{}_cnt.jpg".format(captured_image_location),captured_image)
             # find X-axis of contour
             M = cv.moments(c)
             cx = int(M["m10"] / M["m00"])
@@ -82,38 +109,23 @@ def getImageLocation(sampleImg, actualImage):
                 a = "left"
             else:
                 a = "right"
+            #appends (distance in grid, image)    
             if objectAreaRatio > 0.127:
+                print("{}, {}".format(len(approx),cv.matchShapes(reference_contours[0], c, 1, 0.0)))
                 arrows.append((0, a))
             elif objectAreaRatio > 0.055:
+                print("{}, {}".format(len(approx),cv.matchShapes(reference_contours[0], c, 1, 0.0)))
                 arrows.append((1, a))
             elif objectAreaRatio > 0.027:
+                print("{}, {}".format(len(approx),cv.matchShapes(reference_contours[0], c, 1, 0.0)))
                 arrows.append((2, a))
             elif objectAreaRatio > 0.015:
+                print("{}, {}".format(len(approx),cv.matchShapes(reference_contours[0], c, 1, 0.0)))
                 arrows.append((3, a))
+
+
     return arrows
 
-
-def main():
-    t0 = time.time()
-    arrows = []
-    arrowLoc = []
-    robotLocation = [4, 6]
-    robotDir = "l"
-
-    # get sample image, used to check likeliness of arrow later
-    img = cv.imread('testbed/arrow_real.jpg', cv.IMREAD_GRAYSCALE)
-    # read image
-    capturedImage = cv.imread('testbed/8,14,u.jpg', cv.IMREAD_UNCHANGED)
-    # image preprocessing
-    blur = cv.GaussianBlur(capturedImage, (5, 5), 2)
-    gray = cv.cvtColor(blur, cv.COLOR_BGR2GRAY)
-    arrows = getImageLocation(img, gray)
-    if arrows:
-        arrowLoc = getArrowLocation(arrows, robotLocation, robotDir)
-
-    print(arrowLoc)
-    t1 = time.time()
-    print(t1 - t0, "Seconds")
 
 if __name__ == '__main__':
     main()

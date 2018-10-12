@@ -11,7 +11,7 @@ def main():
 	#gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
 
 	start = timer()
-	arrows = arrow_cascade.detectMultiScale(img, 1.3, 6)
+	arrows = arrow_cascade.detectMultiScale(img, 2, 15)
 	#arrows = arrow_cascade.detectMultiScale(gray, 1.3, 5)
 	end = timer()
 

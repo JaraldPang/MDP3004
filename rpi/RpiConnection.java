@@ -102,15 +102,16 @@ public class RpiConnection
    //basic connection program
    public static void main(String[] args)
    {
-      emulateAlgo();
+      emulateAlgo2();
    }
    
-   public static void emulateAlgo()
+   public static void emulateAlgo1()
    {
       try
       {
          Random ran = new Random();
          RpiConnection conn = new RpiConnection("192.168.17.1", 45000);
+         String msg;
          for(int i = 0; i < 5; i++)
          {
             switch(ran.nextInt(4))
@@ -133,8 +134,12 @@ public class RpiConnection
                   break;                  
             }
             //emulate ack from algo
-            conn.read();
-            conn.write("rpic"+1);
+            do
+            {            
+               msg = conn.read();
+            }while(msg != "ok");
+            
+            conn.write("rpic"+i);
          }
          conn.close();
       }
@@ -143,6 +148,65 @@ public class RpiConnection
          ioe.printStackTrace();
       }
    }
+   
+   public static void emulateAlgo2()
+   {
+      try
+      {
+         Random ran = new Random();
+         RpiConnection conn = new RpiConnection("192.168.17.1", 45000);
+         String msg;
+
+         conn.write("arw");
+         System.out.println("Forward");
+         do
+         {            
+            msg = conn.read();
+            System.out.println("Received:" + msg);
+         }while(!msg.equalsIgnoreCase("ok"));
+         conn.write("rpi1,2,u");
+         
+         conn.write("ara");
+         System.out.println("Turn Left");
+         do
+         {            
+            msg = conn.read();
+            System.out.println("Received:" + msg);
+         }while(!msg.equalsIgnoreCase("ok"));
+         conn.write("rpi1,2,l");
+         
+         conn.write("ard");
+         System.out.println("Turn Right");
+         do
+         {            
+            msg = conn.read();
+            System.out.println("Received:" + msg);
+         }while(!msg.equalsIgnoreCase("ok"));
+         conn.write("rpi1,2,u");
+         
+         conn.write("ars");
+         System.out.println("Backwards");
+         do
+         {            
+            msg = conn.read();
+            System.out.println("Received:" + msg);
+         }while(!msg.equalsIgnoreCase("ok"));
+         conn.write("rpi1,1,u");
+         
+         try
+         {
+            Thread.sleep(1000);
+         }
+         catch(InterruptedException ie){}
+         
+         conn.write("rpi1,1,u");
+         conn.close();
+      }
+      catch(IOException ioe)
+      {
+         ioe.printStackTrace();
+      }
+   }   
 
    public static void provideInput()
    {

@@ -531,40 +531,47 @@ void calibrate_Robot_Position() {
 
     //detects left and right, not in position
     if ((leftTooClose && rightTooClose) || (leftTooFar && rightTooFar) || (leftTooClose && rightTooFar) || (leftTooFar && rightTooClose)) {
-      while (abs(distTL - distTR) > ANGLE_TOL) {
+      while (!calibrated) {
         calibrate_Robot_Angle(irTL, irTR);
         calibrateDistance(irTL);
+		if (abs(distTL - distTR) > ANGLE_TOL){
+			calibrated = true;
+			break;
+		}
       }
       calibrateDistance(irTL);
       calibrate_Robot_Angle(irTL, irTR);
       
-      calibrated = true;
       break;
     }
 
     //detects left and mid, not in position
     else if ((leftTooClose && midTooClose) || (leftTooFar && midTooFar) || (leftTooClose && midTooFar) || (leftTooFar && midTooClose)) {
-      while (abs(distTL - distTM) > ANGLE_TOL) {
+      while (!calibrated) {
         calibrate_Robot_Angle(irTL, irTM);
         calibrateDistance(irTL);
+		if (abs(distTL - distTM) > ANGLE_TOL){
+			calibrated = true;
+			break;
       }
       calibrateDistance(irTL);
       calibrate_Robot_Angle(irTL, irTM);
       
-      calibrated = true;
       break;
     }
 
     //detects mid and right, not in position
     else if ((leftTooClose && midTooClose) || (leftTooFar && midTooFar) || (leftTooClose && midTooFar) || (leftTooFar && midTooClose)) {
-      while (abs(distTM - distTR) > ANGLE_TOL) {
+      while (!calibrated) {
         calibrate_Robot_Angle(irTM, irTR);
         calibrateDistance(irTM);
+		if (abs(distTM - distTR) > ANGLE_TOL){
+			calibrated = true;
+			break;
       }
       calibrateDistance(irTM);
       calibrate_Robot_Angle(irTM, irTR);
       
-      calibrated = true;
       break;
     }
 
@@ -619,7 +626,7 @@ void calibrate_Robot_Angle(int tpinL, int tpinR) {
   distL = final_MedianRead(tpinL);
   distR = final_MedianRead(tpinR);
   diff = abs(distL - distR);
-  while (diff > ANGLE_TOL) {
+  while (calibration_angle) {
 	if (distL > distR) {
 		moveRight(diff/2);
 	}

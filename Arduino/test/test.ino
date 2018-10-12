@@ -62,6 +62,7 @@ double distTL = 0.0, distTM = 0.0, distTR = 0.0, distBLT = 0.0, distBRT = 0.0, d
 int step_counter = 0;
 bool calibration_state = false;
 bool calibration_angle = false;
+bool calibration_dist = false;
 bool calibrated = false;
 bool recalibrate = false;
 bool fastest_path = false;
@@ -628,17 +629,21 @@ void calibrate_Robot_Angle(int tpinL, int tpinR) {
 	distL = final_MedianRead(tpinL);
     distR = final_MedianRead(tpinR);
     diff = abs(distL - distR);
+	if (diff > ANGLE_TOL){
+		calibration_angle = false;
+		break;
+	}
   }
 
   delay(200);
-  calibration_angle = false;
 }
 
 void calibrateDistance(int tpin) {
   //use only one of the 3 front sensors
   double dist;
+  calibration_dist = true
   dist = final_MedianRead(tpin);
-  while(dist < WALL_GAP || dist > WALL_GAP){
+  while(calibration_dist){
     if (dist < WALL_GAP) {
       moveReverse(WALL_GAP - dist/2);
     }
@@ -646,6 +651,10 @@ void calibrateDistance(int tpin) {
       moveForward(dist/2 - WALL_GAP);
     }
 	dist = final_MedianRead(tpin);
+	if (dist > 8 && dist < 13){
+		calibration_dist = false;
+		break;
+	}
   }
   delay(200);
 }

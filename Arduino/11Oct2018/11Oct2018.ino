@@ -2,11 +2,8 @@
 #include <EnableInterrupt.h>
 #include <RunningMedian.h>
 #include <SharpIR.h>
-#include <string.h>
-#include <math.h>
-/*
-     ******************************************************************************************************************************
-*/
+
+
 /**
  * Everything About Sensor
  *
@@ -32,8 +29,8 @@
 #define irBRB A3
 #define irBLT A5
 
-#define MODEL_SHORT 1080 // 1080 (Short), 20150 (Long)
-#define MODEL_LONG 20150 // 1080 (Short), 20150 (Long)
+#define MODEL_SHORT 1080
+#define MODEL_LONG 20150
 
 SharpIR sensorTL(irTL, MODEL_SHORT);
 SharpIR sensorTM(irTM, MODEL_SHORT);
@@ -69,28 +66,12 @@ bool calibrated = false;
 bool recalibrate = false;
 bool fastest_path = false;
 
+#define REPLY_AlAn_OK 1
+#define REPLY_An_Echo 2
+
 /*
-     ******************************************************************************************************************************
-     2Oct2018
-     ******************************************************************************************************************************
-*/
-//1 - TL, 2 - TM, 3 - TR, 4 - BRT, 5 - BLT
-
-//Front
-double arrMapping1[] = {10.00, 21.27, 34.61, 43.78, 50.29};
-double arrMapping2[] = {10.59, 21.17, 33.25, 44.60, 47.41};
-double arrMapping3[] = {10.51, 21.80, 33.96, 42.03, 46.24};
-
-//Right
-double arrMapping4[] = {10.97, 23.12, 36.22, 48.37, 54.46};
-//Right - LR
-double arrMapping0[] = {20.20, 22.85, 30.37, 39.52, 49.73, 62.40, 74.94, 85.88, 96.24};
-
-//Left
-double arrMapping5[] = {8.98, 20.59, 32.39, 44.60, 53.33};
-/*
-     ******************************************************************************************************************************
-*/
+ *  Pololu Dual VNH5019 Motor Driver Shield Variables
+ */
 
 /**
  * Everything About Motor
@@ -139,18 +120,13 @@ int motorStatus;
 double integral;
 long prevTick, prevMillis = 0;
 
-//String robotRead;
+String robotRead;
 bool newData = false, isStarted = false;
 bool robotReady = false;
 
-
 /*
-     ******************************************************************************************************************************
-*/
-
-String robotRead;
-
-String messageHeader = "an";
+ *  Pololu Dual VNH5019 Motor Driver Shield Encoder Methods
+ */
 
 //E1
 void showEncode1() {
@@ -161,9 +137,10 @@ void showEncode2() {
   encoderRightCounter++;
 }
 
-/**
- * This function is to get encoder values
+/*
+ *  Pololu Dual VNH5019 Motor Driver Shield Functions & Robot Calibrations 
  */
+
 double computePID() {
   //Serial.println("[PID] M1Ticks(" + String(M1Ticks) + ") - M2Ticks(" + String(M2Ticks) + ") = " + String(M1Ticks-M2Ticks));
   double p, i, d, pid, error, integral;
@@ -199,40 +176,40 @@ void moveForward(double cm) {
       pid = computePID();
       //Serial.println("R/E1 : " + String((0.6 * Set_Speed) + pid) + " L/E2 : " + String((0.6 * Set_Speed) - pid));
       md.setSpeeds(
-          ((Set_Speed) - pid),
-          ((Set_Speed) + pid)
+        ((Set_Speed) - pid),
+        ((Set_Speed) + pid)
       );
     }
     while (encoderLeftCounter < targetTick - 50) {
       pid = computePID();
       //Serial.println("R/E1 : " + String((1.0 * Set_Speed) + pid) + " L/E2 : " + String((1.0 * Set_Speed) - pid));
       md.setSpeeds(
-          ((Set_Speed) - pid),
-          ((Set_Speed) + pid)
+        ((Set_Speed) - pid),
+        ((Set_Speed) + pid)
       );
     }
     while (encoderLeftCounter < targetTick - 25) {
       pid = computePID();
       //Serial.println("R/E1 : " + String((0.8 * Set_Speed) + pid) + " L/E2 : " + String((0.8 * Set_Speed) - pid));
       md.setSpeeds(
-          ((Set_Speed) - pid),
-          ((Set_Speed) + pid)
+        ((Set_Speed) - pid),
+        ((Set_Speed) + pid)
       );
     }
     while (encoderLeftCounter < targetTick - 15) {
       pid = computePID();
       //Serial.println("R/E1 : " + String((0.6 * Set_Speed) + pid) + " L/E2 : " + String((0.6 * Set_Speed) - pid));
       md.setSpeeds(
-          ((Set_Speed) - pid),
-          ((Set_Speed) + pid)
+        ((Set_Speed) - pid),
+        ((Set_Speed) + pid)
       );
     }
     while (encoderLeftCounter < targetTick) {
       pid = computePID();
       //Serial.println("R/E1 : " + String((0.5 * Set_Speed) + pid) + " L/E2 : " + String((0.5 * Set_Speed) - pid));
       md.setSpeeds(
-          ((Set_Speed) - pid),
-          ((Set_Speed) + pid)
+        ((Set_Speed) - pid),
+        ((Set_Speed) + pid)
       );
     }
   }
@@ -243,8 +220,8 @@ void moveForward(double cm) {
     while (encoderLeftCounter < targetTick) {
       pid = computePID();
       md.setSpeeds(
-          ((Set_Speed) - pid),
-          ((Set_Speed) + pid)
+        ((Set_Speed) - pid),
+        ((Set_Speed) + pid)
       );
     }
     //moveRight_sil(1);
@@ -257,30 +234,30 @@ void moveForward(double cm) {
       pid = computePID();
       //0.885
       md.setSpeeds(
-          ((Set_Speed) - pid),
-          ((Set_Speed) + pid)
+        ((Set_Speed) - pid),
+        ((Set_Speed) + pid)
       );
     }
 
     while (encoderLeftCounter < targetTick - 25) {
       pid = computePID();
       md.setSpeeds(
-          ((0.8 * Set_Speed) - pid),
-          ((0.8 * Set_Speed) + pid)
+        ((0.8 * Set_Speed) - pid),
+        ((0.8 * Set_Speed) + pid)
       );
     }
     while (encoderLeftCounter < targetTick - 15) {
       pid = computePID();
       md.setSpeeds(
-          ((Set_Speed) - pid),
-          ((Set_Speed) + pid)
+        ((Set_Speed) - pid),
+        ((Set_Speed) + pid)
       );
     }
     while (encoderLeftCounter < targetTick) {
       pid = computePID();
       md.setSpeeds(
-          ((Set_Speed) - pid),
-          ((Set_Speed) + pid)
+        ((Set_Speed) - pid),
+        ((Set_Speed) + pid)
       );
     }
     //to bypass the curve motion movement
@@ -293,30 +270,30 @@ void moveForward(double cm) {
     while (encoderLeftCounter < targetTick - 50) {
       pid = computePID();
       md.setSpeeds(
-          ((Set_Speed) - pid),
-          ((Set_Speed) + pid)
+        ((Set_Speed) - pid),
+        ((Set_Speed) + pid)
       );
     }
 
     while (encoderLeftCounter < targetTick - 25) {
       pid = computePID();
       md.setSpeeds(
-          ((Set_Speed) - pid),
-          ((Set_Speed) + pid)
+        ((Set_Speed) - pid),
+        ((Set_Speed) + pid)
       );
     }
     while (encoderLeftCounter < targetTick - 15) {
       pid = computePID();
       md.setSpeeds(
-          ((Set_Speed) - pid),
-          ((Set_Speed) + pid)
+        ((Set_Speed) - pid),
+        ((Set_Speed) + pid)
       );
     }
     while (encoderLeftCounter < targetTick) {
       pid = computePID();
       md.setSpeeds(
-          ((Set_Speed) - pid),
-          ((Set_Speed) + pid)
+        ((Set_Speed) - pid),
+        ((Set_Speed) + pid)
       );
     }
     //to bypass the curve motion movement
@@ -327,8 +304,8 @@ void moveForward(double cm) {
     while (encoderLeftCounter < targetTick) {
       pid = computePID();
       md.setSpeeds (
-          (Set_Speed - pid),
-          (Set_Speed + pid)
+        (Set_Speed - pid),
+        (Set_Speed + pid)
       );
       //Serial.println("M1setSpeed: " + String(int((Set_Speed - pid))) + ", M2setSpeed: " + String(int((Set_Speed + pid))));
       //Serial.println("M1Ticks: " + String(int((encoderRightCounter))) + ", M2Ticks: " + String(int((encoderLeftCounter))));
@@ -339,11 +316,11 @@ void moveForward(double cm) {
   md.setBrakes(Speed_Brake, Speed_Brake - 10);
 
   if (calibration_state != true) {
-    replyStop();
+    replyFx(REPLY_AlAn_OK);
   }
   if (fastest_path == true) {
     delay(250);
-    replyStop();
+    replyFx(REPLY_AlAn_OK);
   }
 }
 
@@ -365,35 +342,35 @@ void moveReverse(double cm) {
   while (encoderLeftCounter < min(50, targetTick)) {
     pid = computePID();
     md.setSpeeds(
-        -((Set_Speed) - pid),
-        -((Set_Speed) + pid)
+      -((Set_Speed) - pid),
+      -((Set_Speed) + pid)
     );
   }
 
   while (encoderLeftCounter < targetTick - 50) {
     pid = computePID();
     md.setSpeeds(
-        -((Set_Speed) - pid),
-        -((Set_Speed) + pid)
+      -((Set_Speed) - pid),
+      -((Set_Speed) + pid)
     );
   }
 
   while (encoderLeftCounter < targetTick) {
     pid = computePID();
     md.setSpeeds(
-        -((Set_Speed) - pid),
-        -((Set_Speed) + pid)
+      -((Set_Speed) - pid),
+      -((Set_Speed) + pid)
     );
   }
 
   md.setBrakes(400, 400);
 
   if (calibration_state != true) {
-    replyStop();
+    replyFx(REPLY_AlAn_OK);
   }
   if (fastest_path == true) {
     delay(250);
-    replyStop();
+    replyFx(REPLY_AlAn_OK);
   }
 }
 
@@ -424,32 +401,32 @@ void moveLeft(double deg) {
   while ( encoderLeftCounter < min(50, targetTick)) {
     pid = computePID();
     md.setSpeeds(
-        ((Set_Speed) - pid),
-        -((Set_Speed) + pid)
+      ((Set_Speed) - pid),
+      -((Set_Speed) + pid)
     );
   }
   while ( encoderLeftCounter < targetTick - 50) {
     pid = computePID();
     md.setSpeeds(
-        ((Set_Speed) - pid),
-        -((Set_Speed) + pid)
+      ((Set_Speed) - pid),
+      -((Set_Speed) + pid)
     );
   }
   while ( encoderLeftCounter < targetTick) {
     pid = computePID();
     md.setSpeeds(
-        ((Set_Speed) - pid),
-        -((Set_Speed) + pid));
+      ((Set_Speed) - pid),
+      -((Set_Speed) + pid));
   }
 
   md.setBrakes(Speed_Brake, Speed_Brake);
 
   if (calibration_state != true) {
-    replyStop();
+    replyFx(REPLY_AlAn_OK);
   }
   if (fastest_path == true) {
     delay(250);
-    replyStop();
+    replyFx(REPLY_AlAn_OK);
   }
 }
 
@@ -481,156 +458,58 @@ void moveRight(double deg) {
   while ( encoderLeftCounter < min(50, targetTick)) {
     pid = computePID();
     md.setSpeeds(
-        -((Set_Speed) - pid),
-        ((Set_Speed) + pid)
+      -((Set_Speed) - pid),
+      ((Set_Speed) + pid)
     );
   }
 
   while (encoderLeftCounter < targetTick - 50) {
     pid = computePID();
     md.setSpeeds(
-        -((Set_Speed) - pid),
-        ((Set_Speed) + pid)
+      -((Set_Speed) - pid),
+      ((Set_Speed) + pid)
     );
   }
   while (encoderLeftCounter < targetTick) {
     pid = computePID();
     md.setSpeeds(
-        -((Set_Speed) - pid),
-        ((Set_Speed) + pid)
+      -((Set_Speed) - pid),
+      ((Set_Speed) + pid)
     );
   }
 
   md.setBrakes(Speed_Brake, Speed_Brake);
 
   if (calibration_state != true) {
-    replyStop();
+    replyFx(REPLY_AlAn_OK);
   }
   if (fastest_path == true) {
     delay(250);
-    replyStop();
+    replyFx(REPLY_AlAn_OK);
   }
 }
 
-void replyStop() {
-  Serial.println("anok");
-  Serial.flush();
-  Serial.println("alok");
-  Serial.flush();
-}
-
-void obstacleAvoid() {
-  bool avoidComplete = false;
-  while (avoidComplete == false) {
-    //if left has wall, obstacle at any part
-    if (final_MedianRead(irBLT) <= 25 && final_MedianRead(irBLT) > 0 && final_MedianRead(irTR) <= 15 && final_MedianRead(irTR) > 0) {
-      Serial.println("Obstacle near wall");
-      moveRight(90);
-      delay(500);
-      moveForward(10);
-      delay(500);
-      moveLeft(90);
-      delay(500);
-      moveRight(45);
-      delay(500);
-      moveForward(20);
-      delay(500);
-      moveLeft(45);
-      delay(500);
-      moveForward(30);
-      delay(500);
-      moveLeft(45);
-      delay(500);
-      moveForward(20);
-      delay(500);
-      moveRight(42);
-      avoidComplete = true;
-    }
-    else if (final_MedianRead(irBRB) <= 25 && final_MedianRead(irBRB) > 0 && final_MedianRead(irTL) <= 15 && final_MedianRead(irTL) > 0) {
-      Serial.println("Obstacle near wall");
-      moveLeft(90);
-      delay(500);
-      moveForward(10);
-      delay(500);
-      moveLeft(90);
-      delay(500);
-      moveLeft(45);
-      delay(500);
-      moveForward(20);
-      delay(500);
-      moveRight(45);
-      delay(500);
-      moveForward(30);
-      delay(500);
-      moveRight(45);
-      delay(500);
-      moveForward(20);
-      delay(500);
-      moveLeft(42);
-      avoidComplete = true;
-    }
-
-    //if right no wall, obstacle at front right
-    if (final_MedianRead(irTR) <= 15 && final_MedianRead(irTR) > 0) {
-      Serial.println("Obstacle at front right");
-      moveLeft(45);
-      delay(500);
-      moveForward(20);
-      delay(500);
-      moveRight(45);
-      delay(500);
-      moveForward(30);
-      delay(500);
-      moveRight(45);
-      delay(500);
-      moveForward(20);
-      delay(500);
-      moveLeft(42);
-      moveForward(40);
-      avoidComplete = true;
-    }
-    //if right no wall, obstacle at front middle
-    else if (final_MedianRead(irTM) <= 15 && final_MedianRead(irTM) > 0) {
-      Serial.println("Obstacle at front middle");
-      moveRight(45);
-      delay(500);
-      moveForward(20);
-      delay(500);
-      moveLeft(45);
-      delay(500);
-      moveForward(30);
-      delay(500);
-      moveLeft(45);
-      delay(500);
-      moveForward(20);
-      delay(500);
-      moveRight(42);
-      moveForward(40);
-      avoidComplete = true;
-    }
-    //if right no wall, obstacle at front left
-    if (final_MedianRead(irTL) <= 15 && final_MedianRead(irTL) > 0) {
-      Serial.println("Obstacle at front left");
-      moveRight(45);
-      delay(500);
-      moveForward(20);
-      delay(500);
-      moveLeft(47);
-      delay(500);
-      moveForward(30);
-      delay(500);
-      moveLeft(47);
-      delay(500);
-      moveForward(20);
-      delay(500);
-      moveRight(42);
-      moveForward(40);
-      avoidComplete = true;
-    }
-    else {
-      moveForward(10);
-    }
-    delay(500);
+void replyFx(int category) {
+  switch (category)
+  {
+  /*
+  * Case 1 : Algo Ok, Android Ok
+  * Case 2 : Android Echo
+  */
+  case 1 :
+    Serial.println("anok");
+    Serial.flush();
+    Serial.println("alok");
+    Serial.flush();
+    break;
+  case 2 :
+    Serial.println("an" + robotRead);
+    Serial.flush();
+    break;
+  case 3 :
+    break;
+  default :
+    break;
   }
 }
 
@@ -648,73 +527,73 @@ void calibrate_Robot_Position() {
     bool midTooFar = distTM > (WALL_GAP + WALL_MIN_TOL) && distTM < (WALL_GAP + WALL_MAX_TOL);
     bool rightTooClose = distTR > 0 && distTR < (WALL_GAP - WALL_MIN_TOL);
     bool rightTooFar = distTR > (WALL_GAP + WALL_MIN_TOL) && distTR < (WALL_GAP + WALL_MAX_TOL);
-    
+
     //detects left and right, not in position
     if ((leftTooClose && rightTooClose) || (leftTooFar && rightTooFar) || (leftTooClose && rightTooFar) || (leftTooFar && rightTooClose)) {
-        if (abs(distTL - distTR) > ANGLE_TOL) {
-          calibrate_Robot_Angle(irTL, irTR);
-          calibrateDistance(irTL);
-          calibrate_Robot_Angle(irTL, irTR);
-        } else {
-          calibrateDistance(irTL);
-          calibrate_Robot_Angle(irTL, irTR);
-        }
-        calibrated = true;
-        break;
+      if (abs(distTL - distTR) > ANGLE_TOL) {
+        calibrate_Robot_Angle(irTL, irTR);
+        calibrateDistance(irTL);
+        calibrate_Robot_Angle(irTL, irTR);
+      } else {
+        calibrateDistance(irTL);
+        calibrate_Robot_Angle(irTL, irTR);
+      }
+      calibrated = true;
+      break;
     }
 
     //detects left and mid, not in position
-    else if((leftTooClose && midTooClose) || (leftTooFar && midTooFar) || (leftTooClose && midTooFar) || (leftTooFar && midTooClose)) { 
-        if (abs(distTL - distTM) > ANGLE_TOL) {
-          calibrate_Robot_Angle(irTL, irTM);
-          calibrateDistance(irTL);
-          calibrate_Robot_Angle(irTL, irTM);
-        } else {
-          calibrateDistance(irTL);
-          calibrate_Robot_Angle(irTL, irTM);
-        }
-        calibrated = true;
-        break;
+    else if ((leftTooClose && midTooClose) || (leftTooFar && midTooFar) || (leftTooClose && midTooFar) || (leftTooFar && midTooClose)) {
+      if (abs(distTL - distTM) > ANGLE_TOL) {
+        calibrate_Robot_Angle(irTL, irTM);
+        calibrateDistance(irTL);
+        calibrate_Robot_Angle(irTL, irTM);
+      } else {
+        calibrateDistance(irTL);
+        calibrate_Robot_Angle(irTL, irTM);
+      }
+      calibrated = true;
+      break;
     }
 
     //detects mid and right, not in position
-    else if((leftTooClose && midTooClose) || (leftTooFar && midTooFar) || (leftTooClose && midTooFar) || (leftTooFar && midTooClose)) { 
-        if (abs(distTM - distTR) > ANGLE_TOL) {
-          calibrate_Robot_Angle(irTM, irTR);
-          calibrateDistance(irTM);
-          calibrate_Robot_Angle(irTM, irTR);
-        } else {
-          calibrateDistance(irTM);
-          calibrate_Robot_Angle(irTM, irTR);
-        }
-        calibrated = true;
-        break;
-    }
-    
-    //detects only left, not in position
-    else if(leftTooClose || leftTooFar) {      
-        calibrateDistance(irTL);
-        calibrated = true;
-        break;
-    }
-    
-    //detects only mid, not in position
-    else if(midTooClose || midTooFar) {
+    else if ((leftTooClose && midTooClose) || (leftTooFar && midTooFar) || (leftTooClose && midTooFar) || (leftTooFar && midTooClose)) {
+      if (abs(distTM - distTR) > ANGLE_TOL) {
+        calibrate_Robot_Angle(irTM, irTR);
         calibrateDistance(irTM);
-        calibrated = true;
-        break;
+        calibrate_Robot_Angle(irTM, irTR);
+      } else {
+        calibrateDistance(irTM);
+        calibrate_Robot_Angle(irTM, irTR);
+      }
+      calibrated = true;
+      break;
     }
-    
+
+    //detects only left, not in position
+    else if (leftTooClose || leftTooFar) {
+      calibrateDistance(irTL);
+      calibrated = true;
+      break;
+    }
+
+    //detects only mid, not in position
+    else if (midTooClose || midTooFar) {
+      calibrateDistance(irTM);
+      calibrated = true;
+      break;
+    }
+
     //detects only right, not in position
-    else if(rightTooClose || rightTooFar) {
-        calibrateDistance(irTR);
-        calibrated = true;
-        break;
-    }  
+    else if (rightTooClose || rightTooFar) {
+      calibrateDistance(irTR);
+      calibrated = true;
+      break;
+    }
 
     //doesn't detect, assume nothing to calibrate to
     else {
-      if(turn == 1) {
+      if (turn == 1) {
         moveLeft(90);
         delay(500);
         break;
@@ -722,10 +601,10 @@ void calibrate_Robot_Position() {
         turn++;
         moveRight(90);
         delay(500);
-      }    
+      }
     }
-  } 
-  if(turn == 1) {
+  }
+  if (turn == 1) {
     moveLeft(90);
   }
   Serial.println("alok");
@@ -738,7 +617,7 @@ void calibrate_Robot_Angle(int tpinL, int tpinR) {
   double distL;
   double distR;
   double diff;
-  
+
   for (int i = 0; i < 2; i++) {
     distL = final_MedianRead(tpinL);
     distR = final_MedianRead(tpinR);
@@ -771,14 +650,14 @@ void calibrateDistance(int tpin) {
   }
   delay(200);
 }
+
 /*
-     ********************************************************************************************************************************
-*/
+ *  Sharp IR Functions & Grids Processing
+ */
 
 void flush_SensorData() {
   distTL = 0.0; distTM = 0.0; distTR = 0.0; distBLT = 0.0; distBRT = 0.0; distBRB = 0.0;
 }
-
 
 double final_MedianRead(int tpin) {
   double x[9];
@@ -808,7 +687,6 @@ void insertion_Sort(double array[], int length) {
   }
 }
 
-
 double evaluate_Distance(int pin) {
   double distanceReturn = 0.0;
   switch (pin)
@@ -836,23 +714,6 @@ double evaluate_Distance(int pin) {
     break;
   }
   return distanceReturn;
-}
-
-void print_Calibrate_SensorData() {
-  flush_SensorData();
-  distTL = calibrate_SensorValue(sensorTL.distance(), 1);
-  distTM = calibrate_SensorValue(sensorTM.distance(), 2);
-  distTR = calibrate_SensorValue(sensorTR.distance(), 3);
-  distBRT = calibrate_SensorValue(sensorBRT.distance(), 4);
-  distBRB = calibrate_SensorValue(sensorBRB.distance(), 0);
-  distBLT = calibrate_SensorValue(sensorBLT.distance(), 5);
-  Serial.println("an" + String(distTL) + ";" +
-                 String(distTM) + ";" +
-                 String(distTR) + ";" +
-                 String(distBRT) + ";" +
-                 String(distBRB) + ";" +
-                 String(distBLT));
-  Serial.flush();
 }
 
 void print_Median_SensorData_Grids() {
@@ -925,38 +786,6 @@ void print_Median_SensorData() {
   }
 }
 
-double calibrate_SensorValue(double dist, int category) {
-  double *arr;
-  int i, len;
-
-  /*0 - BRB, 1 - TL, 2 - TM, 3 - TR, 4 - BRT, 5 - BLT*/
-
-  switch (category) {
-  case 0: arr = arrMapping0; len = sizeof(arrMapping0) / sizeof(*arr); break;
-  case 1: arr = arrMapping1; len = sizeof(arrMapping1) / sizeof(*arr); break;
-  case 2: arr = arrMapping2; len = sizeof(arrMapping2) / sizeof(*arr); break;
-  case 3: arr = arrMapping3; len = sizeof(arrMapping3) / sizeof(*arr); break;
-  case 4: arr = arrMapping4; len = sizeof(arrMapping4) / sizeof(*arr); break;
-  case 5: arr = arrMapping5; len = sizeof(arrMapping5) / sizeof(*arr); break;
-  default: return -1;
-  }
-
-  for (i = 0; i < len; i++) {
-    if (dist < arr[i]) {
-      int a = (i == 0) ? 0 : arr[i - 1];
-      int offset = (category == 0) ? 1 : 0;
-
-      if ((i == 0) && (category == 0)) {
-        return map(dist, a, arr[i], 0, ((i + offset + 1) * 10));
-      }
-
-      return map(dist, a, arr[i], ((i + offset) * 10), ((i + offset + 1) * 10));
-    }
-  }
-
-  return i * 10;
-}
-
 int obstacle_GridConversation(double sensor_data, int sensor_category) {
   int temp_value = 0;
 
@@ -1017,8 +846,8 @@ int obstacle_GridConversation(double sensor_data, int sensor_category) {
 }
 
 /*
-     ********************************************************************************************************************************
-*/
+ *  Arduino Serial & Data Processing
+ */
 
 String getValue(String data, char separator, int index) {
   int found = 0;
@@ -1036,25 +865,7 @@ String getValue(String data, char separator, int index) {
 }
 
 void serialEvent() {
-  /*
-  }
-  char inData[20];
-  unsigned long timeout = millis() + TIMEOUT;
-  uint8_t inIndex = 0;
-  while ( ((int32_t)(millis() - timeout) < 0) && (inIndex < (sizeof(inData) / sizeof(inData[0])))) {
-    while (Serial.available()) {
-      // get the new byte:
-      inData[inIndex] = (char) Serial.read();
 
-      if (inData[inIndex] == '\n') || (inData[inIndex] == '\r'))  {
-        newData = true;
-        break;
-      }
-      // add it to the inputString:
-      Serial.writeln(inData[inIndex++]);
-      robotRead += inData[inIndex];
-    }
-    */
   while (Serial.available()) {
     // get the new byte:
     char inChar = (char) Serial.read();
@@ -1069,16 +880,9 @@ void serialEvent() {
 
 }
 
-void blink_LED() {
-  digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
-  delay(1000);                       // wait for a second
-  digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
-  delay(1000);
-}
-
 /*
-     ********************************************************************************************************************************
-*/
+ *  Arduino Default Function
+ */
 
 void setup() {
   // put your setup code here, to run once:
@@ -1090,8 +894,6 @@ void setup() {
   pinMode(irBRT, INPUT);
   pinMode(irBRB, INPUT);
   pinMode(irBLT, INPUT);
-
-  //pinMode(LED_BUILTIN, OUTPUT);
 
   digitalWrite(irTL, LOW);
   digitalWrite(irTM, LOW);
@@ -1110,33 +912,15 @@ void setup() {
 void loop() {
 
   if (newData) {
-    Serial.println("an" + robotRead);
-    Serial.flush();
-
     double movementValue = getValue(robotRead, ';', 1).toFloat();
     char condition = robotRead.charAt(0);
 
     switch (condition) {
-    case 'Q':
-    case 'q':
-    {
-      //startCalibrate();
-      break;
-    }
     case 'W':
     case 'w':
     {
       step_counter++;
       (movementValue == 0) ? moveForward(10) : moveForward(movementValue);
-      // if (step_counter == STEPS_TO_CALIBRATE || recalibrate == true) {
-      //   calibrate_Robot_Position();
-      //   if (calibrated) {
-      //     step_counter = 0;
-      //     recalibrate = false;
-      //   } else {
-      //     recalibrate = true;
-      //   }
-      // }
       break;
     }
     case 'A':
@@ -1144,15 +928,6 @@ void loop() {
     {
       step_counter++;
       (movementValue == 0) ? moveLeft(90) : moveLeft(movementValue);
-      // if (step_counter == STEPS_TO_CALIBRATE || recalibrate == true) {
-      //   calibrate_Robot_Position();
-      //   if (calibrated) {
-      //     step_counter = 0;
-      //     recalibrate = false;
-      //   } else {
-      //     recalibrate = true;
-      //   }
-      // }
       break;
     }
     case 'S':
@@ -1160,15 +935,6 @@ void loop() {
     {
       step_counter++;
       (movementValue == 0) ? moveReverse(10) : moveReverse(movementValue);
-      // if (step_counter == STEPS_TO_CALIBRATE || recalibrate == true) {
-      //   calibrate_Robot_Position();
-      //   if (calibrated) {
-      //     step_counter = 0;
-      //     recalibrate = false;
-      //   } else {
-      //     recalibrate = true;
-      //   }
-      // }
       break;
     }
     case 'D':
@@ -1176,76 +942,37 @@ void loop() {
     {
       step_counter++;
       (movementValue == 0) ? moveRight(90) : moveRight(movementValue);
-      // if (step_counter == STEPS_TO_CALIBRATE || recalibrate == true) {
-      //   calibrate_Robot_Position();
-      //   if (calibrated) {
-      //     step_counter = 0;
-      //     recalibrate = false;
-      //   } else {
-      //     recalibrate = true;
-      //   }
-      // }
       break;
     }
-
     case 'G':
     case 'g':
     {
+      replyFx(REPLY_An_Echo);
       print_Median_SensorData_Grids();
       break;
     }
-    case 'T':
-    case 't':
-    {
-      print_Calibrate_SensorData();
-      //(movementValue == 0) ? testMotors(0) : testMotors(movementValue);
-      //autoCalibrate(1);
-      break;
-    }
-
     case 'Z':
     case 'z':
     {
+      replyFx(REPLY_An_Echo);
       print_Median_SensorData();
       print_Median_SensorData_Grids();
       break;
     }
     case 'X':
     case 'x': {
-      //obstacleAvoid();
       fastest_path = true;
-     // Serial.println("alok");
+      // Serial.println("alok");
       Serial.flush();
       break;
     }
     case 'C':
     case 'c':
     {
+      replyFx(REPLY_An_Echo);
       calibrate_Robot_Position();
-      //calibrate_Robot_Angle(sensorTL, 1, sensorTR, 3, 17);
-      //print_Calibrate_SensorData();
       break;
     }
-    case 'B':
-    case 'b':
-    {
-      //calibrate_Robot_Angle();
-      //calibrateWithFront();
-      break;
-    }
-    case 'N':
-    case 'n':
-    {
-      //calibrateWithLeft();
-      break;
-    }
-    case 'M':
-    case 'm':
-    {
-      //calibrateWithRight();
-      break;
-    }
-
     default:
     {
       //defaultResponse();

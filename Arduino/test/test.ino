@@ -515,130 +515,52 @@ void replyFx(int category) {
 }
 
 void calibrate_Robot_Position() {
-  calibration_state = true;
   int turn = 0;
   calibrated = false;
 
-  while (calibrated != true) {
+  while (!calibrated) {
     print_Median_SensorData();
-
-    bool leftTooClose = distTL > 0 && distTL < (WALL_GAP - WALL_MIN_TOL);
-    bool leftTooFar = distTL > (WALL_GAP + WALL_MIN_TOL) && distTL < (WALL_GAP + WALL_MAX_TOL);
-    bool midTooClose = distTM > 0 && distTM < (WALL_GAP - WALL_MIN_TOL);
-    bool midTooFar = distTM > (WALL_GAP + WALL_MIN_TOL) && distTM < (WALL_GAP + WALL_MAX_TOL);
-    bool rightTooClose = distTR > 0 && distTR < (WALL_GAP - WALL_MIN_TOL);
-    bool rightTooFar = distTR > (WALL_GAP + WALL_MIN_TOL) && distTR < (WALL_GAP + WALL_MAX_TOL);
-
-    //detects left and right, not in position
-    if ((leftTooClose && rightTooClose) || (leftTooFar && rightTooFar) || (leftTooClose && rightTooFar) || (leftTooFar && rightTooClose)) {
-      while (!calibrated) {
-        calibrate_Robot_Angle(irTL, irTR);
-        if (abs(distTL - distTR) < ANGLE_TOL) {
-          calibrated = true;
-          break;
-        }
-      }
-	  calibrateDistance(irTL);
-
-      break;
+    calibrate_Robot_Angle(irTL, irTR, irTM);
+	calibrateDistance(irTM);
+	calibrated = true;
+	break;
     }
-
-    //detects left and mid, not in position
-    else if ((leftTooClose && midTooClose) || (leftTooFar && midTooFar) || (leftTooClose && midTooFar) || (leftTooFar && midTooClose)) {
-      while (!calibrated) {
-        calibrate_Robot_Angle(irTL, irTM);
-        if (abs(distTL - distTM) < ANGLE_TOL) {
-          calibrated = true;
-          break;
-        }
-	  }
-	  calibrateDistance(irTL);
-
-      break;
-    }
-
-    //detects mid and right, not in position
-    else if ((leftTooClose && midTooClose) || (leftTooFar && midTooFar) || (leftTooClose && midTooFar) || (leftTooFar && midTooClose)) {
-      while (!calibrated) {
-        calibrate_Robot_Angle(irTM, irTR);
-        if (abs(distTM - distTR) < ANGLE_TOL) {
-          calibrated = true;
-          break;
-        }
-	  }
-	  calibrateDistance(irTM);
-
-      break;
-    }
-
-    //detects only left, not in position
-    else if (leftTooClose || leftTooFar) {
-      calibrateDistance(irTL);
-      calibrated = true;
-      break;
-    }
-
-    //detects only mid, not in position
-    else if (midTooClose || midTooFar) {
-      calibrateDistance(irTM);
-      calibrated = true;
-      break;
-    }
-
-    //detects only right, not in position
-    else if (rightTooClose || rightTooFar) {
-      calibrateDistance(irTR);
-      calibrated = true;
-      break;
-    }
-
-    //doesn't detect, assume nothing to calibrate to
-    else {
-      if (turn == 1) {
-        moveLeft(90);
-        delay(500);
-        break;
-      } else {
-        turn++;
-        moveRight(90);
-        delay(500);
-      }
-    }
-  }
-  if (turn == 1) {
-    moveLeft(90);
   }
   Serial.println("alok");
   Serial.flush();
-  calibration_state = false;
 }
 
-void calibrate_Robot_Angle(int tpinL, int tpinR) {
+void calibrate_Robot_Angle(int tpinL, int tpinR, int tpinM) {
   calibration_angle = true;
   double distL;
   double distR;
-  double diff;
-
+  double distM;
+  double diffLR;
+  double diffLM;
+  
+  distM = final_MedianRead(tpinM);
   distL = final_MedianRead(tpinL);
   distR = final_MedianRead(tpinR);
-  diff = abs(distL - distR);
+  diffLR = abs(distL - distR);
+  diffLM = abd(distL - distM);
+  if (diffLM > diffLR){moveRight(10);}
+
   while (calibration_angle) {
-    if (distL > distR) {
-      moveRight(diff / 2);
-    }
-    else if (distR > distL) {
-      moveLeft(diff / 2);
-    }
-    distL = final_MedianRead(tpinL);
+	distM = final_MedianRead(tpinM);
+	distL = final_MedianRead(tpinL);
     distR = final_MedianRead(tpinR);
-    diff = abs(distL - distR);
-    if (diff < ANGLE_TOL) {
+    diffLR = abs(distL - distR);
+    if (diffLR < ANGLE_TOL) {
       calibration_angle = false;
       break;
     }
+    if (distL > distR) {
+      moveRight(3 * diff / 4);
+    }
+    else if (distR > distL) {
+      moveLeft(3 * diff / 4);
+    }
   }
-
-  delay(200);
 }
 
 void calibrateDistance(int tpin) {
@@ -648,19 +570,18 @@ void calibrateDistance(int tpin) {
   dist = final_MedianRead(tpin);
   
   while (calibration_dist) {
-    if (dist < WALL_GAP) {
-      moveReverse(WALL_GAP - dist / 2);
-    }
-    if (dist > WALL_GAP) {
-      moveForward(dist / 2 - WALL_GAP);
-    }
-    dist = final_MedianRead(tpin);
-    if (dist > 8 && dist < 13) {
+	dist = final_MedianRead(tpin);
+    if (dist > 11 && dist < 12.5) {
       calibration_dist = false;
       break;
     }
+    if (dist < WALL_GAP) {
+      moveReverse(WALL_GAP - 3 * dist / 4);
+    }
+    else if (dist > WALL_GAP) {
+      moveForward(3 * dist / 4 - WALL_GAP);
+    }
   }
-  delay(200);
 }
 
 /*

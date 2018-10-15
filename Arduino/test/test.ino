@@ -568,15 +568,15 @@ void calibrateDistance(int tpin) {
   
   while (calibration_dist) {
 	dist = final_MedianRead(tpin);
-    if (dist > 10 && dist < 12.5) {
+    if (dist > 9 && dist < 12.5) {
       calibration_dist = false;
       break;
     }
     if (dist < WALL_GAP) {
-      moveReverse(WALL_GAP - dist / 2);
+      moveReverse(WALL_GAP - dist);
     }
     else if (dist > WALL_GAP) {
-      moveForward(dist / 2 - WALL_GAP);
+      moveForward(dist - WALL_GAP);
     }
   }
 }

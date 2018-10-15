@@ -9,14 +9,14 @@
  *
  * MDP Board Pin <> Arduino Pin <> Sensor Range <> Model <> Location
  * Top Sensor
- * PS1 <> A0  <> SE5  Distance <= 85          (1080)    TLeft
- * PS3 <> A2  <> SE7  Distance <= 85          (1080)    TMiddle
- * PS5 <> A4  <> SE2  Distance <= 85          (1080)    TRight Kel 2
+ * PS1 <> A0  <> SE5  Distance <= 85          (10801)    TLeft
+ * PS3 <> A2  <> SE7  Distance <= 85          (10802)    TMiddle
+ * PS5 <> A4  <> SE2  Distance <= 85          (10803)    TRight Kel 2
  *
  * Bottom Sensor
- * PS2 <> A1  <> SE3 Distance <=80            (1080)    BRight(Front)
- * PS4 <> A3  <> SE1 Distance 30 <= x <= 130  (20150)   BRight(Back)
- * PS6 <> A5  <> SE6 Distance <=85            (1080)    BLeft(Front) Kel 1
+ * PS2 <> A1  <> SE3 Distance <=80            (10804)    BRight(Front)
+ * PS4 <> A3  <> SE1 Distance 30 <= x <= 130  (201505)   BRight(Back)
+ * PS6 <> A5  <> SE6 Distance <=85            (10806)    BLeft(Front) Kel 1
  *
  *
  *
@@ -30,16 +30,13 @@
 #define irBRB A3
 #define irBLT A5
 
-#define MODEL_SHORT 1080
-#define MODEL_LONG 20150
+SharpIR sensorTL(irTL, 10801);
+SharpIR sensorTM(irTM, 10802);
+SharpIR sensorTR(irTR, 10803);
 
-SharpIR sensorTL(irTL, MODEL_SHORT);
-SharpIR sensorTM(irTM, MODEL_SHORT);
-SharpIR sensorTR(irTR, MODEL_SHORT);
-
-SharpIR sensorBRT(irBRT, MODEL_SHORT);
-SharpIR sensorBRB(irBRB, MODEL_LONG);
-SharpIR sensorBLT(irBLT, MODEL_SHORT);
+SharpIR sensorBRT(irBRT, 10804);
+SharpIR sensorBRB(irBRB, 201505);
+SharpIR sensorBLT(irBLT, 10806);
 
 double distTL = 0.0, distTM = 0.0, distTR = 0.0, distBLT = 0.0, distBRT = 0.0, distBRB = 0.0;
 
@@ -47,7 +44,7 @@ double distTL = 0.0, distTM = 0.0, distTR = 0.0, distBLT = 0.0, distBRT = 0.0, d
 #define MAX_RANGE_OF_SHORT_SENSOR 4
 
 #define MIN_RANGE_OF_LONG_SENSOR 3
-#define MAX_RANGE_OF_LONG_SENSOR 7
+#define MAX_RANGE_OF_LONG_SENSOR 9
 
 #define SHORT_OFFSET 10
 #define LONG_OFFSET 20
@@ -762,12 +759,12 @@ void print_Median_SensorData() {
   flush_SensorData();
 
   // Read Median Distance
-  distTL = final_MedianRead(irTL);
-  distTM = final_MedianRead(irTM);
-  distTR = final_MedianRead(irTR);
-  distBLT = final_MedianRead(irBLT);
-  distBRT = final_MedianRead(irBRT);
-  distBRB = final_MedianRead(irBRB);
+  distTL = evaluate_Distance(irTL);
+  distTM = evaluate_Distance(irTM);
+  distTR = evaluate_Distance(irTR);
+  distBLT = evaluate_Distance(irBLT);
+  distBRT = evaluate_Distance(irBRT);
+  distBRB = evaluate_Distance(irBRB);
 
   // Concatenate all position into a string and send
   output += String(distTL);  output += ",";
@@ -796,7 +793,10 @@ int obstacle_GridConversation(double sensor_data, int sensor_category) {
     // Remove Wall. Convert to Grids.
     temp_value = (sensor_data - SHORT_OFFSET) / 10;
     // Next To Imaginary, return 0
-    if ((temp_value < MIN_RANGE_OF_SHORT_SENSOR)) {
+    if (temp_value < 0){
+      return MAX_RANGE_OF_SHORT_SENSOR;
+    }
+    else if ((temp_value < MIN_RANGE_OF_SHORT_SENSOR)) {
       return temp_value;
     }
     // Within Range, return Grids.
@@ -812,7 +812,10 @@ int obstacle_GridConversation(double sensor_data, int sensor_category) {
   // Side Sensor
   else if (sensor_category == 2) {
     temp_value = (sensor_data - SHORT_OFFSET) / 10;
-    if ((temp_value < MIN_RANGE_OF_SHORT_SENSOR)) {
+    if (temp_value < 0){
+      return MAX_RANGE_OF_SHORT_SENSOR;
+    }
+    else if ((temp_value < MIN_RANGE_OF_SHORT_SENSOR)) {
       return temp_value;
     }
     else if ((temp_value >= MIN_RANGE_OF_SHORT_SENSOR) &&
@@ -981,37 +984,4 @@ void loop() {
     robotRead = "";
     newData = false;
   }
-  delay(1000);
-  moveForward(30);
-  delay(250);
-  moveRight(180);
-  delay(250);
-  moveForward(30);
-  delay(250);
-  moveRight(180);
-  delay(250);
-  moveForward(30);
-  delay(500);
-  calibrate_Robot_Position();
-  delay(250);
-  moveRight(180);
-  delay(250);
-  moveForward(30);
-  delay(250);
-  moveRight(180);
-  delay(250);
-  moveForward(30);
-  delay(250);
-  moveRight(180);
-  delay(250);
-  moveForward(30);
-  delay(500);
-  calibrate_Robot_Position();
-  delay(250);
-  moveRight(90);
-  delay(500);
-  calibrate_Robot_Position();
-  delay(250);
-  moveRight(90);
-  delay(250);
 }

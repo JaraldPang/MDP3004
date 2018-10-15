@@ -4,14 +4,24 @@
 uses only 1 sensor. use the 1 sensor, prefer middle, to take readingR and readingL
 THIS ASSUMES the robot is positioned approximately centered to the grid and rotation is performed on the spot
 min_tol is the equidistance from the normal, where the normal is a vertical line cutting THROUGH the sensor
-given a right-angled triangle with sides a,o,h where a is the distance of the robot to a wall/obstacle in the first reading or initial orientation
-then h is the distance taken by the sensor at the second reading
-for a 1 degree min_tol, a = 10cm, then o is 10tan(1) = 0.17cm. 
-for a 5 degree min_tol, a = 13.5cm, then o is 13.5tan(5) = 1.18cm.
-since readings are a and h respectively, min_tol is the minimum distance of difference between a and h
-for a= 13.5cm, 5 deg, h should be 13.7cm meaning min_tol should be 13.7 - 13.5 = 0.2cm
-meaning if the robot is 0 degrees slanted from the wall and 1st reading from the wall is 13.5 cm, then a 10 degree slant reading should read 13.7cm
-if the robot is 10 degrees slanted from the wall and 1st reading from the wall is 13.5cm, then a 10 degree slant reading will read 14.6cm
+
+when the robot would to take 2 readings, 1 left of its center and 1 right of its center
+ - if the robot is aligned, the left and right reading ~ approximately the same
+ - if the robot is slanted left, the left reading > right reading
+ - if the robot is slanted right, the right reading > left reading
+ - the more severe the slant, the greater the difference in reading
+
+e.g.
+
+if the robot is 0 degrees slanted from the wall and distance from the wall is 13.5 cm, then a 10 degree left and right slant reading should read 13.7cm
+if the robot is 10 degrees right slanted from the wall and distance from the wall is 13.5cm, then a 10 degree right slant reading will read 14.6cm, while a 10 degree left slant reading would read 
+13.2cm
+
+to afford a degree of tolerance, we put the slant difference tolerance as 0.2; this is equivalent to 5 degree slant on either side
+this is because if the robot is already slant e.g. slant 10 degrees
+a 5 degree turn for the 1st reading and 5 degree turn for the right reading corresponds to slant 5 and slant 15
+will return 13.5 and 13.9 respectively.   
+
 */
 
 //need 2 readings of distance in cm from robot's initial position

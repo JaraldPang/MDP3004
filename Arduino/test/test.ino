@@ -565,19 +565,18 @@ void calibrateDistance(int tpin) {
   //use only one of the 3 front sensors
   double dist;
   calibration_dist = true;
-  dist = final_MedianRead(tpin);
   
   while (calibration_dist) {
 	dist = final_MedianRead(tpin);
-    if (dist > 11 && dist < 12.5) {
+    if (dist > 10 && dist < 12.5) {
       calibration_dist = false;
       break;
     }
     if (dist < WALL_GAP) {
-      moveReverse(WALL_GAP - 3 * dist / 4);
+      moveReverse(WALL_GAP - dist / 2);
     }
     else if (dist > WALL_GAP) {
-      moveForward(3 * dist / 4 - WALL_GAP);
+      moveForward(dist / 2 - WALL_GAP);
     }
   }
 }

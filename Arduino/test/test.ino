@@ -63,7 +63,7 @@ int step_counter = 0;
 bool calibration_state = false;
 bool calibration_angle = false;
 bool calibration_dist = false;
-bool calibrated = false;
+//bool calibrated = false;
 bool recalibrate = false;
 bool fastest_path = false;
 
@@ -516,16 +516,15 @@ void replyFx(int category) {
 
 void calibrate_Robot_Position() {
   int turn = 0;
-  calibrated = false;
-
-  while (!calibrated) {
-    print_Median_SensorData();
+  calibration_state = true;
+  print_Median_SensorData();
+  while (calibration_state) {
     calibrate_Robot_Angle(irTL, irTR, irTM);
 	calibrateDistance(irTM);
-	calibrated = true;
+	calibration_state = false;
 	break;
     }
-  }
+
   Serial.println("alok");
   Serial.flush();
 }
@@ -542,8 +541,8 @@ void calibrate_Robot_Angle(int tpinL, int tpinR, int tpinM) {
   distL = final_MedianRead(tpinL);
   distR = final_MedianRead(tpinR);
   diffLR = abs(distL - distR);
-  diffLM = abd(distL - distM);
-  if (diffLM > diffLR){moveRight(10);}
+  diffLM = abs(distL - distM);
+  if (diffLM > diffLR){moveRight(30);}
 
   while (calibration_angle) {
 	distM = final_MedianRead(tpinM);
@@ -555,10 +554,10 @@ void calibrate_Robot_Angle(int tpinL, int tpinR, int tpinM) {
       break;
     }
     if (distL > distR) {
-      moveRight(3 * diff / 4);
+      moveRight(3 * diffLR / 4);
     }
     else if (distR > distL) {
-      moveLeft(3 * diff / 4);
+      moveLeft(3 * diffLR / 4);
     }
   }
 }

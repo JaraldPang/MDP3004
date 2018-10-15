@@ -41,7 +41,7 @@ SharpIR sensorBLT(irBLT, 10806);
 double distTL = 0.0, distTM = 0.0, distTR = 0.0, distBLT = 0.0, distBRT = 0.0, distBRB = 0.0;
 
 #define MIN_RANGE_OF_SHORT_SENSOR 1
-#define MAX_RANGE_OF_SHORT_SENSOR 4
+#define MAX_RANGE_OF_SHORT_SENSOR 6
 
 #define MIN_RANGE_OF_LONG_SENSOR 3
 #define MAX_RANGE_OF_LONG_SENSOR 9

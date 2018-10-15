@@ -29,24 +29,23 @@
 #define irBRB A3
 #define irBLT A5
 
-#define MODEL_SHORT 1080
-#define MODEL_LONG 20150
 
-SharpIR sensorTL(irTL, MODEL_SHORT);
-SharpIR sensorTM(irTM, MODEL_SHORT);
-SharpIR sensorTR(irTR, MODEL_SHORT);
+SharpIR sensorTL(irTL, 10801);
+SharpIR sensorTM(irTM, 10802);
+SharpIR sensorTR(irTR, 10803);
 
-SharpIR sensorBRT(irBRT, MODEL_SHORT);
-SharpIR sensorBRB(irBRB, MODEL_LONG);
-SharpIR sensorBLT(irBLT, MODEL_SHORT);
+SharpIR sensorBRT(irBRT, 10804);
+SharpIR sensorBRB(irBRB, 201505);
+SharpIR sensorBLT(irBLT, 10806);
 
 double distTL = 0.0, distTM = 0.0, distTR = 0.0, distBLT = 0.0, distBRT = 0.0, distBRB = 0.0;
 
 #define MIN_RANGE_OF_SHORT_SENSOR 1
-#define MAX_RANGE_OF_SHORT_SENSOR 4
+#define MAX_RANGE_OF_SHORT_SENSOR 6
 
 #define MIN_RANGE_OF_LONG_SENSOR 3
-#define MAX_RANGE_OF_LONG_SENSOR 7
+#define MAX_RANGE_OF_LONG_SENSOR 9
+
 
 #define SHORT_OFFSET 10
 #define LONG_OFFSET 20
@@ -54,7 +53,7 @@ double distTL = 0.0, distTM = 0.0, distTR = 0.0, distBLT = 0.0, distBRT = 0.0, d
 #define WALL_GAP 10
 #define WALL_MIN_TOL 0.5
 #define WALL_MAX_TOL 3
-#define ANGLE_TOL 0.25
+#define ANGLE_TOL 0.1
 
 //position calibration variables
 #define STEPS_TO_CALIBRATE 5
@@ -729,7 +728,10 @@ int obstacle_GridConversation(double sensor_data, int sensor_category) {
     // Remove Wall. Convert to Grids.
     temp_value = (sensor_data - SHORT_OFFSET) / 10;
     // Next To Imaginary, return 0
-    if ((temp_value < MIN_RANGE_OF_SHORT_SENSOR)) {
+    if (temp_value < 0){
+      return MAX_RANGE_OF_SHORT_SENSOR;
+    }
+    else if ((temp_value < MIN_RANGE_OF_SHORT_SENSOR)) {
       return temp_value;
     }
     // Within Range, return Grids.
@@ -745,7 +747,10 @@ int obstacle_GridConversation(double sensor_data, int sensor_category) {
   // Side Sensor
   else if (sensor_category == 2) {
     temp_value = (sensor_data - SHORT_OFFSET) / 10;
-    if ((temp_value < MIN_RANGE_OF_SHORT_SENSOR)) {
+    if (temp_value < 0){
+      return MAX_RANGE_OF_SHORT_SENSOR;
+    }
+    else if ((temp_value < MIN_RANGE_OF_SHORT_SENSOR)) {
       return temp_value;
     }
     else if ((temp_value >= MIN_RANGE_OF_SHORT_SENSOR) &&

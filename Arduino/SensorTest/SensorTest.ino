@@ -9,7 +9,7 @@
 #define pinSensor3 3
 #define pinSensor4 4
 #define pinSensor5 5
-z
+
 /**
  * Sharp IR Model :
  * GP2Y0A02YK0F --> "20150"

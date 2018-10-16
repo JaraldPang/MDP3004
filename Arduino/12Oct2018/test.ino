@@ -29,31 +29,32 @@
 #define irBRB A3
 #define irBLT A5
 
+#define MODEL_SHORT 1080
+#define MODEL_LONG 20150
 
-SharpIR sensorTL(irTL, 10801);
-SharpIR sensorTM(irTM, 10802);
-SharpIR sensorTR(irTR, 10803);
+SharpIR sensorTL(irTL, MODEL_SHORT);
+SharpIR sensorTM(irTM, MODEL_SHORT);
+SharpIR sensorTR(irTR, MODEL_SHORT);
 
-SharpIR sensorBRT(irBRT, 10804);
-SharpIR sensorBRB(irBRB, 201505);
-SharpIR sensorBLT(irBLT, 10806);
+SharpIR sensorBRT(irBRT, MODEL_SHORT);
+SharpIR sensorBRB(irBRB, MODEL_LONG);
+SharpIR sensorBLT(irBLT, MODEL_SHORT);
 
 double distTL = 0.0, distTM = 0.0, distTR = 0.0, distBLT = 0.0, distBRT = 0.0, distBRB = 0.0;
 
 #define MIN_RANGE_OF_SHORT_SENSOR 1
-#define MAX_RANGE_OF_SHORT_SENSOR 6
+#define MAX_RANGE_OF_SHORT_SENSOR 4
 
 #define MIN_RANGE_OF_LONG_SENSOR 3
-#define MAX_RANGE_OF_LONG_SENSOR 9
-
+#define MAX_RANGE_OF_LONG_SENSOR 7
 
 #define SHORT_OFFSET 10
 #define LONG_OFFSET 20
 
-#define WALL_GAP 12
+#define WALL_GAP 10
 #define WALL_MIN_TOL 0.5
 #define WALL_MAX_TOL 3
-#define ANGLE_TOL 0.05
+#define ANGLE_TOL 0.25
 
 //position calibration variables
 #define STEPS_TO_CALIBRATE 5
@@ -61,8 +62,7 @@ double distTL = 0.0, distTM = 0.0, distTR = 0.0, distBLT = 0.0, distBRT = 0.0, d
 int step_counter = 0;
 bool calibration_state = false;
 bool calibration_angle = false;
-bool calibration_dist = false;
-//bool calibrated = false;
+bool calibrated = false;
 bool recalibrate = false;
 bool fastest_path = false;
 
@@ -84,7 +84,7 @@ bool fastest_path = false;
  * md.setSpeeds(R,L) / (E1,E2)
  */
 
-#define kp 30
+#define kp 40
 #define ki 0
 #define kd 0
 
@@ -98,8 +98,8 @@ bool fastest_path = false;
 #define Speed_Brake 400
 
 // Calibration speed
-#define Speed_Calibration 325
-#define Speed_Calibration_Angle 200
+#define Speed_Calibration 200
+#define Speed_Calibration_Angle 60
 
 //Fastest path speed
 #define Speed_Move_Fastest 375
@@ -138,7 +138,7 @@ void showEncode2() {
 }
 
 /*
- *  Pololu Dual VNH5019 Motor Driver Shield Functions & Robot Calibrations
+ *  Pololu Dual VNH5019 Motor Driver Shield Functions & Robot Calibrations 
  */
 
 double computePID() {
@@ -514,59 +514,140 @@ void replyFx(int category) {
 }
 
 void calibrate_Robot_Position() {
-  int turn = 0;
   calibration_state = true;
-  
-  print_Median_SensorData();
-  calibrate_Robot_Angle(irTL, irTR, irTM);
-  calibrateDistance(irTM);
-  calibration_state = false;
+  int turn = 0;
+  calibrated = false;
 
+  while (calibrated != true) {
+    print_Median_SensorData();
+
+    bool leftTooClose = distTL > 0 && distTL < (WALL_GAP - WALL_MIN_TOL);
+    bool leftTooFar = distTL > (WALL_GAP + WALL_MIN_TOL) && distTL < (WALL_GAP + WALL_MAX_TOL);
+    bool midTooClose = distTM > 0 && distTM < (WALL_GAP - WALL_MIN_TOL);
+    bool midTooFar = distTM > (WALL_GAP + WALL_MIN_TOL) && distTM < (WALL_GAP + WALL_MAX_TOL);
+    bool rightTooClose = distTR > 0 && distTR < (WALL_GAP - WALL_MIN_TOL);
+    bool rightTooFar = distTR > (WALL_GAP + WALL_MIN_TOL) && distTR < (WALL_GAP + WALL_MAX_TOL);
+
+    //detects left and right, not in position
+    if ((leftTooClose && rightTooClose) || (leftTooFar && rightTooFar) || (leftTooClose && rightTooFar) || (leftTooFar && rightTooClose)) {
+      while (abs(distTL - distTR) > ANGLE_TOL) {
+        calibrate_Robot_Angle(irTL, irTR);
+        calibrateDistance(irTL);
+      }
+      calibrateDistance(irTL);
+      calibrate_Robot_Angle(irTL, irTR);
+      
+      calibrated = true;
+      break;
+    }
+
+    //detects left and mid, not in position
+    else if ((leftTooClose && midTooClose) || (leftTooFar && midTooFar) || (leftTooClose && midTooFar) || (leftTooFar && midTooClose)) {
+      while (abs(distTL - distTM) > ANGLE_TOL) {
+        calibrate_Robot_Angle(irTL, irTM);
+        calibrateDistance(irTL);
+      }
+      calibrateDistance(irTL);
+      calibrate_Robot_Angle(irTL, irTM);
+      
+      calibrated = true;
+      break;
+    }
+
+    //detects mid and right, not in position
+    else if ((leftTooClose && midTooClose) || (leftTooFar && midTooFar) || (leftTooClose && midTooFar) || (leftTooFar && midTooClose)) {
+      while (abs(distTM - distTR) > ANGLE_TOL) {
+        calibrate_Robot_Angle(irTM, irTR);
+        calibrateDistance(irTM);
+      }
+      calibrateDistance(irTM);
+      calibrate_Robot_Angle(irTM, irTR);
+      
+      calibrated = true;
+      break;
+    }
+
+    //detects only left, not in position
+    else if (leftTooClose || leftTooFar) {
+      calibrateDistance(irTL);
+      calibrated = true;
+      break;
+    }
+
+    //detects only mid, not in position
+    else if (midTooClose || midTooFar) {
+      calibrateDistance(irTM);
+      calibrated = true;
+      break;
+    }
+
+    //detects only right, not in position
+    else if (rightTooClose || rightTooFar) {
+      calibrateDistance(irTR);
+      calibrated = true;
+      break;
+    }
+
+    //doesn't detect, assume nothing to calibrate to
+    else {
+      if (turn == 1) {
+        moveLeft(90);
+        delay(500);
+        break;
+      } else {
+        turn++;
+        moveRight(90);
+        delay(500);
+      }
+    }
+  }
+  if (turn == 1) {
+    moveLeft(90);
+  }
   Serial.println("alok");
   Serial.flush();
+  calibration_state = false;
 }
 
-void calibrate_Robot_Angle(int tpinL, int tpinR, int tpinM) {
+void calibrate_Robot_Angle(int tpinL, int tpinR) {
   calibration_angle = true;
   double distL;
   double distR;
-  double diffLR;
- 
-  while (calibration_angle) {
+  double diff;
+  
   distL = final_MedianRead(tpinL);
+  distR = final_MedianRead(tpinR);
+  diff = abs(distL - distR);
+  while (diff > ANGLE_TOL) {
+	if (distL > distR) {
+		moveRight(diff/2);
+	}
+	else if (distR > distL) {
+		moveLeft(diff/2);
+	}
+	distL = final_MedianRead(tpinL);
     distR = final_MedianRead(tpinR);
-    diffLR = abs(distL - distR);
-    if (diffLR < ANGLE_TOL) {
-      calibration_angle = false;
-      break;
-    }
-    if (distL > distR) {
-      moveRight(diffLR);
-    }
-    else if (distR > distL) {
-      moveLeft(diffLR);
-    }
+    diff = abs(distL - distR);
   }
+
+  delay(200);
+  calibration_angle = false;
 }
 
 void calibrateDistance(int tpin) {
   //use only one of the 3 front sensors
   double dist;
-  calibration_dist = true;
-  
-  while (calibration_dist) {
   dist = final_MedianRead(tpin);
-    if (dist > 11 && dist < 13) {
-      calibration_dist = false;
-      break;
-    }
+  while(dist < WALL_GAP || dist > WALL_GAP){
     if (dist < WALL_GAP) {
-      moveReverse(WALL_GAP - dist);
+      moveReverse(WALL_GAP - dist/2);
     }
-    else if (dist > WALL_GAP) {
-      moveForward(dist - WALL_GAP);
+    if (dist > WALL_GAP) {
+      moveForward(dist/2 - WALL_GAP);
     }
+	dist = final_MedianRead(tpin);
   }
+  delay(200);
 }
 
 /*
@@ -715,10 +796,7 @@ int obstacle_GridConversation(double sensor_data, int sensor_category) {
     // Remove Wall. Convert to Grids.
     temp_value = (sensor_data - SHORT_OFFSET) / 10;
     // Next To Imaginary, return 0
-    if (temp_value < 0){
-      return MAX_RANGE_OF_SHORT_SENSOR;
-    }
-    else if ((temp_value < MIN_RANGE_OF_SHORT_SENSOR)) {
+    if ((temp_value < MIN_RANGE_OF_SHORT_SENSOR)) {
       return temp_value;
     }
     // Within Range, return Grids.
@@ -734,10 +812,7 @@ int obstacle_GridConversation(double sensor_data, int sensor_category) {
   // Side Sensor
   else if (sensor_category == 2) {
     temp_value = (sensor_data - SHORT_OFFSET) / 10;
-    if (temp_value < 0){
-      return MAX_RANGE_OF_SHORT_SENSOR;
-    }
-    else if ((temp_value < MIN_RANGE_OF_SHORT_SENSOR)) {
+    if ((temp_value < MIN_RANGE_OF_SHORT_SENSOR)) {
       return temp_value;
     }
     else if ((temp_value >= MIN_RANGE_OF_SHORT_SENSOR) &&
@@ -923,5 +998,5 @@ void loop() {
 //  delay(250);
 //  moveRight(180);
   //delay(2000);
-//calibrate_Robot_Position();
+  //calibrate_Robot_Position();
 }

@@ -84,7 +84,7 @@ bool fastest_path = false;
  * md.setSpeeds(R,L) / (E1,E2)
  */
 
-#define kp 30
+#define kp 40
 #define ki 0
 #define kd 0
 
@@ -98,7 +98,7 @@ bool fastest_path = false;
 #define Speed_Brake 400
 
 // Calibration speed
-#define Speed_Calibration 325
+#define Speed_Calibration 250
 #define Speed_Calibration_Angle 200
 
 //Fastest path speed
@@ -389,11 +389,7 @@ void moveLeft(double deg) {
     else if (deg <= 360 ) targetTick = deg * 4.675;
     else targetTick = deg * 4.65;
     */
-  if (deg <= 90) targetTick = deg * 4.27;//4.17(test)//4.095(on maze)//4.0935;//4.0925;//4.09L;//4.085L;//4.08L;//4.0775L;
-  //4.076L;//4.078M;//4.075L;//4.08M;//4.07L;//4.09;
-  //4.102;//4.11;//4.121;M//4.122M;//4.1224M;
-  //4.1225M;//4.1145L;//4.11L;//4.1L;//4.115M;
-  //4.12;//4.125M;//4.15M;//4.195M;//4.2;//4.205;//4.21;//4.258;
+  if (deg <= 90) targetTick = deg * 4.15089;//4.17(test)//4.095(on maze)//4.0935;//4.0925;//4.09L;//4.085L;//4.08L;//4.0775L;
   else if (deg <= 180 ) targetTick = deg * 4.322;//4.322(test)//4.62;
   else if (deg <= 360 ) targetTick = deg * 4.41;
   else targetTick = deg * 4.45;
@@ -439,7 +435,7 @@ void moveRight(double deg) {
   integral = 0;
   encoderLeftCounter = encoderRightCounter = prevTick = 0;
 
-  if (deg <= 90) targetTick = deg * 4.255;//4.155(on maze)//4.175M;//4.186M;//4.19M;//4.185;//4.175L;
+  if (deg <= 90) targetTick = deg * 4.24;//4.155(on maze)//4.175M;//4.186M;//4.19M;//4.185;//4.175L;
   //4.148L;//4.15M;//4.170M;//4.175M;//4.21M;//4.205;//4.185;//4.175;
   //4.2;//4.185;//4.175L;//4.17L;
   //4.165;//4.1545L;//4.154L;//4.153L;
@@ -533,7 +529,7 @@ void calibrate_Robot_Angle(int tpinL, int tpinR, int tpinM) {
   double diffLR;
  
   while (calibration_angle) {
-  distL = final_MedianRead(tpinL);
+  distL = final_MedianRead(tpinL) - 0.5;
     distR = final_MedianRead(tpinR);
     diffLR = abs(distL - distR);
     if (diffLR < ANGLE_TOL) {
@@ -906,10 +902,10 @@ void loop() {
     robotRead = "";
     newData = false;
   }
-//  delay(1000);
+//  delay(5000);
 //  moveForward(30);
 //  delay(250);
-//  moveRight(180);
+//  moveLeft(180);
 //  delay(250);
 //  moveForward(30);
 //  delay(250);

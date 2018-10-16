@@ -91,7 +91,6 @@ class MainController : Controller() {
             configurationModel.mapDescriptorPart2 = part2
             if (connection.isConnected) {
                 connection.sendMdfString(part1, part2)
-                connection.sendCalibrationCommandAndWait()
             }
         }
     }

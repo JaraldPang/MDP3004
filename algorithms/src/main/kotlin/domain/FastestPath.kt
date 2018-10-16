@@ -4,16 +4,17 @@ import model.CellInfoModel
 import model.MazeModel
 import java.util.*
 
-open class FastestPath(protected val robot: Robot) {
+open class FastestPath(
+    protected val robot: Robot,
+    protected val start: CellInfoModel = robot.centerCell.copy(),
+    protected val dest: Pair<Int, Int> = MAZE_ROWS - 1 - 1 to MAZE_COLUMNS - 1 - 1
+) {
     suspend fun runFastestPath() {
         val movements = findFastestPathMovements()
-        robot.moveFollowingMovements(movements)
+        robot.moveFollowingMovements(movements, true)
     }
 
     open fun findFastestPathMovements(): List<Movement> {
-        val start = robot.centerCell.copy()
-        val dest = MAZE_ROWS - 1 - 1 to MAZE_COLUMNS - 1 - 1
-//        val dest = 11 to 5
         val paths = findFastestPathToDestination(robot.explorationMaze.copy(), start, dest)
         val minPath = paths.asSequence()
             .filter { it.isNotEmpty() }
@@ -22,16 +23,19 @@ open class FastestPath(protected val robot: Robot) {
     }
 }
 
-class FastestPathWithWayPoint(robot: Robot, private val wayPoint: Pair<Int, Int>) : FastestPath(robot) {
+class FastestPathWithWayPoint(
+    robot: Robot,
+    private val wayPoint: Pair<Int, Int>,
+    start: CellInfoModel = robot.centerCell.copy(),
+    dest: Pair<Int, Int> = MAZE_ROWS - 1 - 1 to MAZE_COLUMNS - 1 - 1
+) : FastestPath(robot, start, dest) {
     override fun findFastestPathMovements(): List<Movement> {
-        val start = robot.centerCell.copy()
         val realMaze = robot.explorationMaze.copy()
         val pathsToWayPoint = findFastestPathToDestination(realMaze, start, wayPoint).filter { it.isNotEmpty() }
         if (pathsToWayPoint.isEmpty()) {
+            println("Cannot go to way point (${wayPoint.first}, ${wayPoint.second})")
             return super.findFastestPathMovements()
         }
-        val dest = MAZE_ROWS - 1 - 1 to MAZE_COLUMNS - 1 - 1
-//        val dest = 11 to 5
         val pathsToDest = Direction.values().flatMap { direction ->
             val wayPointCell = CellInfoModel(wayPoint.first, wayPoint.second, direction)
             findFastestPathToDestination(realMaze, wayPointCell, dest).filter { it.isNotEmpty() }

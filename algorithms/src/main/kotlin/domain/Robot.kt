@@ -96,11 +96,14 @@ class Robot(
                 for (i in 0 until sensedDistance) {
                     val row = centerRow + rowDiff + rowInc * i
                     val col = centerCol + colDiff + colInc * i
-                    if (MazeModel.isOutsideOfMaze(row, col) || explorationMaze[row][col] == CELL_OBSTACLE) {
-                        break
-                    }
-                    if (explorationMaze[row][col] == CELL_UNKNOWN) {
-                        explorationMaze[row][col] = CELL_SENSED
+                    if (!MazeModel.isOutsideOfMaze(row, col)) {
+                        if (explorationMaze[row][col] < CELL_UNKNOWN) {
+                            println("Warning: maze[$row][$col] was ${explorationMaze[row][col]} but setting to CELL_SENSED")
+                        }
+                        // If original value is already greater than 0, leave it as it is
+                        if (explorationMaze[row][col] < CELL_SENSED) {
+                            explorationMaze[row][col] = CELL_SENSED
+                        }
                         hasUpdateInMaze = true
                     }
                 }
@@ -131,7 +134,7 @@ class Robot(
             Movement.MOVE_FORWARD -> moveForward()
         }
         if (connection.isConnected) {
-            tryCalibrate()
+            tryCalibrate(false)
         }
     }
 
@@ -159,20 +162,31 @@ class Robot(
         if (rowDiff != 0) {
             val frontRow = centerRow + rowDiff + rowDiff
             for (col in centerCol - 1..centerCol + 1) {
-                explorationMaze[frontRow][col]++
+                if (!MazeModel.isOutsideOfMaze(frontRow, col)) {
+                    if (explorationMaze[frontRow][col] < 0) {
+                        println("Warning: Covering maze[$frontRow][$col] but it was ${explorationMaze[frontRow][col]}")
+                    }
+                    explorationMaze[frontRow][col] = explorationMaze[frontRow][col] + 1
+                }
             }
             centerCell.row += rowDiff
         } else {
             check(colDiff != 0)
             val frontCol = centerCol + colDiff + colDiff
             for (row in centerRow - 1..centerRow + 1) {
-                explorationMaze[row][frontCol]++
+                if (!MazeModel.isOutsideOfMaze(row, frontCol)) {
+                    if (explorationMaze[row][frontCol] < 0) {
+                        println("Warning: Covering maze[$row][$frontCol] but it was ${explorationMaze[row][frontCol]}")
+                    }
+                    explorationMaze[row][frontCol] = explorationMaze[row][frontCol] + 1
+                }
             }
             centerCell.col += colDiff
         }
         if (connection.isConnected) {
             connection.sendRobotCenter(centerCell)
         }
+        explorationMaze.print()
     }
 
     suspend fun goToStartZone() {
@@ -209,7 +223,7 @@ class Robot(
         }
     }
 
-    suspend fun moveFollowingMovements(movements: List<Movement>) {
+    suspend fun moveFollowingMovements(movements: List<Movement>, isAtFastestPath: Boolean = false) {
         if (movements.isEmpty()) {
             return
         }
@@ -219,6 +233,7 @@ class Robot(
             if (movement == Movement.MOVE_FORWARD) {
                 if (connection.isConnected) {
                     connection.sendMoveForwardWithDistanceAndWait(count)
+                    delay(250)
                 }
                 for (i in 0 until count) {
                     if (!connection.isConnected) {
@@ -244,31 +259,84 @@ class Robot(
                 }
             }
             movementCount++
-            if (connection.isConnected) {
-                tryCalibrate()
+            if (connection.isConnected && !isAtFastestPath) {
+                tryCalibrate(false)
             }
         }
     }
 
-    private suspend fun tryCalibrate() {
-        if (movementCount >= 5) {
+    private suspend fun tryCalibrate(force: Boolean) {
+        if (movementCount >= 5 || force) {
             val rightSide = explorationMaze.getSide(centerCell.copy(), Movement.TURN_RIGHT)
             val frontSide = explorationMaze.getSide(centerCell.copy(), Movement.MOVE_FORWARD)
             val leftSide = explorationMaze.getSide(centerCell.copy(), Movement.TURN_LEFT)
-            if (frontSide[0] == CELL_OBSTACLE && frontSide[2] == CELL_OBSTACLE) {
-                connection.sendCalibrationCommandAndWait()
-                movementCount = 0
-            } else if (rightSide[0] == CELL_OBSTACLE && rightSide[2] == CELL_OBSTACLE) {
-                move(Movement.TURN_RIGHT)
-                connection.sendCalibrationCommandAndWait()
-                move(Movement.TURN_LEFT)
-                movementCount = 0
-            } else if (leftSide[0] == CELL_OBSTACLE && leftSide[0] == CELL_OBSTACLE) {
-                move(Movement.TURN_LEFT)
-                connection.sendCalibrationCommandAndWait()
-                move(Movement.TURN_RIGHT)
-                movementCount = 0
+            println("tryCalibrate, force=$force")
+            println("Center=$centerCell")
+            println("Right=${rightSide.joinToString()}")
+            println("Front=${frontSide.joinToString()}")
+            println("Left=${leftSide.joinToString()}")
+            when {
+                frontSide.all { it == CELL_OBSTACLE } && leftSide.all { it == CELL_OBSTACLE } -> {
+                    movementCount = 0
+                    connection.sendCalibrationCommandAndWait()
+                    delay(250)
+                    move(Movement.TURN_LEFT)
+                    delay(250)
+                    connection.sendCalibrationCommandAndWait()
+                    move(Movement.TURN_RIGHT)
+                    delay(250)
+                    movementCount = 0
+                }
+                frontSide.all { it == CELL_OBSTACLE } && rightSide.all { it == CELL_OBSTACLE } -> {
+                    movementCount = 0
+                    connection.sendCalibrationCommandAndWait()
+                    delay(250)
+                    move(Movement.TURN_RIGHT)
+                    delay(250)
+                    connection.sendCalibrationCommandAndWait()
+                    move(Movement.TURN_LEFT)
+                    delay(250)
+                    movementCount = 0
+                }
+                frontSide.all { it == CELL_OBSTACLE } -> {
+                    movementCount = 0
+                    connection.sendCalibrationCommandAndWait()
+                    delay(250)
+                    movementCount = 0
+                }
+                leftSide.all { it == CELL_OBSTACLE } -> {
+                    movementCount = 0
+                    move(Movement.TURN_LEFT)
+                    delay(250)
+                    connection.sendCalibrationCommandAndWait()
+                    move(Movement.TURN_RIGHT)
+                    delay(250)
+                    movementCount = 0
+                }
+                rightSide.all { it == CELL_OBSTACLE } -> {
+                    movementCount = 0
+                    move(Movement.TURN_RIGHT)
+                    delay(250)
+                    connection.sendCalibrationCommandAndWait()
+                    move(Movement.TURN_LEFT)
+                    delay(250)
+                    movementCount = 0
+                }
             }
+        }
+    }
+
+    suspend fun calibrateForFastestPath() {
+        if (!isAtStartZone || centerCell.direction != Direction.UP) {
+            return
+        }
+        if (connection.isConnected) {
+            move(Movement.TURN_LEFT)
+            tryCalibrate(true)
+            move(Movement.TURN_LEFT)
+            tryCalibrate(true)
+            move(Movement.TURN_LEFT)
+            move(Movement.TURN_LEFT)
         }
     }
 }
@@ -280,7 +348,7 @@ private fun List<Movement>.compact(): List<Pair<Movement, Int>> {
         val movement = this[i]
         val (lastMovement, count) = compactList.last()
         val countThreshold = when (movement) {
-            Movement.TURN_LEFT, Movement.TURN_RIGHT -> 2
+            Movement.TURN_LEFT, Movement.TURN_RIGHT -> 1
             Movement.MOVE_FORWARD -> 3
         }
         if (movement == lastMovement && count < countThreshold) {

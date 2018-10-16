@@ -16,6 +16,8 @@ open class Exploration(private val robot: Robot) {
         if (!robot.isAtStartZone) {
             robot.goToStartZone()
         }
+        robot.turnToFaceUp()
+        robot.calibrateForFastestPath()
     }
 
     protected suspend fun exploreInternal(coverageLimit: Double): Boolean {
@@ -103,7 +105,6 @@ open class Exploration(private val robot: Robot) {
                 return false
             }
         }
-        robot.turnToFaceUp()
         return true
     }
 

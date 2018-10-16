@@ -33,7 +33,6 @@ class MazeModel() : ViewModel() {
         }
     }
 
-
     val isFullyExplored: Boolean
         get() {
             for (row in 0 until MAZE_ROWS) {
@@ -220,6 +219,18 @@ class MazeModel() : ViewModel() {
             for (col in 0 until MAZE_COLUMNS) {
                 this[row][col] = newMaze[row][col]
             }
+        }
+    }
+
+    fun print() {
+        for (row in MAZE_ROWS - 1 downTo 0) {
+            for (col in 0 until MAZE_COLUMNS) {
+                if (col != 0) {
+                    print(" ")
+                }
+                System.out.printf("%3d", this[row][col])
+            }
+            println()
         }
     }
 }

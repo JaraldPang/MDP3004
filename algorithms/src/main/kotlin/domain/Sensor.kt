@@ -28,14 +28,14 @@ class SimulatedSensor(position: Int, senseRange: IntRange, private val robot: Ro
         for (i in 0 until senseRange.first) {
             val row = centerRow + rowDiff + rowInc * i
             val col = centerCol + colDiff + colInc * i
-            if (MazeModel.isOutsideOfMaze(row, col) || realMaze[row][col] == CELL_OBSTACLE) {
+            if (MazeModel.isOutsideOfMaze(row, col) || realMaze[row, col] == CELL_OBSTACLE) {
                 return -1
             }
         }
         for (i in senseRange) {
             val row = centerRow + rowDiff + rowInc * i
             val col = centerCol + colDiff + colInc * i
-            if (MazeModel.isOutsideOfMaze(row, col) || realMaze[row][col] == CELL_OBSTACLE) {
+            if (MazeModel.isOutsideOfMaze(row, col) || realMaze[row, col] == CELL_OBSTACLE) {
                 return i
             }
         }

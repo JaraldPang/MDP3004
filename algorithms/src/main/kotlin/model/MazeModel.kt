@@ -13,22 +13,19 @@ class MazeModel() : ViewModel() {
 
     val mazeProperties = Array(MAZE_ROWS) { _ -> Array(MAZE_COLUMNS) { SimpleIntegerProperty(0) } }
 
-    class PropertyArrayWrapper(private val row: Array<SimpleIntegerProperty>) {
-        @Synchronized
-        operator fun get(col: Int): Int = row[col].value
+    @Synchronized
+    operator fun get(row: Int, col: Int): Int = mazeProperties[row][col].value
 
-        @Synchronized
-        operator fun set(col: Int, value: Int) {
-            row[col].value = value
-        }
+    @Synchronized
+    operator fun set(row: Int, col: Int, value: Int) {
+        mazeProperties[row][col].value = value
     }
 
-    operator fun get(row: Int) = PropertyArrayWrapper(mazeProperties[row])
 
     private constructor(maze: MazeModel) : this() {
         for (row in 0 until MAZE_ROWS) {
             for (col in 0 until MAZE_COLUMNS) {
-                this[row][col] = maze[row][col]
+                this[row, col] = maze[row, col]
             }
         }
     }
@@ -37,7 +34,7 @@ class MazeModel() : ViewModel() {
         get() {
             for (row in 0 until MAZE_ROWS) {
                 for (col in 0 until MAZE_COLUMNS) {
-                    if (this[row][col] == CELL_UNKNOWN) {
+                    if (this[row, col] == CELL_UNKNOWN) {
                         return false
                     }
                 }
@@ -52,9 +49,9 @@ class MazeModel() : ViewModel() {
         for (row in 0 until MAZE_ROWS) {
             for (col in 0 until MAZE_COLUMNS) {
                 if (row < ROBOT_SIZE && col < ROBOT_SIZE) {
-                    this[row][col] = 1
+                    this[row, col] = 1
                 } else {
-                    this[row][col] = CELL_UNKNOWN
+                    this[row, col] = CELL_UNKNOWN
                 }
             }
         }
@@ -63,10 +60,10 @@ class MazeModel() : ViewModel() {
     fun resetForFastestPath() {
         for (row in 0 until MAZE_ROWS) {
             for (col in 0 until MAZE_COLUMNS) {
-                if (this[row][col] < 0) {
-                    this[row][col] = CELL_OBSTACLE
+                if (this[row, col] < 0) {
+                    this[row, col] = CELL_OBSTACLE
                 } else {
-                    this[row][col] = CELL_SENSED
+                    this[row, col] = CELL_SENSED
                 }
             }
         }
@@ -75,7 +72,7 @@ class MazeModel() : ViewModel() {
     fun reset() {
         for (row in 0 until MAZE_ROWS) {
             for (col in 0 until MAZE_COLUMNS) {
-                this[row][col] = 0
+                this[row, col] = 0
             }
         }
     }
@@ -89,9 +86,9 @@ class MazeModel() : ViewModel() {
             if (rowOfSide < 0 || rowOfSide >= MAZE_ROWS) {
                 side.fill(CELL_OBSTACLE)
             } else {
-                side[0] = this[rowOfSide][centerCol - 1]
-                side[1] = this[rowOfSide][centerCol]
-                side[2] = this[rowOfSide][centerCol + 1]
+                side[0] = this[rowOfSide, centerCol - 1]
+                side[1] = this[rowOfSide, centerCol]
+                side[2] = this[rowOfSide, centerCol + 1]
             }
         } else {
             check(colDiff != 0)
@@ -99,9 +96,9 @@ class MazeModel() : ViewModel() {
             if (columnOfSide < 0 || columnOfSide >= MAZE_COLUMNS) { // Outside of maze, fill with CELL_OBSTACLES
                 side.fill(CELL_OBSTACLE)
             } else {
-                side[0] = this[centerRow - 1][columnOfSide]
-                side[1] = this[centerRow][columnOfSide]
-                side[2] = this[centerRow + 1][columnOfSide]
+                side[0] = this[centerRow - 1, columnOfSide]
+                side[1] = this[centerRow, columnOfSide]
+                side[2] = this[centerRow + 1, columnOfSide]
             }
         }
         return side
@@ -121,7 +118,7 @@ class MazeModel() : ViewModel() {
         var sum = 0
         for (row in 0 until MAZE_ROWS) {
             for (col in 0 until MAZE_COLUMNS) {
-                if (this[row][col] != CELL_UNKNOWN) {
+                if (this[row, col] != CELL_UNKNOWN) {
                     sum++
                 }
             }
@@ -136,7 +133,7 @@ class MazeModel() : ViewModel() {
         binary.append("11")
         for (row in 0 until MAZE_ROWS) {
             for (col in 0 until MAZE_COLUMNS) {
-                if (this[row][col] == CELL_UNKNOWN) {
+                if (this[row, col] == CELL_UNKNOWN) {
                     binary.append('0')
                 } else {
                     binary.append('1')
@@ -157,8 +154,8 @@ class MazeModel() : ViewModel() {
         val binary = StringBuilder()
         for (row in 0 until MAZE_ROWS) {
             for (col in 0 until MAZE_COLUMNS) {
-                if (this[row][col] != CELL_UNKNOWN) {
-                    if (this[row][col] == CELL_OBSTACLE) {
+                if (this[row, col] != CELL_UNKNOWN) {
+                    if (this[row, col] == CELL_OBSTACLE) {
                         binary.append('1')
                     } else {
                         binary.append('0')
@@ -217,7 +214,7 @@ class MazeModel() : ViewModel() {
 
         for (row in 0 until MAZE_ROWS) {
             for (col in 0 until MAZE_COLUMNS) {
-                this[row][col] = newMaze[row][col]
+                this[row, col] = newMaze[row][col]
             }
         }
     }
@@ -228,7 +225,7 @@ class MazeModel() : ViewModel() {
                 if (col != 0) {
                     print(" ")
                 }
-                System.out.printf("%3d", this[row][col])
+                System.out.printf("%3d", this[row, col])
             }
             println()
         }

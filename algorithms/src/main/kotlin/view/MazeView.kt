@@ -19,11 +19,11 @@ class MazeView : View() {
                             if (controller.displayRealMaze.value != true) {
                                 return@setOnMouseClicked
                             }
-                            val value = controller.realMaze[row][col]
+                            val value = controller.realMaze[row, col]
                             if (value == CELL_SENSED) {
-                                controller.realMaze[row][col] = CELL_OBSTACLE
+                                controller.realMaze[row, col] = CELL_OBSTACLE
                             } else {
-                                controller.realMaze[row][col] = CELL_SENSED
+                                controller.realMaze[row, col] = CELL_SENSED
                             }
                         }
                         fillProperty().bind(createRealMapBinding(row, col))
@@ -44,7 +44,7 @@ class MazeView : View() {
 
     private fun createRealMapBinding(row: Int, col: Int): ObjectBinding<Color> = Bindings.createObjectBinding(
         Callable {
-            val cell = controller.realMaze[row][col]
+            val cell = controller.realMaze[row, col]
             val wayPointX = controller.configurationModel.wayPointX
             val wayPointY = controller.configurationModel.wayPointY
             when {
@@ -63,7 +63,7 @@ class MazeView : View() {
     private fun createExplorationMapBinding(row: Int, col: Int): ObjectBinding<Color> = Bindings.createObjectBinding(
         Callable {
             val (centerRow, centerCol, direction) = controller.centerCell
-            val cell = controller.explorationMaze[row][col]
+            val cell = controller.explorationMaze[row, col]
             val wayPointX = controller.configurationModel.wayPointX
             val wayPointY = controller.configurationModel.wayPointY
             when {

@@ -60,7 +60,11 @@ class MainController : Controller() {
                 listOf(2, 3, 4, 5, 6).map { SimulatedSensor(it, 0..2, robot, realMaze) }
             } else {
                 listOf(3, 4, 5, 6, 8, 2).zip(connection.sensedDataChannels).map { (position, channel) ->
-                    val senseRange = if (position == 8) SENSE_RANGE_LONG else SENSE_RANGE_SHORT
+                    val senseRange = when (position) {
+                        8 -> SENSE_RANGE_LONG
+                        5 -> SENSE_RANGE_RIGHT
+                        else -> SENSE_RANGE_SHORT
+                    }
                     ActualSensor(position, senseRange, channel)
                 }
             }
@@ -105,7 +109,7 @@ class MainController : Controller() {
             displayRealMaze.value = false
             val wayPointX = configurationModel.wayPointX
             val wayPointY = configurationModel.wayPointY
-            if (speed != null && wayPointX != null && wayPointY != null) {
+            if (wayPointX != null && wayPointY != null) {
                 val fastestPath = FastestPathWithWayPoint(robot, wayPointY to wayPointX)
                 fastestPath.runFastestPath()
             } else {

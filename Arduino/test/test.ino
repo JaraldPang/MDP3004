@@ -84,7 +84,7 @@ bool fastest_path = false;
  * md.setSpeeds(R,L) / (E1,E2)
  */
 
-#define kp 29
+#define kp 37
 #define ki 0.0004
 #define kd 0.0225
 
@@ -386,7 +386,7 @@ void moveLeft(double deg) {
     else if (deg <= 360 ) targetTick = deg * 4.675;
     else targetTick = deg * 4.65;
     */
-  if (deg <= 90) targetTick = deg * 4.18;//4.17(test)//4.095(on maze)//4.0935;//4.0925;//4.09L;//4.085L;//4.08L;//4.0775L;
+  if (deg <= 90) targetTick = deg * 4.20;//4.17(test)//4.095(on maze)//4.0935;//4.0925;//4.09L;//4.085L;//4.08L;//4.0775L;
   else if (deg <= 180 ) targetTick = deg * 4.322;//4.322(test)//4.62;
   else if (deg <= 360 ) targetTick = deg * 4.41;
   else targetTick = deg * 4.45;
@@ -751,7 +751,7 @@ int obstacle_GridConversation(double sensor_data, int sensor_category) {
   // Long Sensor
   else {
     // Convert to Grids.
-    temp_value = (sensor_data) / 10;
+    temp_value = ((sensor_data) / 10) - 1;
     // Less than Minimum Range, return -1. Minimum Range : 30cm (2Grids)
     if ((temp_value < MIN_RANGE_OF_LONG_SENSOR)) {
       return -1;
@@ -759,7 +759,7 @@ int obstacle_GridConversation(double sensor_data, int sensor_category) {
     // Within Range, return Grids with Wall Gaps
     else if ((temp_value >= MIN_RANGE_OF_LONG_SENSOR) &&
              (temp_value <= MAX_RANGE_OF_LONG_SENSOR)) {
-      return (temp_value - (WALL_GAP / 10));
+      return temp_value;
     }
     else {
       // Over Range, return Max Value
@@ -871,7 +871,7 @@ void loop() {
     case 'G':
     case 'g':
     {
-      delay(50);
+      //delay(50);
       print_Median_SensorData_Grids();
       replyFx(REPLY_An_Echo);
       break;
@@ -879,7 +879,6 @@ void loop() {
     case 'Z':
     case 'z':
     {
-      
       print_Median_SensorData();
       print_Median_SensorData_Grids();
       replyFx(REPLY_An_Echo);
@@ -895,14 +894,14 @@ void loop() {
     case 'C':
     case 'c':
     {
-      
       calibrate_Robot_Position();
       replyFx(REPLY_An_Echo);
       break;
     }
     case 'p':
     case 'P':
-    {moveForward(10);
+    {//moveForward(10);
+      calibrate_Robot_Position();
       moveLeft(90);
       //delay(1000);
       print_Median_SensorData();
@@ -921,21 +920,7 @@ void loop() {
 //    moveLeft(90);
 //    print_Median_SensorData();
 //    print_Median_SensorData_Grids();
-//  delay(5000);
-//  moveForward(30);
-//  delay(250);
-//  moveLeft(90);
-//  delay(250);
-//  moveLeft(90);
-//  delay(250);
-//  moveForward(30);
-//  delay(250);
-//  calibrate_Robot_Position();
-//  delay(250);
-//  moveLeft(90);
-//  delay(250);
-//  moveLeft(90);
-  
+//  
   
 //  delay(250);
 //  moveForward(30);

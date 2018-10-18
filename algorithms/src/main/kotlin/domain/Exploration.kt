@@ -5,7 +5,10 @@ import model.CellInfoModel
 import java.util.*
 import java.util.concurrent.TimeUnit
 
-open class Exploration(private val robot: Robot) {
+open class Exploration(private val robot: Robot, private val connection: Connection) {
+    private var calibratedAtTopRightCorner = false
+    private var calibratedAtTopLeftCorner = false
+
     private val stack = Stack<CellInfoModel>().apply {
         push(robot.centerCell.copy())
     }
@@ -17,18 +20,29 @@ open class Exploration(private val robot: Robot) {
             robot.goToStartZone()
         }
         robot.turnToFaceUp()
+        connection.sendStopCommand()
         robot.calibrateForFastestPath()
     }
 
     protected suspend fun exploreInternal(coverageLimit: Double): Boolean {
         var coverage: Double
         var shouldBacktrack: Boolean
+
         do {
+            val (row, col, direction) = robot.centerCell
+            if (row == MAZE_ROWS - 1 - 1) {
+                if (col == MAZE_COLUMNS - 1 - 1 && !calibratedAtTopRightCorner) {
+                    robot.calibrateAtCorner(col, direction)
+                    calibratedAtTopRightCorner = true
+                } else if (col == 1 && !calibratedAtTopLeftCorner) {
+                    robot.calibrateAtCorner(col, direction)
+                    calibratedAtTopLeftCorner = true
+                }
+            }
             robot.sense()
             val explorationMaze = robot.explorationMaze
             val sides = explorationMaze.getEnvironmentOnSides(robot.centerCell.copy())
             println("Center: ${robot.centerCell}, Sides: ${sides.joinToString()}")
-//            shouldBacktrack = sides.all { it > 0 || it == CELL_OBSTACLE } && !sides.all { it == CELL_OBSTACLE }
             shouldBacktrack = sides.all { it > 0 || it == CELL_OBSTACLE }
             if (!shouldBacktrack) {
                 makeMovingDecision(sides)
@@ -124,15 +138,15 @@ open class Exploration(private val robot: Robot) {
     }
 }
 
-class TimeLimitedExploration(robot: Robot, private val timeLimit: Long) :
-    Exploration(robot) {
+class TimeLimitedExploration(robot: Robot, connection: Connection, private val timeLimit: Long) :
+    Exploration(robot, connection) {
     override suspend fun explore() {
         withTimeoutOrNull(TimeUnit.SECONDS.toMillis(timeLimit)) { super.explore() }
     }
 }
 
-class CoverageLimitedExploration(robot: Robot, private val coverageLimit: Double) :
-    Exploration(robot) {
+class CoverageLimitedExploration(robot: Robot, connection: Connection, private val coverageLimit: Double) :
+    Exploration(robot, connection) {
     override suspend fun explore() {
         while (!exploreInternal(coverageLimit)) {
         }

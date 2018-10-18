@@ -39,6 +39,7 @@ class Connection(
         const val FASTEST_PATH_COMMAND = "x"
         const val START_EXPLORATION_COMMAND = "starte"
         const val START_FASTEST_PATH_COMMAND = "startf"
+        const val STOP_COMMAND = "stop"
         const val OK_COMMAND = "ok"
         fun arrowCommand(x: Int, y: Int, direction: Direction): String {
             val directionCommand = when (direction) {
@@ -218,5 +219,9 @@ class Connection(
     suspend fun sendFastestPathCommandAndWait() {
         sendToArduino(FASTEST_PATH_COMMAND)
         okCommandChannel.receive()
+    }
+
+    suspend fun sendStopCommand() {
+        sendToAndroid(STOP_COMMAND)
     }
 }

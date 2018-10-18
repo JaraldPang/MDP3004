@@ -158,6 +158,9 @@ class Robot(
         if (!connection.isConnected) {
             delay(1000L / (speed ?: 3))
         }
+        if (connection.isConnected) {
+            tryCalibrate(false)
+        }
         movementCount++
         if (connection.isConnected) {
             when (movement) {
@@ -169,9 +172,6 @@ class Robot(
             Movement.TURN_RIGHT -> turnRight()
             Movement.TURN_LEFT -> turnLeft()
             Movement.MOVE_FORWARD -> moveForward()
-        }
-        if (connection.isConnected) {
-            tryCalibrate(false)
         }
     }
 
@@ -271,7 +271,6 @@ class Robot(
                 if (movement == Movement.MOVE_FORWARD) {
                     if (connection.isConnected) {
                         connection.sendMoveForwardWithDistanceAndWait(count)
-                        delay(250)
                     }
                     for (i in 0 until count) {
                         if (!connection.isConnected) {
@@ -281,9 +280,7 @@ class Robot(
                     }
                 } else {
                     if (connection.isConnected) {
-                        delay(250L)
                         connection.sendTurnCommandWithCountAndWait(movement, count)
-                        delay(250L)
                     }
                     for (i in 0 until count) {
                         if (!connection.isConnected) {
@@ -296,17 +293,22 @@ class Robot(
                         }
                     }
                 }
+                if (connection.isConnected) {
+                    delay(250L)
+                }
             }
         } else {
             for (movement in movements) {
                 move(movement)
-                delay(500)
+                if (connection.isConnected) {
+                    delay(250L)
+                }
             }
         }
     }
 
     private suspend fun tryCalibrate(force: Boolean) {
-        if (movementCount >= 4 || force) {
+        if (movementCount >= 6 || force) {
             val rightSide = explorationMaze.getSide(centerCell.copy(), Movement.TURN_RIGHT)
             val frontSide = explorationMaze.getSide(centerCell.copy(), Movement.MOVE_FORWARD)
             val leftSide = explorationMaze.getSide(centerCell.copy(), Movement.TURN_LEFT)
@@ -319,11 +321,9 @@ class Robot(
                 frontSide.all { it == CELL_OBSTACLE } && leftSide.all { it == CELL_OBSTACLE } -> {
                     movementCount = 0
                     connection.sendCalibrationCommandAndWait()
-                    delay(250)
                     move(Movement.TURN_LEFT)
                     delay(250)
                     connection.sendCalibrationCommandAndWait()
-                    delay(250)
                     move(Movement.TURN_RIGHT)
                     delay(250)
                     movementCount = 0
@@ -331,11 +331,9 @@ class Robot(
                 frontSide.all { it == CELL_OBSTACLE } && rightSide.all { it == CELL_OBSTACLE } -> {
                     movementCount = 0
                     connection.sendCalibrationCommandAndWait()
-                    delay(250)
                     move(Movement.TURN_RIGHT)
                     delay(250)
                     connection.sendCalibrationCommandAndWait()
-                    delay(250)
                     move(Movement.TURN_LEFT)
                     delay(250)
                     movementCount = 0
@@ -343,7 +341,6 @@ class Robot(
                 frontSide.all { it == CELL_OBSTACLE } -> {
                     movementCount = 0
                     connection.sendCalibrationCommandAndWait()
-                    delay(250)
                     movementCount = 0
                 }
                 leftSide.all { it == CELL_OBSTACLE } -> {
@@ -351,7 +348,6 @@ class Robot(
                     move(Movement.TURN_LEFT)
                     delay(250)
                     connection.sendCalibrationCommandAndWait()
-                    delay(250)
                     move(Movement.TURN_RIGHT)
                     delay(250)
                     movementCount = 0
@@ -361,7 +357,6 @@ class Robot(
                     move(Movement.TURN_RIGHT)
                     delay(250)
                     connection.sendCalibrationCommandAndWait()
-                    delay(250)
                     move(Movement.TURN_LEFT)
                     delay(250)
                     movementCount = 0
@@ -377,10 +372,43 @@ class Robot(
         if (connection.isConnected) {
             move(Movement.TURN_LEFT)
             tryCalibrate(true)
-            move(Movement.TURN_LEFT)
-            tryCalibrate(true)
-            move(Movement.TURN_LEFT)
-            move(Movement.TURN_LEFT)
+            move(Movement.TURN_RIGHT)
+        }
+    }
+
+    suspend fun calibrateAtCorner(col: Int, direction: Direction) {
+        if (connection.isConnected) {
+            if (col == 1) {
+                when (direction) {
+                    Direction.UP -> tryCalibrate(true)
+                    Direction.DOWN -> {
+                        move(Movement.TURN_RIGHT)
+                        tryCalibrate(true)
+                        move(Movement.TURN_LEFT)
+                    }
+                    Direction.LEFT -> tryCalibrate(true)
+                    Direction.RIGHT -> {
+                        move(Movement.TURN_LEFT)
+                        tryCalibrate(true)
+                        move(Movement.TURN_RIGHT)
+                    }
+                }
+            } else if (col == MAZE_COLUMNS - 1 - 1) {
+                when (direction) {
+                    Direction.UP -> tryCalibrate(true)
+                    Direction.DOWN -> {
+                        move(Movement.TURN_LEFT)
+                        tryCalibrate(true)
+                        move(Movement.TURN_RIGHT)
+                    }
+                    Direction.LEFT -> {
+                        move(Movement.TURN_RIGHT)
+                        tryCalibrate(true)
+                        move(Movement.TURN_LEFT)
+                    }
+                    Direction.RIGHT -> tryCalibrate(true)
+                }
+            }
         }
     }
 }

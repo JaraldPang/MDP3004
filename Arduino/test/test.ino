@@ -41,10 +41,10 @@ SharpIR sensorBLT(irBLT, 10806);
 double distTL = 0.0, distTM = 0.0, distTR = 0.0, distBLT = 0.0, distBRT = 0.0, distBRB = 0.0;
 
 #define MIN_RANGE_OF_SHORT_SENSOR 1
-#define MAX_RANGE_OF_SHORT_SENSOR 6
+#define MAX_RANGE_OF_SHORT_SENSOR 3
 
 #define MIN_RANGE_OF_LONG_SENSOR 3
-#define MAX_RANGE_OF_LONG_SENSOR 9
+#define MAX_RANGE_OF_LONG_SENSOR 5
 
 
 #define SHORT_OFFSET 10
@@ -503,17 +503,17 @@ void calibrate_Robot_Position() {
   double distR;
   double distM;
   calibration_state = true;
-  
+
   print_Median_SensorData();
   distL = final_MedianRead(irTL) - 0.6;
   distR = final_MedianRead(irTR);
   distM = final_MedianRead(irTM);
- 
-  if (distL < 15 && distM < 15 && distR < 15){
+
+  if (distL < 15 && distM < 15 && distR < 15) {
     moveReverse(1);
     calibrate_Robot_Angle(irTL, irTR, irTM);
     calibrateDistance(irTM);
-    }
+  }
   calibration_state = false;
 
   Serial.println("alok");
@@ -529,7 +529,7 @@ void calibrate_Robot_Angle(int tpinL, int tpinR, int tpinM) {
 
   counter = 0;
   while (calibration_angle) {
-  distL = final_MedianRead(tpinL) - 0.6;
+    distL = final_MedianRead(tpinL) - 0.6;
     distR = final_MedianRead(tpinR);
     diffLR = abs(distL - distR);
     if (diffLR < ANGLE_TOL || counter >= 10) {
@@ -554,7 +554,7 @@ void calibrateDistance(int tpin) {
 
   counter = 0;
   while (calibration_dist) {
-  dist = final_MedianRead(tpin);
+    dist = final_MedianRead(tpin);
     if (dist > 10.75 && dist < 12.25 || counter >= 10) {
       calibration_dist = false;
       break;
@@ -715,7 +715,7 @@ int obstacle_GridConversation(double sensor_data, int sensor_category) {
     // Remove Wall. Convert to Grids.
     temp_value = (sensor_data - SHORT_OFFSET) / 10;
     // Next To Imaginary, return 0
-    if (temp_value < 0){
+    if (temp_value < 0) {
       return MAX_RANGE_OF_SHORT_SENSOR;
     }
     else if ((temp_value < MIN_RANGE_OF_SHORT_SENSOR)) {
@@ -734,7 +734,7 @@ int obstacle_GridConversation(double sensor_data, int sensor_category) {
   // Side Sensor
   else if (sensor_category == 2) {
     temp_value = (sensor_data - SHORT_OFFSET) / 10;
-    if (temp_value < 0){
+    if (temp_value < 0) {
       return MAX_RANGE_OF_SHORT_SENSOR;
     }
     else if ((temp_value < MIN_RANGE_OF_SHORT_SENSOR)) {
@@ -759,7 +759,8 @@ int obstacle_GridConversation(double sensor_data, int sensor_category) {
     // Within Range, return Grids with Wall Gaps
     else if ((temp_value >= MIN_RANGE_OF_LONG_SENSOR) &&
              (temp_value <= MAX_RANGE_OF_LONG_SENSOR)) {
-      return (temp_value - (WALL_GAP / 10));
+      Serial.println(temp_value);
+      return (temp_value - 1);
     }
     else {
       // Over Range, return Max Value
@@ -920,8 +921,8 @@ void loop() {
 //  moveLeft(90);
 //  delay(250);
 //  moveLeft(90);
-  
-  
+
+
 //  delay(250);
 //  moveForward(30);
 //  delay(250);

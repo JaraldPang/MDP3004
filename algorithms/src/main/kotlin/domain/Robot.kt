@@ -111,40 +111,6 @@ class Robot(
                     }
                 }
             }
-//            if (sensedDistance == 0) {  // Found an obstacle next to the robot
-//                val row = centerRow + rowDiff
-//                val col = centerCol + colDiff
-//                if (!MazeModel.isOutsideOfMaze(row, col)) {
-//                    if (explorationMaze[row][col] != CELL_UNKNOWN && explorationMaze[row][col] != CELL_OBSTACLE) {
-//                        println("Warning: maze[$row][$col] was ${explorationMaze[row][col]} but setting to CELL_OBSTACLE")
-//                    }
-//                    explorationMaze[row][col] = CELL_OBSTACLE
-//                    hasUpdateInMaze = true
-//                    // Find an obstacle, check if any arrows found on it
-//                    val arrowDirection = arrowsFound.remove(row to col)
-//                    if (arrowDirection != null) {
-//                        if (connection.isConnected) {
-//                            connection.sendArrowCommand(col, row, arrowDirection)
-//                        }
-//                    }
-//                }
-//            } else if (sensedDistance in sensor.senseRange) {   // Accurate reading from the sensor
-//                // e.g., 2 means 2 grids away from the robot is empty
-//                for (i in 0 until sensedDistance) {
-//                    val row = centerRow + rowDiff + rowInc * i
-//                    val col = centerCol + colDiff + colInc * i
-//                    if (!MazeModel.isOutsideOfMaze(row, col)) {
-//                        if (explorationMaze[row][col] < CELL_UNKNOWN) {
-//                            println("Warning: maze[$row][$col] was ${explorationMaze[row][col]} but setting to CELL_SENSED")
-//                        }
-//                        // If original value is already greater than 0, leave it as it is
-//                        if (explorationMaze[row][col] < CELL_SENSED) {
-//                            explorationMaze[row][col] = CELL_SENSED
-//                        }
-//                        hasUpdateInMaze = true
-//                    }
-//                }
-//            }
         }
         if (connection.isConnected) {
             val part1 = explorationMaze.outputMapDescriptorPart1()

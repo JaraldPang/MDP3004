@@ -107,7 +107,6 @@ class Connection(
         while (true) {
             val input = checkNotNull(input)
             try {
-//                println("Reading...")
                 val line = withTimeout(TimeUnit.SECONDS.toMillis(60)) { input.readUTF8Line() }
                 println("Line read: ${line ?: "<null>"}")
                 if (line == null) {
@@ -157,7 +156,6 @@ class Connection(
     }
 
     private suspend fun writeLine(line: String) {
-//        println("Sending $line...")
         while (true) {
             try {
                 val output = checkNotNull(output)

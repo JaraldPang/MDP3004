@@ -15,6 +15,7 @@ import tornadofx.*
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.PrintWriter
+import java.util.concurrent.atomic.AtomicBoolean
 
 class MainController : Controller() {
     val centerCell: CellInfoModel by inject()
@@ -22,6 +23,7 @@ class MainController : Controller() {
     val realMaze = MazeModel()
     val configurationModel: ConfigurationModel by inject()
     val displayRealMaze = SimpleBooleanProperty(true)
+    private val isRunning = AtomicBoolean()
     private val wayPointChannel = GlobalScope.actor<Pair<Int, Int>>(Dispatchers.JavaFx) {
         consumeEach { (x, y) ->
             configurationModel.wayPointX = x
@@ -54,6 +56,10 @@ class MainController : Controller() {
 
     fun runExploration() {
         GlobalScope.launch(Dispatchers.JavaFx) {
+            if (isRunning.get()) {
+                return@launch
+            }
+            isRunning.set(true)
             val speed = configurationModel.speed
             val robot = Robot(centerCell, explorationMaze, speed, connection)
             val sensors = if (!connection.isConnected) {
@@ -96,13 +102,23 @@ class MainController : Controller() {
             if (connection.isConnected) {
                 connection.sendMdfString(part1, part2)
             }
+            isRunning.set(false)
         }
     }
 
     fun runFastestPath() {
         GlobalScope.launch(Dispatchers.JavaFx) {
+            if (isRunning.get()) {
+                return@launch
+            }
+            isRunning.set(true)
             if (connection.isConnected) {
                 connection.sendFastestPathCommandAndWait()
+            }
+            val part1 = configurationModel.mapDescriptorPart1
+            val part2 = configurationModel.mapDescriptorPart2
+            if (part1 != null && part1.isNotBlank() && part2 != null && part2.isNotEmpty() && connection.isConnected) {
+                connection.sendMdfString(part1, part2)
             }
             val speed = configurationModel.speed
             val robot = Robot(centerCell, explorationMaze, speed, connection)
@@ -116,6 +132,7 @@ class MainController : Controller() {
                 val fastedPath = FastestPath(robot)
                 fastedPath.runFastestPath()
             }
+            isRunning.set(false)
         }
     }
 

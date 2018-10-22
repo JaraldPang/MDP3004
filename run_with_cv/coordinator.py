@@ -105,10 +105,9 @@ def listen_to_pc(pc_wrapper,arduino_wrapper=None,bt_wrapper=None,opencv_pipe=Non
                     raise ConnectionResetError("Null or empty string received arising from connection reset")
                 else:
                     raise ConnectionResetError("Malformed string received: {}".format(msg))
-        except (timeout,ConnectionResetError) as e:
+        except Exception as e:
             print(e)
             print("Unexpected Disconnect for PC occurred. Awaiting reconnection...")
-            conn.close()
             conn = pc_wrapper.accept_connection_and_flush()
             pass
 

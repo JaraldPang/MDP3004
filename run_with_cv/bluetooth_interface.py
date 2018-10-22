@@ -79,7 +79,8 @@ class BluetoothWrapper(object):
             else:
                 self.client_socket.send(str(msg))
             return True
-        except Exception:
+        except Exception as e:
+            print(e)
             self.queue.put(msg)
             return False
 

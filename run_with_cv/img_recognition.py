@@ -56,8 +56,7 @@ class ImageProcessor():
                 else:
                     continue
             else:
-                print("Job Queue is Empty")
-                time.sleep(1)
+                time.sleep(0.5)
 
         print("Terminating identification...")
 
@@ -136,7 +135,7 @@ class ImageProcessor():
                 objectAreaRatio = objectArea / imgArea
                 
                 #appends (distance in grid, image)    
-                if objectAreaRatio > 0.127:
+                if 0.130 > objectAreaRatio > 0.127:
                     # find X-axis of contour
                     M = cv.moments(c)
                     cx = int(M["m10"] / M["m00"])
@@ -148,7 +147,7 @@ class ImageProcessor():
                     else:
                         a = "right"
                     arrows.append((0, a))
-                elif objectAreaRatio > 0.055:
+                elif 0.060 > objectAreaRatio > 0.055:
                     # find X-axis of contour
                     M = cv.moments(c)
                     cx = int(M["m10"] / M["m00"])
@@ -160,7 +159,7 @@ class ImageProcessor():
                     else:
                         a = "right"
                     arrows.append((1, a))
-                elif objectAreaRatio > 0.027:
+                elif 0.03 > objectAreaRatio > 0.027:
                     # find X-axis of contour
                     M = cv.moments(c)
                     cx = int(M["m10"] / M["m00"])
@@ -172,7 +171,7 @@ class ImageProcessor():
                     else:
                         a = "right"
                     arrows.append((2, a))
-                elif objectAreaRatio > 0.015:
+                elif 0.02 > objectAreaRatio > 0.015:
                     # find X-axis of contour
                     M = cv.moments(c)
                     cx = int(M["m10"] / M["m00"])

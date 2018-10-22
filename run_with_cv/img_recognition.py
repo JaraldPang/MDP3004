@@ -22,7 +22,7 @@ class ImageProcessor():
             while 1:
                 img_name = listener_endpoint_pc.recv()
                 start = timer()
-                print(img_name)
+                #print(img_name)
                 camera.capture("{}/capture/{}.jpg".format(dir,img_name), use_video_port=True)
                 listener_endpoint_pc.send("Captured")
                 end = timer()                
@@ -56,8 +56,7 @@ class ImageProcessor():
                 else:
                     continue
             else:
-                print("Job Queue is Empty")
-                time.sleep(1)
+                time.sleep(0.5)
 
         print("Terminating identification...")
 

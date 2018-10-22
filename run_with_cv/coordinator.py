@@ -65,12 +65,11 @@ def listen_to_pc(pc_wrapper,arduino_wrapper=None,bt_wrapper=None,opencv_pipe=Non
     #gets the connection object, the client's ip address and outbound port
     conn = pc_wrapper.accept_connection_and_flush()
     #do not capture unless told to do so
-    exploration_mode = False
     while(1):
+        msg = ""
         try:
             # encoding scheme is ASCII
             #msg = conn.recv(1024).decode('utf-8')
-            msg = ""
             while(1):
                 char = conn.recv(1).decode('utf-8')
                 if(char is None or char is ""):
@@ -84,7 +83,6 @@ def listen_to_pc(pc_wrapper,arduino_wrapper=None,bt_wrapper=None,opencv_pipe=Non
                 opencv_pipe.send(msg[3:])
                 #block thread until received job finished from camera
                 opencv_pipe.recv()
-                #continue
             elif(msg.startswith("ar")):
                 #if(exploration_mode):
                 #   print("PC HOLDING ARDUINO: {}".format(msg))
@@ -110,7 +108,11 @@ def listen_to_pc(pc_wrapper,arduino_wrapper=None,bt_wrapper=None,opencv_pipe=Non
             print("Unexpected Disconnect for PC occurred. Awaiting reconnection...")
             conn.close()
             conn = pc_wrapper.accept_connection_and_flush()
-            pass
+        except Exception as e:
+            print("Unexpected Disconnect for Bluetooth occurred. The following error occurred: {}. Awaiting reconnection...".format(e))
+            conn.shutdown(SHUT_RDWR)
+            conn.close()
+            conn = pc_wrapper.accept_connection_and_flush()
 
     conn.shutdown(SHUT_RDWR)
     conn.close()
@@ -135,6 +137,12 @@ def listen_to_bluetooth(bt_wrapper,pc_wrapper=None,arduino_wrapper=None,):
             conn.shutdown(SHUT_RDWR)
             conn.close()
             conn = bt_wrapper.accept_connection_and_flush()
+        except Exception as e:
+            print("Unexpected Disconnect for Bluetooth occurred. The following error occurred: {}. Awaiting reconnection...".format(e))
+            conn.shutdown(SHUT_RDWR)
+            conn.close()
+            conn = bt_wrapper.accept_connection_and_flush()
+
             
 
     bt_wrapper.close_bt_socket()
@@ -157,11 +165,11 @@ def listen_to_arduino(ar_wrapper,pc_wrapper=None,bt_wrapper=None):
             #       break
             print("RECEIVED FROM ARDUINO INTERFACE: {}.".format(msg))
             if(msg.startswith("al")):
+                #print("ARDUINO writing to PC: {}".format(msg))
                 pc_wrapper.write(msg[2:])
-                print("ARDUINO wrote to PC: {}".format(msg))
             elif(msg.startswith("an")):
+                #print("ARDUINO writing to ANDROID: {}".format(msg))
                 bt_wrapper.write(msg[2:])
-                print("ARDUINO wrote to ANDROID: {}".format(msg))
         except UnicodeDecodeError as ude:
             print(ude)
             continue

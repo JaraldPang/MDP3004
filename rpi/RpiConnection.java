@@ -102,7 +102,7 @@ public class RpiConnection
    //basic connection program
    public static void main(String[] args)
    {
-      emulateAlgo2();
+      readForever();
    }
    
    public static void emulateAlgo1()
@@ -238,5 +238,36 @@ public class RpiConnection
          ioe.printStackTrace();
       }
    }
+
+   public static void readForever()
+   {
+      try
+      {
+         RpiConnection conn = new RpiConnection("192.168.17.1", 45000);
+         Scanner scn = new Scanner(System.in);
+         String input = "";
+         do
+         {
+            try
+            {
+              System.out.println("RECEIVED: " + conn.read());
+            }
+            catch(SocketTimeoutException ste)
+            {
+               conn.reconnect();
+            }
+         
+         }while(input != "END" || conn.getConnected() == false);
+         conn.close();
+      }
+      catch(IOException ioe)
+      {
+         ioe.printStackTrace();
+      }
+   }
+   
+   
+
+
 
 }

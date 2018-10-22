@@ -1,0 +1,337 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <LinearLayout
+        android:id="@+id/ly_top"
+        android:layout_width="match_parent"
+        android:layout_height="20dp"
+        android:layout_alignParentTop="true">
+
+        <TextView
+            android:id="@+id/txt_status"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/tomato"
+            android:gravity="center"
+            android:text="@string/status_default"
+            android:textColor="@color/white" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/ly_left"
+        android:layout_width="451dp"
+        android:layout_height="601dp"
+        android:layout_below="@id/ly_top"
+        android:layout_alignParentStart="true">
+
+        <GridLayout
+            android:id="@+id/grid_maze"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/ly_right"
+        android:layout_width="150dp"
+        android:layout_height="796dp"
+        android:layout_below="@id/ly_top"
+        android:layout_alignParentEnd="true"
+        android:orientation="vertical"
+        android:padding="5dp">
+
+        <LinearLayout
+            android:id="@+id/layout_bt"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                style="@style/HeaderStyle"
+                android:layout_width="match_parent"
+                android:layout_height="30dp"
+                android:text="@string/bt_header" />
+
+            <android.support.v7.widget.SwitchCompat
+                android:id="@+id/bt_swt_isrobust"
+                android:layout_width="match_parent"
+                android:layout_height="30dp"
+                android:checked="true"
+                android:textColor="@color/dim_gray"
+                android:theme="@style/SwitchStyle" />
+
+            <TextView
+                android:id="@+id/bt_lbl_connected"
+                android:layout_width="match_parent"
+                android:layout_height="20dp"
+                android:textColor="@color/dim_gray"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/bt_txt_connected"
+                android:layout_width="match_parent"
+                android:layout_height="20dp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/layout_time"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                style="@style/HeaderStyle"
+                android:layout_width="match_parent"
+                android:layout_height="30dp"
+                android:text="@string/time_header" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="20dp"
+                android:text="@string/time_explore_qn"
+                android:textColor="@color/dim_gray"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/time_txt_explore"
+                android:layout_width="match_parent"
+                android:layout_height="25dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="20dp"
+                android:text="@string/time_fastest_qn"
+                android:textColor="@color/dim_gray"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/time_txt_fastest"
+                android:layout_width="match_parent"
+                android:layout_height="20dp" />
+
+            <android.support.v7.widget.SwitchCompat
+                android:id="@+id/time_swt_isfastest"
+                android:layout_width="match_parent"
+                android:layout_height="30dp"
+                android:textColor="@color/dim_gray"
+                android:theme="@style/SwitchStyle" />
+
+            <Button
+                android:id="@+id/time_btn_start"
+                style="@style/ButtonStyle1"
+                android:layout_width="match_parent"
+                android:layout_height="80dp"
+                android:text="@string/time_isstart_false" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/layout_point"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                style="@style/HeaderStyle"
+                android:layout_width="match_parent"
+                android:layout_height="30dp"
+                android:text="@string/point_header" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="20dp"
+                    android:text="@string/point_origin_qn"
+                    android:textColor="@color/dim_gray"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:paddingStart="15dp"
+                    android:paddingEnd="15dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="25dp"
+                        android:layout_weight="0.75"
+                        android:text="@string/point_x_qn" />
+
+                    <TextView
+                        android:id="@+id/point_txt_origin_x"
+                        android:layout_width="0dp"
+                        android:layout_height="25dp"
+                        android:layout_weight="1" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="25dp"
+                        android:layout_weight="0.75"
+                        android:text="@string/point_y_qn" />
+
+                    <TextView
+                        android:id="@+id/point_txt_origin_y"
+                        android:layout_width="0dp"
+                        android:layout_height="25dp"
+                        android:layout_weight="1" />
+
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="20dp"
+                    android:text="@string/point_way_qn"
+                    android:textColor="@color/dim_gray"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:paddingStart="15dp"
+                    android:paddingEnd="15dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="20dp"
+                        android:layout_weight="0.75"
+                        android:text="@string/point_x_qn" />
+
+                    <TextView
+                        android:id="@+id/point_txt_way_x"
+                        android:layout_width="0dp"
+                        android:layout_height="20dp"
+                        android:layout_weight="1" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="20dp"
+                        android:layout_weight="0.75"
+                        android:text="@string/point_y_qn" />
+
+                    <TextView
+                        android:id="@+id/point_txt_way_y"
+                        android:layout_width="0dp"
+                        android:layout_height="20dp"
+                        android:layout_weight="1" />
+
+                </LinearLayout>
+
+                <android.support.v7.widget.SwitchCompat
+                    android:id="@+id/point_swt_isway"
+                    android:layout_width="match_parent"
+                    android:layout_height="30dp"
+                    android:checked="true"
+                    android:textColor="@color/dim_gray"
+                    android:theme="@style/SwitchStyle" />
+
+                <Button
+                    android:id="@+id/point_btn_set"
+                    style="@style/ButtonStyle1"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:text="@string/point_isset_false" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/ly_bottom"
+        android:layout_width="451dp"
+        android:layout_height="196dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentBottom="true"
+        android:paddingStart="5dp"
+        android:paddingTop="7dp"
+        android:paddingEnd="0dp"
+        android:paddingBottom="5dp">
+
+        <GridLayout
+            android:id="@+id/layout_direction"
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:background="@drawable/d_box"
+            android:columnCount="3"
+            android:rowCount="3">
+
+            <Button
+                android:id="@+id/direction_btn_calib"
+                style="@style/ButtonStyle2"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_row="1"
+                android:layout_column="1"
+                android:background="@drawable/d_calib"
+                android:rotation="0"
+                android:tag="" />
+
+            <Button
+                android:id="@+id/direction_btn_up"
+                style="@style/ButtonStyle3"
+                android:layout_row="0"
+                android:layout_column="1"
+                android:rotation="0" />
+
+            <Button
+                android:id="@+id/direction_btn_down"
+                style="@style/ButtonStyle3"
+                android:layout_row="2"
+                android:layout_column="1"
+                android:rotation="180" />
+
+            <Button
+                android:id="@+id/direction_btn_left"
+                style="@style/ButtonStyle3"
+                android:layout_row="1"
+                android:layout_column="0"
+                android:rotation="270" />
+
+            <Button
+                android:id="@+id/direction_btn_right"
+                style="@style/ButtonStyle3"
+                android:layout_row="1"
+                android:layout_column="2"
+                android:rotation="90" />
+
+        </GridLayout>
+
+        <LinearLayout
+            android:layout_width="295dp"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:paddingStart="5dp"
+            android:paddingEnd="0dp">
+
+            <ImageButton
+                android:id="@+id/msg_tp_preview"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/d_box"
+                android:visibility="visible" />
+
+            <ListView
+                android:id="@+id/msg_lv_preview"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/d_box"
+                android:padding="10dp"
+                android:visibility="gone" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</RelativeLayout>

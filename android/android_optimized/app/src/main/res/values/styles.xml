@@ -1,0 +1,50 @@
+<resources>
+
+	<style name="ThemeGrey" parent="Base.Theme.AppCompat.Light">
+		<item name="colorPrimary">@color/light_gray</item>
+		<item name="colorPrimaryDark">@color/gray</item>
+		<item name="colorAccent">@color/colorAccent</item>
+	</style>
+
+	<style name="SwitchStyle" parent="Base.Theme.AppCompat.Light">
+		<item name="colorControlActivated">@color/lime_green</item>
+		<item name="colorSwitchThumbNormal">@color/deep_sky_blue</item>
+		<item name="android:colorForeground">@color/deep_sky_blue</item>
+		<item name="android:switchTextAppearance">
+			@android:style/TextAppearance.DeviceDefault.Small
+		</item>
+		<item name="android:textAppearance">@android:style/TextAppearance.DeviceDefault.Small</item>
+		<item name="android:textStyle">bold</item>
+	</style>
+
+	<style name="HeaderStyle" parent="Base.Theme.AppCompat.Light">
+		<item name="android:gravity">bottom|center_horizontal</item>
+		<item name="android:textAllCaps">true</item>
+		<item name="android:textColor">@color/colorAccent</item>
+	</style>
+
+	<style name="ButtonStyle1" parent="Base.Theme.AppCompat.Light">
+		<item name="android:textAllCaps">true</item>
+		<item name="android:textAppearance">@android:style/TextAppearance.DeviceDefault.Small</item>
+		<item name="android:textSize">14sp</item>
+	</style>
+
+	<style name="ButtonStyle2" parent="ButtonStyle1">
+		<item name="android:layout_gravity">center</item>
+		<item name="android:layout_width">50dp</item>
+		<item name="android:layout_height">50dp</item>
+		<item name="android:width">50dp</item>
+		<item name="android:height">50dp</item>
+	</style>
+
+	<style name="ButtonStyle3" parent="ButtonStyle2">
+		<item name="android:background">@drawable/d_arrow</item>
+	</style>
+
+	<style name="DialogStyle" parent="Base.Theme.AppCompat.Light.Dialog.Alert">
+		<item name="android:textColor">@color/black</item>
+		<item name="android:textColorPrimary">@color/dim_gray</item>
+		<item name="colorAccent">@color/colorAccent</item>
+	</style>
+
+</resources>

@@ -106,18 +106,14 @@ class ImageProcessor():
         captured_image = cv.imread("{}/capture/{}.jpg".format(dir,captured_image_location), cv.IMREAD_UNCHANGED)
         gray = cv.cvtColor(captured_image, cv.COLOR_RGB2GRAY)
         blur = cv.GaussianBlur(gray, (5, 5), 2)
-        ret, thresholded_img = cv.threshold(gray, 50, 255, cv.THRESH_BINARY)
+        ret, thresholded_img = cv.threshold(blur, 50, 255, cv.THRESH_BINARY)
         #cv.imwrite("capture/{}_th.jpg".format(captured_image_location),thresholded_img)
-        cnts_start = timer()
         captured_cnts = cv.findContours(thresholded_img, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)[1]
-        cnts_end = timer()
-        print("Image: {} - cnts shape: {} - time: {}".format(captured_image_location,captured_cnts.shape,cnts_end - cnts_start))
         # get image size
         imgX = captured_image.shape[1]
         imgY = captured_image.shape[0]
         imgArea = imgX * imgY
         # for each contour found
-        enumerate_start = timer()
         for (i, c) in enumerate(captured_cnts):
             # find number of edges the object has
             peri = cv.arcLength(c, True)
@@ -137,7 +133,7 @@ class ImageProcessor():
                 objectAreaRatio = objectArea / imgArea
                 
                 #appends (distance in grid, image)    
-                if 0.130 > objectAreaRatio > 0.127:
+                if objectAreaRatio > 0.127:
                     # find X-axis of contour
                     M = cv.moments(c)
                     cx = int(M["m10"] / M["m00"])
@@ -149,7 +145,7 @@ class ImageProcessor():
                     else:
                         a = "right"
                     arrows.append((0, a))
-                elif 0.060 > objectAreaRatio > 0.055:
+                elif objectAreaRatio > 0.055:
                     # find X-axis of contour
                     M = cv.moments(c)
                     cx = int(M["m10"] / M["m00"])
@@ -161,7 +157,7 @@ class ImageProcessor():
                     else:
                         a = "right"
                     arrows.append((1, a))
-                elif 0.03 > objectAreaRatio > 0.027:
+                elif objectAreaRatio > 0.027:
                     # find X-axis of contour
                     M = cv.moments(c)
                     cx = int(M["m10"] / M["m00"])
@@ -173,7 +169,7 @@ class ImageProcessor():
                     else:
                         a = "right"
                     arrows.append((2, a))
-                elif 0.02 > objectAreaRatio > 0.015:
+                elif objectAreaRatio > 0.015:
                     # find X-axis of contour
                     M = cv.moments(c)
                     cx = int(M["m10"] / M["m00"])
@@ -186,8 +182,7 @@ class ImageProcessor():
                         a = "right"
                     arrows.append((3, a))
 
-        enumerate_end = timer()
-        print("Loop Timer: {}".format(enumerate_end -  enumerate_start))
+
         return arrows
 
 

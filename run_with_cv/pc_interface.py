@@ -69,8 +69,10 @@ class PcWrapper:
         try:
             #if the queue is not empty there was a disconnect and the reader thread is flushing, enqueue this msg
             if(self.queue.empty() is False):
+                print("Placed {} in PC queue".format(msg))
                 self.queue.put(msg)
             else:
+                print("Writing to PC: {}".format(msg))
                 self.conn.sendall("{}\n".format(msg).encode())
             return True
         except Exception as e:

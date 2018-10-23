@@ -14,23 +14,44 @@ class ImageProcessor():
     def __init__(self):
         self.jobs = Queue()
 
-    def capture(self,listener_endpoint_pc):
+    #sequence as i verb sequence
+    def sequence_images(listener_endpoint_pc):
+        dir = sys.path[0]
+        while 1:
+            img_name = listener_endpoint_pc.recv()
+            start = timer()
+            yield "{}/capture/{}.jpg".format(dir,img_name)
+            end = timer()
+            listener_endpoint_pc.send("Captured")
+            self.jobs.put(img_name)
+            print("Time taken for capturing {} : {}".format(img_name, end - start))
+
+    def capture_old(self,listener_endpoint_pc):
+        camera = PiCamera(resolution=(1920,1080))
         try:
-            camera = PiCamera(resolution=(1920,1080))
+            dir = sys.path[0]
+            print("Starting Capture Thread...")
+            camera.capture_sequence(sequence_images(listener_endpoint_pc), use_video_port=True)
+            print("Terminating Capture...")
+        finally:
+            camera.close()
+
+    def capture(self,listener_endpoint_pc):
+        camera = PiCamera(resolution=(1920,1080))
+        try:
             dir = sys.path[0]
             print("Starting Capture Thread...")
             while 1:
                 img_name = listener_endpoint_pc.recv()
                 start = timer()
-                #print(img_name)
                 camera.capture("{}/capture/{}.jpg".format(dir,img_name), use_video_port=True)
+                end = timer()
                 listener_endpoint_pc.send("Captured")
-                end = timer()                
                 print("Time taken for capturing {} : {}".format(img_name, end - start))
                 self.jobs.put(img_name)
             print("Terminating Capture...")
         finally:
-            pass
+            camera.close()
 
 
     def identify(self, listener_endpoint_rpi):
@@ -133,7 +154,7 @@ class ImageProcessor():
                 objectAreaRatio = objectArea / imgArea
                 
                 #appends (distance in grid, image)    
-                if objectAreaRatio > 0.127:
+                if 0.130 > objectAreaRatio > 0.125:
                     # find X-axis of contour
                     M = cv.moments(c)
                     cx = int(M["m10"] / M["m00"])
@@ -145,7 +166,7 @@ class ImageProcessor():
                     else:
                         a = "right"
                     arrows.append((0, a))
-                elif objectAreaRatio > 0.055:
+                elif 0.058 > objectAreaRatio > 0.053:
                     # find X-axis of contour
                     M = cv.moments(c)
                     cx = int(M["m10"] / M["m00"])
@@ -157,7 +178,7 @@ class ImageProcessor():
                     else:
                         a = "right"
                     arrows.append((1, a))
-                elif objectAreaRatio > 0.027:
+                elif 0.030 > objectAreaRatio > 0.025:
                     # find X-axis of contour
                     M = cv.moments(c)
                     cx = int(M["m10"] / M["m00"])
@@ -169,7 +190,7 @@ class ImageProcessor():
                     else:
                         a = "right"
                     arrows.append((2, a))
-                elif objectAreaRatio > 0.015:
+                elif 0.018 > objectAreaRatio > 0.013:
                     # find X-axis of contour
                     M = cv.moments(c)
                     cx = int(M["m10"] / M["m00"])

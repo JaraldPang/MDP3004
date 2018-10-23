@@ -164,7 +164,7 @@ def listen_to_arduino(ar_wrapper,pc_wrapper=None,bt_wrapper=None):
                 bt_wrapper.write(msg[2:])
             print("Finished Processing AR: {}".format(msg))
         except UnicodeDecodeError as ude:
-            print(ude)
+            print("Failed to decode: {}".format(ude))
             continue
         except Exception as e:
             print(e)

@@ -74,7 +74,7 @@ class PcWrapper:
                 self.conn.sendall("{}\n".format(msg).encode())
             return True
         except Exception as e:
-            print(e)
+            print("\nPC Thread encountering the following write error: %s" % str(e))(e)
             self.queue.put(msg)
             return False
 

@@ -39,6 +39,7 @@ def initialize_opencv(camera_endpoint=None,recog_endpoint=None):
     process_thread.join()
 
 def initialize_listeners(camera_endpoint,recog_endpoint):
+    
     pc_wrapper = PcWrapper()
     bt_wrapper = BluetoothWrapper()
     ar_wrapper = ArduinoWrapper()
@@ -103,6 +104,7 @@ def listen_to_pc(pc_wrapper,arduino_wrapper=None,bt_wrapper=None,opencv_pipe=Non
                     raise ConnectionResetError("Null or empty string received arising from connection reset")
                 else:
                     raise ConnectionResetError("Malformed string received: {}".format(msg))
+            print("Finished Processing PC: {}".format(msg))
         except Exception as e:
             print(e)
             print("Unexpected Disconnect for PC occurred. Awaiting reconnection...")
@@ -131,6 +133,7 @@ def listen_to_bluetooth(bt_wrapper,pc_wrapper=None,arduino_wrapper=None,):
             elif(msg.startswith("ar_")):
                 #print("BT writing to ARDUINO: {}".format(msg))
                 arduino_wrapper.write(msg[3:])
+            print("Finished Processing BT: {}".format(msg))
         except (timeout,BluetoothError):
             print("Unexpected Disconnect for Bluetooth occurred. Awaiting reconnection...")
             conn.shutdown(SHUT_RDWR)
@@ -151,17 +154,7 @@ def listen_to_arduino(ar_wrapper,pc_wrapper=None,bt_wrapper=None):
     ser = ar_wrapper.get_connection()
     while(1):
         try:
-            msg = ser.readline().decode('ascii',errors='ignore').strip() #aruino using println to send so need remove \r\n
-            #msg = ""
-            #while(1):
-            #   char = ser.read(1).decode('utf-8')
-            #   print("{}".format(char))
-            #   if(char is None or char is ""):
-            #       continue
-            #   msg += char
-            #  if(msg.endswith("\n")):
-            #       print("\n")
-            #       break
+            msg = ser.readline().decode('ascii',errors='ignore').strip() #aruino using println to send so need remove \r\nreak
             print("RECEIVED FROM ARDUINO INTERFACE: {}.".format(msg))
             if(msg.startswith("al")):
                 #print("ARDUINO writing to PC: {}".format(msg))
@@ -169,6 +162,7 @@ def listen_to_arduino(ar_wrapper,pc_wrapper=None,bt_wrapper=None):
             elif(msg.startswith("an")):
                 #print("ARDUINO writing to ANDROID: {}".format(msg))
                 bt_wrapper.write(msg[2:])
+            print("Finished Processing AR: {}".format(msg))
         except UnicodeDecodeError as ude:
             print(ude)
             continue

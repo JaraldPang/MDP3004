@@ -51,8 +51,6 @@ class ImageProcessor():
                     for entry in arrowLocAndFace:
                         print("FOUND! For Status: {}, writing to endpoint arrow location: {}".format(robot_status,entry))
                         listener_endpoint_rpi.send("arrfound{}".format(entry))
-                    print(arrowsWithPartition)
-                    print(arrowLocAndFace)
                 else:
                     continue
             else:

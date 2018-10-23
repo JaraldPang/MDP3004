@@ -32,7 +32,9 @@ class ArduinoWrapper():
         return self.ser
 
     def write(self, msg):
-        self.ser.write("{}\n".format(msg).encode('UTF-8')) #serial comms need to encode then can send
+        #serial comms need to encode then can send. 
+        #no need to try catch cause any failure is dead
+        self.ser.write("{}\n".format(msg).encode('UTF-8')) 
 
     def get_connection(self):
         return self.ser

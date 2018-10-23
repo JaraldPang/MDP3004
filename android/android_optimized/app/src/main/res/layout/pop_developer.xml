@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="match_parent"
+	android:layout_height="wrap_content"
+	android:orientation="vertical"
+	android:padding="5dp"
+	android:paddingStart="14dp"
+	android:paddingEnd="14dp">
+
+	<TextView
+		style="@style/HeaderStyle"
+		android:layout_width="match_parent"
+		android:layout_height="30dp"
+		android:text="@string/developer" />
+
+	<Button
+		android:id="@+id/dev_restart"
+		android:layout_width="match_parent"
+		android:layout_height="40dp"
+		android:text="Restart Map" />
+
+	<Button
+		android:id="@+id/dev_sensor"
+		android:layout_width="match_parent"
+		android:layout_height="40dp"
+		android:text="arduino :: g" />
+
+	<Button
+		android:id="@+id/dev_crash"
+		android:layout_width="match_parent"
+		android:layout_height="40dp"
+		android:text="algorithm :: crash" />
+
+	<Button
+		android:id="@+id/dev_chat"
+		android:layout_width="match_parent"
+		android:layout_height="40dp" />
+
+</LinearLayout>

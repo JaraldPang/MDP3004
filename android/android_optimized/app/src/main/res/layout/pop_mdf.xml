@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="match_parent"
+	android:layout_height="wrap_content"
+	android:orientation="vertical"
+	android:paddingStart="14dp"
+	android:paddingTop="5dp"
+	android:paddingEnd="14dp"
+	android:paddingBottom="14dp">
+
+	<TextView
+		style="@style/HeaderStyle"
+		android:layout_width="match_parent"
+		android:layout_height="30dp"
+		android:text="@string/mdf_header" />
+
+	<LinearLayout
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:orientation="vertical">
+
+		<TextView
+			android:layout_width="wrap_content"
+			android:layout_height="25dp"
+			android:text="@string/mdf_s1"
+			android:textColor="@color/dim_gray"
+			android:textStyle="bold" />
+
+		<TextView
+			android:id="@+id/s1_txt_data"
+			android:layout_width="match_parent"
+			android:layout_height="100dp"
+			android:background="@drawable/d_box"
+			android:padding="7dp"
+			android:textColor="@color/black" />
+
+	</LinearLayout>
+
+	<LinearLayout
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:orientation="vertical">
+
+		<TextView
+			android:layout_width="wrap_content"
+			android:layout_height="25dp"
+			android:text="@string/mdf_s2"
+			android:textColor="@color/dim_gray"
+			android:textStyle="bold" />
+
+		<TextView
+			android:id="@+id/s2_txt_data"
+			android:layout_width="match_parent"
+			android:layout_height="100dp"
+			android:background="@drawable/d_box"
+			android:padding="7dp"
+			android:textColor="@color/black" />
+
+	</LinearLayout>
+
+</LinearLayout>

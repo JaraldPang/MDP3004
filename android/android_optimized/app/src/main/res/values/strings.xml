@@ -1,0 +1,51 @@
+<resources>
+	<string name="app_name">MDP G17</string>
+	<string name="_null" />
+	<string name="_success">Success</string>
+	<string name="_turnon">Turn On</string>
+	<string name="_turnoff">Turn Off</string>
+	<string name="_delimiter2">;</string>
+	<string name="_delimiter">,</string>
+	<string name="_bracket_s">{</string>
+	<string name="_bracket_e">}</string>
+
+	<string name="mdf_header">Map Descriptor String</string>
+	<string name="mdf_s1">MDF String 1</string>
+	<string name="mdf_s2">MDF String 2</string>
+
+	<string name="arrow_header">Obstacle with Up Arrows</string>
+
+	<string name="status_default">No Status</string>
+
+	<string name="bt_header">Bluetooth</string>
+	<string name="bt_find">Find Devices</string>
+	<string name="bt_isconnect_true">Connected to:</string>
+	<string name="bt_isconnect_false">Not Connected</string>
+	<string name="bt_paired">Paired Devices</string>
+	<string name="bt_reconnect">Reconnect to Last Device</string>
+	<string name="bt_isrobust_true">Robust: On</string>
+	<string name="bt_isrobust_false">Robust: Off</string>
+
+	<string name="msg_header">Messaging</string>
+	<string name="msg_send">Send</string>
+
+	<string name="time_header">Timings</string>
+	<string name="time_explore_qn">Exploration Time:</string>
+	<string name="time_fastest_qn">Fastest Path Time:</string>
+	<string name="time_fastest">Fastest</string>
+	<string name="time_explore">Explore</string>
+	<string name="time_isstart_false">Start</string>
+	<string name="time_isstart_true">Stop</string>
+	<string name="time_default">0:00:000</string>
+
+	<string name="point_header">Coordinates</string>
+	<string name="point_x_qn">X:</string>
+	<string name="point_y_qn">Y:</string>
+	<string name="point_swt_origin">Origin</string>
+	<string name="point_swt_way">Way</string>
+	<string name="point_origin_qn">Origin point:</string>
+	<string name="point_way_qn">Way point:</string>
+	<string name="point_isset_false">Set Point</string>
+	<string name="point_isset_true">Confirm</string>
+	<string name="developer">Developer</string>
+</resources>

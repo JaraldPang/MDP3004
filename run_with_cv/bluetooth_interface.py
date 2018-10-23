@@ -71,6 +71,7 @@ class BluetoothWrapper(object):
 
     #we delegate read jobs to the read thread
     #we also delegate flushing of the queue to the reader thread
+    #if there are any errors, it's a failure to send. due to the 3-way nature 
     def write(self,msg):
         try:
             #if the queue is not empty there was a disconnect and the reader thread is flushing, enqueue this msg
@@ -80,7 +81,7 @@ class BluetoothWrapper(object):
                 self.client_socket.send(str(msg))
             return True
         except Exception as e:
-            print(e)
+            print("BT thread encountering the following write error: %s" % str(e))
             self.queue.put(msg)
             return False
 

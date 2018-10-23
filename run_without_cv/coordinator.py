@@ -78,7 +78,11 @@ def listen_to_pc(pc_wrapper,arduino_wrapper=None,bt_wrapper=None,opencv_pipe=Non
             print("Unexpected Disconnect for PC occurred. Awaiting reconnection...")
             conn.close()
             conn = pc_wrapper.accept_connection_and_flush()
-            pass
+        except Exception as e:
+            print("Unexpected Disconnect for Bluetooth occurred. The following error occurred: {}. Awaiting reconnection...".format(e))
+            conn.shutdown(SHUT_RDWR)
+            conn.close()
+            conn = pc_wrapper.accept_connection_and_flush()
 
     conn.shutdown(SHUT_RDWR)
     conn.close()
@@ -100,6 +104,11 @@ def listen_to_bluetooth(bt_wrapper,pc_wrapper=None,arduino_wrapper=None,):
                 arduino_wrapper.write(msg[3:])
         except (timeout,BluetoothError):
             print("Unexpected Disconnect for Bluetooth occurred. Awaiting reconnection...")
+            conn.shutdown(SHUT_RDWR)
+            conn.close()
+            conn = bt_wrapper.accept_connection_and_flush()
+        except Exception as e:
+            print("Unexpected Disconnect for Bluetooth occurred. The following error occurred: {}. Awaiting reconnection...".format(e))
             conn.shutdown(SHUT_RDWR)
             conn.close()
             conn = bt_wrapper.accept_connection_and_flush()

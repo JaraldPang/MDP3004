@@ -15,28 +15,31 @@ class ImageProcessor():
         self.jobs = Queue()
 
     #sequence as i verb sequence
-    def sequence_images(listener_endpoint_pc):
+    def sequence_images(self,listener_endpoint_pc):
         dir = sys.path[0]
         while 1:
             img_name = listener_endpoint_pc.recv()
             start = timer()
             yield "{}/capture/{}.jpg".format(dir,img_name)
             end = timer()
+            #if(end-start < 0.1):
+            #   time.sleep(0.1-(end-start))
+            #   print("Camera too fast: {}. Slept for: {}".format(end-start,0.1-(end-start)))
             listener_endpoint_pc.send("Captured")
             self.jobs.put(img_name)
-            print("Time taken for capturing {} : {}".format(img_name, end - start))
+            print("Time taken for capturing {} : {}.".format(img_name, end - start))
 
-    def capture_old(self,listener_endpoint_pc):
+    def capture(self,listener_endpoint_pc):
         camera = PiCamera(resolution=(1920,1080))
         try:
             dir = sys.path[0]
             print("Starting Capture Thread...")
-            camera.capture_sequence(sequence_images(listener_endpoint_pc), use_video_port=True)
+            camera.capture_sequence(self.sequence_images(listener_endpoint_pc), use_video_port=True)
             print("Terminating Capture...")
         finally:
             camera.close()
 
-    def capture(self,listener_endpoint_pc):
+    def capture_old(self,listener_endpoint_pc):
         camera = PiCamera(resolution=(1920,1080))
         try:
             dir = sys.path[0]

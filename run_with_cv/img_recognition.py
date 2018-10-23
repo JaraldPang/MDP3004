@@ -108,12 +108,16 @@ class ImageProcessor():
         blur = cv.GaussianBlur(gray, (5, 5), 2)
         ret, thresholded_img = cv.threshold(gray, 50, 255, cv.THRESH_BINARY)
         #cv.imwrite("capture/{}_th.jpg".format(captured_image_location),thresholded_img)
+        cnts_start = timer()
         captured_cnts = cv.findContours(thresholded_img, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)[1]
+        cnts_end = timer()
+        print("Image: {} - cnts shape: {} - time: {}".format(captured_image_location,captured_cnts.shape,cnts_end - cnts_start))
         # get image size
         imgX = captured_image.shape[1]
         imgY = captured_image.shape[0]
         imgArea = imgX * imgY
         # for each contour found
+        enumerate_start = timer()
         for (i, c) in enumerate(captured_cnts):
             # find number of edges the object has
             peri = cv.arcLength(c, True)
@@ -182,6 +186,8 @@ class ImageProcessor():
                         a = "right"
                     arrows.append((3, a))
 
+        enumerate_end = timer()
+        print("Loop Timer: {}".format(enumerate_end -  enumerate_start))
         return arrows
 
 

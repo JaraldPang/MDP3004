@@ -98,13 +98,13 @@ class Robot(
         }
 //        delay(100)
         val sensorData = sensors.map { it to it.sense() }
-        if (!forceUpdate) {
-            val tempMaze = explorationMaze.copy()
-            val movement = checkConflictWithSensorData(tempMaze, sensorData)
-            if (movement != null) {
-                return movement
-            }
-        }
+//        if (!forceUpdate) {
+//            val tempMaze = explorationMaze.copy()
+//            val movement = checkConflictWithSensorData(tempMaze, sensorData)
+//            if (movement != null) {
+//                return movement
+//            }
+//        }
 
         val (centerRow, centerCol, direction) = centerCell
         for ((sensor, sensedDistance) in sensorData) {
@@ -360,7 +360,7 @@ class Robot(
             for (movement in movements) {
                 move(movement)
                 if (connection.isConnected) {
-                    delay(350L)
+                    delay(500L)
                 }
             }
         }

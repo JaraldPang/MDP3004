@@ -11,6 +11,6 @@ class Group17AlgorithmsApp : App(MainView::class) {
     }
 }
 
-fun main(args: Array<String>) {
-    launch<Group17AlgorithmsApp>(args)
+fun main() {
+    launch<Group17AlgorithmsApp>()
 }

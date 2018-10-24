@@ -1,6 +1,6 @@
 package domain
 
-import kotlinx.coroutines.experimental.channels.ReceiveChannel
+import kotlinx.coroutines.channels.ReceiveChannel
 import model.MazeModel
 
 /**

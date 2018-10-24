@@ -5,6 +5,7 @@ import model.MazeModel
 import java.util.*
 
 open class FastestPath(
+    private val connection: Connection,
     protected val robot: Robot,
     protected val start: CellInfoModel = robot.centerCell.copy(),
     protected val dest: Pair<Int, Int> = MAZE_ROWS - 1 - 1 to MAZE_COLUMNS - 1 - 1
@@ -12,6 +13,9 @@ open class FastestPath(
     suspend fun runFastestPath() {
         val movements = findFastestPathMovements()
         robot.moveFollowingMovements(movements, true)
+        if (connection.isConnected) {
+            connection.sendStopCommand()
+        }
     }
 
     open fun findFastestPathMovements(): List<Movement> {
@@ -24,11 +28,12 @@ open class FastestPath(
 }
 
 class FastestPathWithWayPoint(
+    connection: Connection,
     robot: Robot,
     private val wayPoint: Pair<Int, Int>,
     start: CellInfoModel = robot.centerCell.copy(),
     dest: Pair<Int, Int> = MAZE_ROWS - 1 - 1 to MAZE_COLUMNS - 1 - 1
-) : FastestPath(robot, start, dest) {
+) : FastestPath(connection, robot, start, dest) {
     override fun findFastestPathMovements(): List<Movement> {
         val realMaze = robot.explorationMaze.copy()
         val pathsToWayPoint = findFastestPathToDestination(realMaze, start, wayPoint).filter { it.isNotEmpty() }

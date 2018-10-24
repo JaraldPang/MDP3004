@@ -1,26 +1,51 @@
 package domain
 
-import kotlinx.coroutines.experimental.Dispatchers
-import kotlinx.coroutines.experimental.GlobalScope
-import kotlinx.coroutines.experimental.delay
-import kotlinx.coroutines.experimental.javafx.JavaFx
-import kotlinx.coroutines.experimental.launch
+import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonProperty
+import kotlinx.coroutines.*
 import model.CellInfoModel
 import model.MazeModel
 import model.MovementInfo
+import kotlin.coroutines.CoroutineContext
 import kotlin.math.min
+
+data class ExplorationMaze(
+    @get:JsonProperty("explorationMaze") val explorationMaze: List<List<Int>>
+) : JsonSerializable {
+    @JsonIgnore
+    override val filename = "ExplorationMaze"
+}
+
+data class CenterCell(
+    @get:JsonProperty("row") val row: Int,
+    @get:JsonProperty("col") val col: Int,
+    @get:JsonProperty("direction") val direction: Direction
+) : JsonSerializable {
+    @JsonIgnore
+    override val filename = "CenterCell"
+}
+
+data class Arrows(@get:JsonProperty("arrows") val arrows: List<CenterCell>) : JsonSerializable {
+    @JsonIgnore
+    override val filename = "Arrows"
+}
 
 class Robot(
     val centerCell: CellInfoModel,
     val explorationMaze: MazeModel,
     private val speed: Int?,
     private val connection: Connection
-) {
+) : CoroutineScope {
+    private val job = Job()
+
+    override val coroutineContext: CoroutineContext
+        get() = Dispatchers.Main + job
     val isAtStartZone get() = centerCell.row == 1 && centerCell.col == 1
 
     private var sensors = listOf<Sensor>()
 
     private val arrowsFound = hashMapOf<Pair<Int, Int>, Direction>()
+    private val correctArrows = mutableListOf<CellInfoModel>()
 
     private var movementCount = 0
 
@@ -30,7 +55,7 @@ class Robot(
 
     private fun startProcessingArrowFound() {
         if (connection.isConnected) {
-            GlobalScope.launch(Dispatchers.JavaFx) {
+            launch {
                 // Hopefully the arrowFound message comes after the obstacle is sensed
                 for (arrowFound in connection.arrowFoundChannel) {
                     val (x, y, directionCommand) = arrowFound.substring(8).split(",")
@@ -51,6 +76,8 @@ class Robot(
                         if (connection.isConnected) {
                             connection.sendArrowCommand(col, row, direction)
                         }
+                        correctArrows += CellInfoModel(row, col, direction)
+                        saveJson(Arrows(correctArrows.map { CenterCell(it.row, it.col, it.direction) }))
                     } else {
                         // The corresponding grid is not an obstacle (yet), cache it and check later
                         println("Received arrow at ($col,$row,$directionCommand) but caching")
@@ -65,15 +92,22 @@ class Robot(
         this.sensors = sensors
     }
 
-    suspend fun sense(): Boolean {
+    suspend fun sense(forceUpdate: Boolean = false): Movement? {
         if (connection.isConnected) {
             connection.sendGetSensorDataCommand()
         }
 //        delay(100)
-        var hasUpdateInMaze = false
+        val sensorData = sensors.map { it to it.sense() }
+        if (!forceUpdate) {
+            val tempMaze = explorationMaze.copy()
+            val movement = checkConflictWithSensorData(tempMaze, sensorData)
+            if (movement != null) {
+                return movement
+            }
+        }
+
         val (centerRow, centerCol, direction) = centerCell
-        for (sensor in sensors) {
-            val sensedDistance = sensor.sense()
+        for ((sensor, sensedDistance) in sensorData) {
             val (rowDiff, colDiff, rowInc, colInc) = SENSOR_INFO[sensor.position][direction.ordinal]
             if (sensedDistance >= sensor.senseRange.first) {
                 if (sensedDistance == 0) {  // Found an obstacle next to the robot
@@ -84,7 +118,6 @@ class Robot(
                             println("Warning: maze[$row][$col] was ${explorationMaze[row, col]} but setting to CELL_OBSTACLE")
                         }
                         explorationMaze[row, col] = CELL_OBSTACLE
-                        hasUpdateInMaze = true
                         // Find an obstacle, check if any arrows found on it
                         val arrowDirection = arrowsFound.remove(row to col)
                         if (arrowDirection != null) {
@@ -106,7 +139,14 @@ class Robot(
                             if (explorationMaze[row, col] < CELL_SENSED) {
                                 explorationMaze[row, col] = CELL_SENSED
                             }
-                            hasUpdateInMaze = true
+
+                            // Clearing an arrow, save back to arrowsFound
+                            val arrow = correctArrows.find { it.row == row && it.col == col }
+                            if (arrow != null) {
+                                correctArrows.remove(arrow)
+                                saveJson(Arrows(correctArrows.map { CenterCell(it.row, it.col, it.direction) }))
+                                arrowsFound[row to col] = arrow.direction
+                            }
                         }
                     }
                 }
@@ -117,7 +157,48 @@ class Robot(
             val part2 = explorationMaze.outputMapDescriptorPart2()
             connection.sendMdfString(part1, part2)
         }
-        return hasUpdateInMaze
+        return null
+    }
+
+    /**
+     * @return If has conflict with existing map, return the movement needed to sense again, else return null
+     */
+    private fun checkConflictWithSensorData(mazeModel: MazeModel, sensorData: List<Pair<Sensor, Int>>): Movement? {
+        val (centerRow, centerCol, direction) = centerCell
+        for ((sensor, sensedDistance) in sensorData) {
+            val (rowDiff, colDiff, rowInc, colInc) = SENSOR_INFO[sensor.position][direction.ordinal]
+            if (sensedDistance >= sensor.senseRange.first) {
+                if (sensedDistance == 0) {  // Found an obstacle next to the robot
+                    val row = centerRow + rowDiff
+                    val col = centerCol + colDiff
+                    if (!MazeModel.isOutsideOfMaze(row, col)) {
+                        if (mazeModel[row, col] != CELL_UNKNOWN && mazeModel[row, col] != CELL_OBSTACLE) {
+                            println("Warning: maze[$row][$col] was ${mazeModel[row, col]} but setting to CELL_OBSTACLE")
+                            when (sensor.position) {
+                                in (0..2) -> return Movement.TURN_LEFT
+                                in (6..8) -> return Movement.TURN_RIGHT
+                            }
+                        }
+                    }
+                } else {
+                    // e.g., 2 means 2 grids away from the robot is empty
+                    for (i in 0 until min(sensor.senseRange.last, sensedDistance)) {
+                        val row = centerRow + rowDiff + rowInc * i
+                        val col = centerCol + colDiff + colInc * i
+                        if (!MazeModel.isOutsideOfMaze(row, col)) {
+                            if (mazeModel[row, col] < CELL_UNKNOWN) {
+                                println("Warning: maze[$row][$col] was ${mazeModel[row, col]} but setting to CELL_SENSED")
+                                when (sensor.position) {
+                                    in (0..2) -> return Movement.TURN_LEFT
+                                    in (6..8) -> return Movement.TURN_RIGHT
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return null
     }
 
     suspend fun move(movement: Movement) {
@@ -147,6 +228,7 @@ class Robot(
         if (connection.isConnected) {
             connection.sendRobotCenter(centerCell)
         }
+        saveStateToFile()
     }
 
     private suspend fun turnRight() {
@@ -155,6 +237,7 @@ class Robot(
         if (connection.isConnected) {
             connection.sendRobotCenter(centerCell)
         }
+        saveStateToFile()
     }
 
     private suspend fun moveForward() {
@@ -190,6 +273,16 @@ class Robot(
             connection.sendRobotCenter(centerCell)
         }
         explorationMaze.print()
+        saveStateToFile()
+    }
+
+    private fun saveStateToFile() {
+        saveJson(ExplorationMaze(List(MAZE_ROWS) { row ->
+            List(MAZE_COLUMNS) { col ->
+                explorationMaze[row, col]
+            }
+        }))
+        saveJson(CenterCell(centerCell.row, centerCell.col, centerCell.direction))
     }
 
     suspend fun goToStartZone() {
@@ -259,15 +352,15 @@ class Robot(
                         }
                     }
                 }
-                if (connection.isConnected) {
-                    delay(250L)
-                }
+//                if (connection.isConnected) {
+//                    delay(250L)
+//                }
             }
         } else {
             for (movement in movements) {
                 move(movement)
                 if (connection.isConnected) {
-                    delay(250L)
+                    delay(350L)
                 }
             }
         }
@@ -288,20 +381,20 @@ class Robot(
                     movementCount = 0
                     connection.sendCalibrationCommandAndWait()
                     move(Movement.TURN_LEFT)
-                    delay(250)
+                    delay(250L)
                     connection.sendCalibrationCommandAndWait()
                     move(Movement.TURN_RIGHT)
-                    delay(250)
+                    delay(250L)
                     movementCount = 0
                 }
                 frontSide.all { it == CELL_OBSTACLE } && rightSide.all { it == CELL_OBSTACLE } -> {
                     movementCount = 0
                     connection.sendCalibrationCommandAndWait()
                     move(Movement.TURN_RIGHT)
-                    delay(250)
+                    delay(250L)
                     connection.sendCalibrationCommandAndWait()
                     move(Movement.TURN_LEFT)
-                    delay(250)
+                    delay(250L)
                     movementCount = 0
                 }
                 frontSide.all { it == CELL_OBSTACLE } -> {
@@ -312,19 +405,19 @@ class Robot(
                 leftSide.all { it == CELL_OBSTACLE } -> {
                     movementCount = 0
                     move(Movement.TURN_LEFT)
-                    delay(250)
+                    delay(250L)
                     connection.sendCalibrationCommandAndWait()
                     move(Movement.TURN_RIGHT)
-                    delay(250)
+                    delay(250L)
                     movementCount = 0
                 }
                 rightSide.all { it == CELL_OBSTACLE } -> {
                     movementCount = 0
                     move(Movement.TURN_RIGHT)
-                    delay(250)
+                    delay(250L)
                     connection.sendCalibrationCommandAndWait()
                     move(Movement.TURN_LEFT)
-                    delay(250)
+                    delay(250L)
                     movementCount = 0
                 }
             }

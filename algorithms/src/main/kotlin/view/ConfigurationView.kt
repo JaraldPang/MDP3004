@@ -8,14 +8,13 @@ import javafx.scene.input.MouseEvent
 import javafx.util.converter.DoubleStringConverter
 import javafx.util.converter.IntegerStringConverter
 import javafx.util.converter.LongStringConverter
-import kotlinx.coroutines.experimental.Dispatchers
-import kotlinx.coroutines.experimental.GlobalScope
-import kotlinx.coroutines.experimental.channels.Channel
-import kotlinx.coroutines.experimental.channels.ReceiveChannel
-import kotlinx.coroutines.experimental.channels.actor
-import kotlinx.coroutines.experimental.channels.produce
-import kotlinx.coroutines.experimental.javafx.JavaFx
-import kotlinx.coroutines.experimental.selects.whileSelect
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.ReceiveChannel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.selects.selectUnbiased
 import tornadofx.*
 
 class ConfigurationView : View() {
@@ -119,9 +118,21 @@ class ConfigurationView : View() {
             button("Fastest Path") {
                 action { controller.runFastestPath() }
             }
-            button("Connect") {
-                enableWhen(controller.connection.socketProperty.booleanBinding { it == null })
-                onClick { controller.connect() }
+            button {
+                textProperty().bind(controller.connection.socketProperty.stringBinding {
+                    if (it == null) {
+                        "Connect"
+                    } else {
+                        "Disconnect"
+                    }
+                })
+                onClick {
+                    if (!controller.connection.isConnected) {
+                        controller.connect()
+                    } else {
+                        controller.disconnect()
+                    }
+                }
             }
             button("Reset") {
                 action { controller.reset() }
@@ -131,8 +142,9 @@ class ConfigurationView : View() {
 }
 
 fun Node.onClick(action: suspend (MouseEvent) -> Unit) {
-    val eventActor = GlobalScope.actor<MouseEvent>(Dispatchers.JavaFx, capacity = Channel.CONFLATED) {
-        for (event in channel.debounce(300)) {
+    val eventActor = Channel<MouseEvent>(Channel.CONFLATED)
+    GlobalScope.launch(Dispatchers.Main) {
+        for (event in eventActor.debounce(300)) {
             action(event)
         }
     }
@@ -140,18 +152,22 @@ fun Node.onClick(action: suspend (MouseEvent) -> Unit) {
     onMouseClicked = EventHandler { eventActor.offer(it) }
 }
 
-fun <T> ReceiveChannel<T>.debounce(timeMillis: Long) =
-    GlobalScope.produce(Dispatchers.JavaFx) {
+@UseExperimental(ExperimentalCoroutinesApi::class)
+fun <T> ReceiveChannel<T>.debounce(timeMillis: Long): ReceiveChannel<T> {
+    val producer = Channel<T>(Channel.UNLIMITED)
+    GlobalScope.launch(Dispatchers.Main) {
         var value = receive()
-        whileSelect {
-            onTimeout(timeMillis) {
-                send(value)
-                value = receive()
-                true
-            }
-            onReceive {
-                value = it
-                true
+        while (true) {
+            selectUnbiased<Unit> {
+                onTimeout(timeMillis) {
+                    producer.send(value)
+                    value = receive()
+                }
+                onReceive {
+                    value = it
+                }
             }
         }
     }
+    return producer
+}

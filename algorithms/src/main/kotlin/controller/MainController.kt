@@ -1,13 +1,17 @@
 package controller
 
+import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonProperty
 import domain.*
 import javafx.beans.property.SimpleBooleanProperty
-import kotlinx.coroutines.experimental.Dispatchers
-import kotlinx.coroutines.experimental.GlobalScope
-import kotlinx.coroutines.experimental.channels.actor
-import kotlinx.coroutines.experimental.channels.consumeEach
-import kotlinx.coroutines.experimental.javafx.JavaFx
-import kotlinx.coroutines.experimental.launch
+import kotlinx.atomicfu.AtomicRef
+import kotlinx.atomicfu.atomic
+import kotlinx.atomicfu.update
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.launch
 import model.CellInfoModel
 import model.ConfigurationModel
 import model.MazeModel
@@ -15,35 +19,44 @@ import tornadofx.*
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.PrintWriter
-import java.util.concurrent.atomic.AtomicBoolean
 
-class MainController : Controller() {
+enum class AppState {
+    IDLE,
+    EXPLORATION,
+    FASTEST_PATH
+}
+
+data class AppStateJson(@get:JsonProperty("appState") val appState: AppState) : JsonSerializable {
+    @JsonIgnore
+    override val filename = "AppState"
+}
+
+inline fun AtomicRef<AppState>.withState(runningState: AppState, restoredState: AppState, block: () -> Unit) {
+    if (!compareAndSet(restoredState, runningState)) {
+        return
+    }
+    saveJson(AppStateJson(runningState))
+    block()
+    update { restoredState }
+    saveJson(AppStateJson(restoredState))
+}
+
+
+class MainController : Controller(), CoroutineScope {
+    private val job = Job()
+    override val coroutineContext get() = Dispatchers.Main + job
+
     val centerCell: CellInfoModel by inject()
     val explorationMaze = MazeModel()
     val realMaze = MazeModel()
     val configurationModel: ConfigurationModel by inject()
     val displayRealMaze = SimpleBooleanProperty(true)
-    private val isRunning = AtomicBoolean()
-    private val wayPointChannel = GlobalScope.actor<Pair<Int, Int>>(Dispatchers.JavaFx) {
-        consumeEach { (x, y) ->
-            configurationModel.wayPointX = x
-            configurationModel.wayPointY = y
-        }
-    }
+    private val appState = atomic(AppState.IDLE)
 
-    private val startCommandChannel = GlobalScope.actor<String>(Dispatchers.JavaFx) {
-        consumeEach {
-            when (it) {
-                Connection.START_EXPLORATION_COMMAND -> runExploration()
-                Connection.START_FASTEST_PATH_COMMAND -> runFastestPath()
-            }
-        }
-    }
+    private val wayPointChannel = Channel<Pair<Int, Int>>(Channel.UNLIMITED)
+    private val startCommandChannel = Channel<String>(Channel.UNLIMITED)
 
-    val connection = Connection(
-        wayPointChannel = wayPointChannel,
-        startCommandChannel = startCommandChannel
-    )
+    val connection = Connection(wayPointChannel = wayPointChannel, startCommandChannel = startCommandChannel)
 
     init {
         with(centerCell) {
@@ -52,14 +65,30 @@ class MainController : Controller() {
             direction = Direction.UP
         }
         explorationMaze.initExploration()
+
+        launch {
+            for ((x, y) in wayPointChannel) {
+                configurationModel.wayPointX = x
+                configurationModel.wayPointY = y
+            }
+        }
+
+        launch {
+            for (command in startCommandChannel) {
+                when (command) {
+                    Connection.START_EXPLORATION_COMMAND -> runExploration()
+                    Connection.START_FASTEST_PATH_COMMAND -> runFastestPath()
+                }
+            }
+        }
+
+//        launch {
+//            tryToRecover()
+//        }
     }
 
-    fun runExploration() {
-        GlobalScope.launch(Dispatchers.JavaFx) {
-            if (isRunning.get()) {
-                return@launch
-            }
-            isRunning.set(true)
+    fun runExploration() = launch {
+        appState.withState(AppState.EXPLORATION, AppState.IDLE) {
             val speed = configurationModel.speed
             val robot = Robot(centerCell, explorationMaze, speed, connection)
             val sensors = if (!connection.isConnected) {
@@ -102,16 +131,12 @@ class MainController : Controller() {
             if (connection.isConnected) {
                 connection.sendMdfString(part1, part2)
             }
-            isRunning.set(false)
         }
     }
 
-    fun runFastestPath() {
-        GlobalScope.launch(Dispatchers.JavaFx) {
-            if (isRunning.get()) {
-                return@launch
-            }
-            isRunning.set(true)
+
+    fun runFastestPath() = launch {
+        appState.withState(AppState.FASTEST_PATH, AppState.IDLE) {
             if (connection.isConnected) {
                 connection.sendFastestPathCommandAndWait()
             }
@@ -126,15 +151,15 @@ class MainController : Controller() {
             val wayPointX = configurationModel.wayPointX
             val wayPointY = configurationModel.wayPointY
             if (wayPointX != null && wayPointY != null) {
-                val fastestPath = FastestPathWithWayPoint(robot, wayPointY to wayPointX)
+                val fastestPath = FastestPathWithWayPoint(connection, robot, wayPointY to wayPointX)
                 fastestPath.runFastestPath()
             } else {
-                val fastedPath = FastestPath(robot)
+                val fastedPath = FastestPath(connection, robot)
                 fastedPath.runFastestPath()
             }
-            isRunning.set(false)
         }
     }
+
 
     fun loadMapDescriptor() {
         val filename = configurationModel.filename
@@ -159,11 +184,13 @@ class MainController : Controller() {
         }
     }
 
-    fun connect() {
-        GlobalScope.launch(Dispatchers.JavaFx) {
-            connection.connect()
-            connection.startReadingLoop()
-        }
+    fun connect() = launch {
+        connection.connect()
+        connection.startReadingLoop()
+    }
+
+    fun disconnect() {
+        connection.disconnect()
     }
 
     fun reset() {
@@ -173,5 +200,33 @@ class MainController : Controller() {
         realMaze.reset()
         configurationModel.reset()
         displayRealMaze.value = true
+    }
+
+    private suspend fun tryToRecover() {
+        val appState = loadJson<AppStateJson>("AppState") ?: return
+        if (appState.appState != AppState.IDLE) {
+            val centerCell = loadJson<CenterCell>("CenterCell") ?: return
+            with(this.centerCell) {
+                row = centerCell.row
+                col = centerCell.col
+                direction = centerCell.direction
+            }
+            val explorationMaze = loadJson<ExplorationMaze>("ExplorationMaze") ?: return
+            for (row in 0 until MAZE_ROWS) {
+                for (col in 0 until MAZE_COLUMNS) {
+                    this.explorationMaze[row, col] = explorationMaze.explorationMaze[row][col]
+                }
+            }
+            val connection = loadJson<ConnectionJson>("Connection")
+            if (connection?.isConnected == true) {
+                connect().join()
+            }
+            when (appState.appState) {
+                AppState.EXPLORATION -> runExploration()
+                AppState.FASTEST_PATH -> runFastestPath()
+                else -> {
+                }
+            }
+        }
     }
 }

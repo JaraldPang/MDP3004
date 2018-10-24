@@ -1,9 +1,16 @@
 package domain
 
-import kotlinx.coroutines.experimental.withTimeoutOrNull
+import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonProperty
+import kotlinx.coroutines.withTimeoutOrNull
 import model.CellInfoModel
 import java.util.*
 import java.util.concurrent.TimeUnit
+
+data class ExplorationJson(@get:JsonProperty("stack") val stack: List<CenterCell>) : JsonSerializable {
+    @JsonIgnore
+    override val filename = "Exploration"
+}
 
 open class Exploration(private val robot: Robot, private val connection: Connection) {
     private var calibratedAtTopRightCorner = false
@@ -20,7 +27,9 @@ open class Exploration(private val robot: Robot, private val connection: Connect
             robot.goToStartZone()
         }
         robot.turnToFaceUp()
-        connection.sendStopCommand()
+        if (connection.isConnected) {
+            connection.sendStopCommand()
+        }
         robot.calibrateForFastestPath()
     }
 
@@ -39,7 +48,28 @@ open class Exploration(private val robot: Robot, private val connection: Connect
                     calibratedAtTopLeftCorner = true
                 }
             }
-            robot.sense()
+
+            val senseAgainMovement = robot.sense()
+            if (senseAgainMovement != null) {
+                // Find conflicts in the sensorData, turn and sense again
+                when (senseAgainMovement) {
+                    Movement.TURN_LEFT -> {
+                        robot.move(Movement.TURN_LEFT)
+                        robot.sense(forceUpdate = true)
+                        robot.move(Movement.TURN_RIGHT)
+                        robot.sense(forceUpdate = true)
+                    }
+                    Movement.TURN_RIGHT -> {
+                        robot.move(Movement.TURN_RIGHT)
+                        robot.sense(forceUpdate = true)
+                        robot.move(Movement.TURN_LEFT)
+                        robot.sense(forceUpdate = true)
+                    }
+                    else -> {
+                    }
+                }
+            }
+
             val explorationMaze = robot.explorationMaze
             val sides = explorationMaze.getEnvironmentOnSides(robot.centerCell.copy())
             println("Center: ${robot.centerCell}, Sides: ${sides.joinToString()}")
@@ -71,11 +101,6 @@ open class Exploration(private val robot: Robot, private val connection: Connect
         })
         val finalChoice = choices.first()
         when {
-//            sides[finalChoice.ordinal] == CELL_OBSTACLE -> {
-//                turnLeft()
-//                turnLeft()
-//                moveForward()
-//            }
             sides[finalChoice.ordinal] == CELL_UNKNOWN -> when (finalChoice) {
                 Movement.TURN_RIGHT, Movement.MOVE_FORWARD -> turnRight()
                 Movement.TURN_LEFT -> turnLeft()
@@ -96,6 +121,7 @@ open class Exploration(private val robot: Robot, private val connection: Connect
         println("Backtracking")
         while (stack.isNotEmpty()) {
             val cell = stack.pop()
+            saveJson(ExplorationJson(stack.map { CenterCell(it.row, it.col, it.direction) }))
             val sides = robot.explorationMaze.getEnvironmentOnSides(cell)
             println("Checking $cell, sides=${sides.joinToString()}")
             if (sides.any { it == CELL_UNKNOWN || it == CELL_SENSED }) {
@@ -125,16 +151,19 @@ open class Exploration(private val robot: Robot, private val connection: Connect
     private suspend fun moveForward() {
         robot.move(Movement.MOVE_FORWARD)
         stack += robot.centerCell.copy()
+        saveJson(ExplorationJson(stack.map { CenterCell(it.row, it.col, it.direction) }))
     }
 
     private suspend fun turnLeft() {
         robot.move(Movement.TURN_LEFT)
         stack += robot.centerCell.copy()
+        saveJson(ExplorationJson(stack.map { CenterCell(it.row, it.col, it.direction) }))
     }
 
     private suspend fun turnRight() {
         robot.move(Movement.TURN_RIGHT)
         stack += robot.centerCell.copy()
+        saveJson(ExplorationJson(stack.map { CenterCell(it.row, it.col, it.direction) }))
     }
 }
 

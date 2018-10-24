@@ -1,23 +1,28 @@
 package domain
 
+import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonProperty
 import io.ktor.network.selector.ActorSelectorManager
 import io.ktor.network.sockets.Socket
 import io.ktor.network.sockets.aSocket
 import io.ktor.network.sockets.openReadChannel
 import io.ktor.network.sockets.openWriteChannel
-import io.ktor.network.util.ioCoroutineDispatcher
+import io.ktor.util.KtorExperimentalAPI
 import javafx.beans.property.SimpleObjectProperty
-import kotlinx.coroutines.experimental.channels.Channel
-import kotlinx.coroutines.experimental.channels.SendChannel
-import kotlinx.coroutines.experimental.delay
-import kotlinx.coroutines.experimental.io.ByteReadChannel
-import kotlinx.coroutines.experimental.io.ByteWriteChannel
-import kotlinx.coroutines.experimental.io.readUTF8Line
-import kotlinx.coroutines.experimental.io.writeStringUtf8
-import kotlinx.coroutines.experimental.withTimeout
+import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.ReceiveChannel
+import kotlinx.coroutines.channels.SendChannel
+import kotlinx.coroutines.io.*
+import kotlinx.coroutines.selects.selectUnbiased
 import model.CellInfoModel
 import tornadofx.*
 import java.util.concurrent.TimeUnit
+
+data class ConnectionJson(@get:JsonProperty("isConnected") val isConnected: Boolean) : JsonSerializable {
+    @JsonIgnore
+    override val filename = "Connection"
+}
 
 class Connection(
     private val hostname: String = HOSTNAME,
@@ -87,17 +92,19 @@ class Connection(
 
     val isConnected get() = socket != null
 
-    val sensedDataChannels = List(NUMBER_OF_SENSORS) { Channel<Int>() }
-    val arrowFoundChannel = Channel<String>()
+    val sensedDataChannels = List(NUMBER_OF_SENSORS) { Channel<Int>(Channel.UNLIMITED) }
+    val arrowFoundChannel = Channel<String>(Channel.UNLIMITED)
 
-    private val okCommandChannel = Channel<String>()
+    private val okCommandChannel = Channel<String>(Channel.UNLIMITED)
 
+    @UseExperimental(KtorExperimentalAPI::class)
     suspend fun connect() {
         check(socket == null)
         println("Connecting...")
-        socket = aSocket(ActorSelectorManager(ioCoroutineDispatcher)).tcp().connect(hostname, port)
+        socket = aSocket(ActorSelectorManager(Dispatchers.IO)).tcp().connect(hostname, port)
             .also { socket ->
                 println("Connected")
+                saveJson(ConnectionJson(true))
                 input = socket.openReadChannel()
                 output = socket.openWriteChannel(autoFlush = true)
             }
@@ -128,23 +135,32 @@ class Connection(
                 val x = line.substring(4 until indexOfComma).toInt()
                 val y = line.substring(indexOfComma + 1 until line.length - 1).toInt()
                 wayPointChannel.send(x to y)
+                println("Process way done")
             }
             line.startsWith("sensor") -> {
                 val sensedData = line.substring(6).split(',').map { it.toInt() }
                 sensedData.zip(sensedDataChannels).forEach { (data, channel) -> channel.send(data) }
+                println("Process sensor done")
             }
-            line.startsWith("arrfound") -> arrowFoundChannel.send(line)
-            line == START_EXPLORATION_COMMAND || line == START_FASTEST_PATH_COMMAND ->
+            line.startsWith("arrfound") -> {
+                arrowFoundChannel.send(line)
+                println("Process arrfound done")
+            }
+            line == START_EXPLORATION_COMMAND || line == START_FASTEST_PATH_COMMAND -> {
                 startCommandChannel.send(line)
-            line == OK_COMMAND -> okCommandChannel.send(line)
+                println("Process start commands done")
+            }
+            line == OK_COMMAND -> {
+                okCommandChannel.send(line)
+                println("Process ok done")
+            }
         }
     }
 
     private suspend fun reconnect() {
         while (true) {
             delay(TimeUnit.SECONDS.toMillis(1))
-            socket?.dispose()
-            socket = null
+            disconnect()
             try {
                 withTimeout(TimeUnit.SECONDS.toMillis(10)) { connect() }
                 break
@@ -153,6 +169,16 @@ class Connection(
                 continue
             }
         }
+    }
+
+    fun disconnect() {
+        socket?.dispose()
+        socket = null
+        input?.cancel()
+        input = null
+        output?.close()
+        output = null
+        saveJson(ConnectionJson(false))
     }
 
     private suspend fun writeLine(line: String) {
@@ -221,5 +247,100 @@ class Connection(
 
     suspend fun sendStopCommand() {
         sendToAndroid(STOP_COMMAND)
+    }
+}
+
+private object Reconnect
+
+private fun CoroutineScope.connect(
+    hostname: String,
+    port: Int,
+    lineReadChannel: SendChannel<String>,
+    lineWriteChannel: ReceiveChannel<String>,
+    reconnectSignalChannel: SendChannel<Reconnect>
+) = launch {
+    val socket = createSocket(hostname, port)
+    val input = socket.openReadChannel()
+    val output = socket.openWriteChannel()
+
+    launch {
+        while (isActive) {
+            val line = try {
+                withTimeoutOrNull(TimeUnit.SECONDS.toMillis(60)) { input.readUTF8Line() }
+                    .also { println("Read: ${it ?: "<null>"}") }
+            } catch (e: Throwable) {
+                System.err.println(e.message)
+                null
+            }
+            if (line == null) {
+                socket.dispose()
+                reconnectSignalChannel.send(Reconnect)
+                break
+            } else {
+                lineReadChannel.send(line)
+            }
+        }
+    }
+
+    launch {
+        for (line in lineWriteChannel) {
+            try {
+                output.writeStringUtf8("$line\n")
+                println("Written: $line")
+            } catch (e: Throwable) {
+                System.err.println(e.message)
+                socket.dispose()
+                reconnectSignalChannel.send(Reconnect)
+            }
+        }
+    }
+}
+
+fun CoroutineScope.processMessages(
+    hostname: String,
+    port: Int,
+    inputMessageChannel: SendChannel<InputMessage>,
+    outputMessageChannel: ReceiveChannel<OutputMessage>
+) = launch {
+    val lineReadChannel = Channel<String>()
+    val lineWriteChannel = Channel<String>()
+    val reconnectSignalChannel = Channel<Reconnect>()
+    var connection = connect(hostname, port, lineReadChannel, lineWriteChannel, reconnectSignalChannel)
+
+    while (isActive) {
+        selectUnbiased<Unit> {
+            reconnectSignalChannel.onReceive {
+                connection.cancel()
+                connection = connect(hostname, port, lineReadChannel, lineWriteChannel, reconnectSignalChannel)
+            }
+            lineReadChannel.onReceive { line ->
+                val message = InputMessage.PARSABLES.firstOrNull { it.isParsableFrom(line) }?.fromLine(line)
+                if (message == null) {
+                    println("Unable to parse $line")
+                } else {
+                    inputMessageChannel.send(message)
+                }
+            }
+            outputMessageChannel.onReceive {
+                lineWriteChannel.send("${it.prefix}$it")
+            }
+        }
+    }
+}
+
+@UseExperimental(KtorExperimentalAPI::class)
+private suspend fun createSocket(hostname: String, port: Int): Socket {
+    var delayTime = TimeUnit.SECONDS.toMillis(1L)
+    while (true) {
+        try {
+            return aSocket(ActorSelectorManager(Dispatchers.IO)).tcp().connect(hostname, port)
+        } catch (e: Throwable) {
+            System.err.println(e.message)
+            delay(delayTime)
+            delayTime *= 2
+            if (delayTime > TimeUnit.SECONDS.toMillis(5)) {
+                delayTime = TimeUnit.SECONDS.toMillis(5)
+            }
+        }
     }
 }

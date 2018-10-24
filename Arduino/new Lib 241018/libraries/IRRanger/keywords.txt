@@ -1,0 +1,28 @@
+######################################
+# Syntax Coloring Map For IRRanger   #
+######################################
+
+######################################
+# Datatypes (KEYWORD1)               #
+######################################
+
+IRRanger	KEYWORD1
+
+######################################
+# Methods and Functions (KEYWORD2)   #
+######################################
+
+setModel	KEYWORD2
+setARef	KEYWORD2
+resetARef	KEYWORD2
+setPRef	KEYWORD2
+setRepeat	KEYWORD2
+setThreshold	KEYWORD2
+getRaw	KEYWORD2
+getV	KEYWORD2
+getCM	KEYWORD2
+getIN	KEYWORD2
+raw2CM	KEYWORD2
+raw2IN	KEYWORD2
+isClose	KEYWORD2
+isFar	KEYWORD2

@@ -120,3 +120,5 @@ hs_err_pid*
 
 # Configuration file while running
 .*.json
+
+build/*

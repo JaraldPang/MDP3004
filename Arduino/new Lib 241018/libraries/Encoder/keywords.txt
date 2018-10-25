@@ -1,7 +1,0 @@
-Encoder 		KEYWORD1
-rencoder1		KEYWORD2
-rencoder2		KEYWORD2
-getMotor1RPM	KEYWORD2
-getMotor2RPM	KEYWORD2
-getCount1		KEYWORD2
-getCount2		KEYWORD2

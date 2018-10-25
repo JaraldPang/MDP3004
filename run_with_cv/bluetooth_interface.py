@@ -81,7 +81,7 @@ class BluetoothWrapper(object):
                 self.client_socket.send(str(msg))
             return True
         except Exception as e:
-            print("BT thread encountering the following write error: %s" % str(e))
+            print("BT write encountering the following error: %s" % str(e))
             self.queue.put(msg)
             return False
 

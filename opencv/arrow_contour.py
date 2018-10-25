@@ -103,7 +103,7 @@ def main():
     # get sample image, used to check likeliness of arrow later
     img = cv.imread('testbed/arrow_real.jpg', cv.IMREAD_GRAYSCALE)
     # read image
-    capturedImage = cv.imread('testbed/8,14,u.jpg', cv.IMREAD_UNCHANGED)
+    capturedImage = cv.imread('testbed/9,13,d.jpg', cv.IMREAD_UNCHANGED)
     # image preprocessing
     blur = cv.GaussianBlur(capturedImage, (5, 5), 2)
     gray = cv.cvtColor(blur, cv.COLOR_BGR2GRAY)

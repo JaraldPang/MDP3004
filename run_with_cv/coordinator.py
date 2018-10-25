@@ -8,6 +8,11 @@ from bluetooth.btcommon import BluetoothError
 from img_recognition import ImageProcessor
 
 #The main method
+
+exploration_mode = True
+exploration_lock = threading.Lock()
+
+
 def main():
 
     listener_endpoint_pc, camera_endpoint = Pipe()
@@ -29,7 +34,7 @@ def main():
 
 def initialize_opencv(camera_endpoint=None,recog_endpoint=None):
     cv_process = ImageProcessor()
-    capture_thread = threading.Thread(target=cv_process.capture,args=(camera_endpoint,))
+    capture_thread = threading.Thread(target=cv_process.capture_old,args=(camera_endpoint,))
     process_thread = threading.Thread(target=cv_process.identify,args=(recog_endpoint,))
 
     capture_thread.start()
@@ -39,7 +44,7 @@ def initialize_opencv(camera_endpoint=None,recog_endpoint=None):
     process_thread.join()
 
 def initialize_listeners(camera_endpoint,recog_endpoint):
-    
+        
     pc_wrapper = PcWrapper()
     bt_wrapper = BluetoothWrapper()
     ar_wrapper = ArduinoWrapper()
@@ -74,16 +79,18 @@ def listen_to_pc(pc_wrapper,arduino_wrapper=None,bt_wrapper=None,opencv_pipe=Non
             while(1):
                 char = conn.recv(1).decode('utf-8')
                 if(char is None or char is ""):
-                    raise ConnectionResetError("Malformed string received: {}".format(msg))
+                    raise ConnectionResetError("Malformed string received:{}".format(msg))
                 if(char == "\n"):
                     break
                 msg += char
-            print("RECEIVED FROM PC INTERFACE: {}.".format(msg))
+            print("RECEIVED FROM PC INTERFACE:{}.".format(msg))
             if(msg.startswith("rpi")):
                 #signal new capture job
-                opencv_pipe.send(msg[3:])
-                #block thread until received job finished from camera
-                opencv_pipe.recv()
+                with exploration_lock:
+                    if(exploration_mode):
+                        opencv_pipe.send(msg[3:])
+                        #block thread until received job finished from camera
+                        opencv_pipe.recv()
             elif(msg.startswith("ar")):
                 #if(exploration_mode):
                 #   print("PC HOLDING ARDUINO: {}".format(msg))
@@ -104,18 +111,12 @@ def listen_to_pc(pc_wrapper,arduino_wrapper=None,bt_wrapper=None,opencv_pipe=Non
                     raise ConnectionResetError("Null or empty string received arising from connection reset")
                 else:
                     raise ConnectionResetError("Malformed string received: {}".format(msg))
-            print("Finished Processing PC: {}".format(msg))
+            print("Finished Processing PC:{}".format(msg))
         except Exception as e:
-            print(e)
-            print("Unexpected Disconnect for PC occurred. Awaiting reconnection...")
-            conn = pc_wrapper.accept_connection_and_flush()
-        except Exception as e:
-            print("Unexpected Disconnect for Bluetooth occurred. The following error occurred: {}. Awaiting reconnection...".format(e))
-            conn.shutdown(SHUT_RDWR)
+            print("Unexpected Disconnect for PC occurred. The following error occurred: {}. Awaiting reconnection...".format(e))
             conn.close()
             conn = pc_wrapper.accept_connection_and_flush()
 
-    conn.shutdown(SHUT_RDWR)
     conn.close()
     print("Closing PC Listener")
 
@@ -129,23 +130,24 @@ def listen_to_bluetooth(bt_wrapper,pc_wrapper=None,arduino_wrapper=None,):
             print("RECEIVED FROM BT INTERFACE: {}.".format(msg))
             if(msg.startswith("al_")):
                 #print("BT writing to PC: {}".format(msg))
+                if(msg=="al_starte"):
+                    with exploration_lock:
+                        exploration_mode = True
+                        print("Mode: Exploration")
+                elif(msg=="al_startf"):
+                    with exploration_lock:
+                        print("Mode: Fastest")
+                        exploration_mode = False                    
                 pc_wrapper.write(msg[3:])
             elif(msg.startswith("ar_")):
                 #print("BT writing to ARDUINO: {}".format(msg))
                 arduino_wrapper.write(msg[3:])
             print("Finished Processing BT: {}".format(msg))
-        except (timeout,BluetoothError):
-            print("Unexpected Disconnect for Bluetooth occurred. Awaiting reconnection...")
-            conn.shutdown(SHUT_RDWR)
-            conn.close()
-            conn = bt_wrapper.accept_connection_and_flush()
         except Exception as e:
             print("Unexpected Disconnect for Bluetooth occurred. The following error occurred: {}. Awaiting reconnection...".format(e))
             conn.shutdown(SHUT_RDWR)
             conn.close()
             conn = bt_wrapper.accept_connection_and_flush()
-
-            
 
     bt_wrapper.close_bt_socket()
     print("Closing Bluetooth Listener")
@@ -167,8 +169,7 @@ def listen_to_arduino(ar_wrapper,pc_wrapper=None,bt_wrapper=None):
             print("Failed to decode: {}".format(ude))
             continue
         except Exception as e:
-            print(e)
-            print("Unexpected Disconnect occurred from arduino, trying to reconnect...")
+            print("Unexpected Disconnect occurred from arduino: {}, trying to reconnect...".format(e))
             ser.close()
             ser = ar_wrapper.reconnect()
 

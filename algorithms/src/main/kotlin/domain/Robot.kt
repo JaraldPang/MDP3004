@@ -96,7 +96,7 @@ class Robot(
         if (connection.isConnected) {
             connection.sendGetSensorDataCommand()
         }
-//        delay(100)
+//        delay(250L)
         val sensorData = sensors.map { it to it.sense() }
 //        if (!forceUpdate) {
 //            val tempMaze = explorationMaze.copy()
@@ -203,7 +203,7 @@ class Robot(
 
     suspend fun move(movement: Movement) {
         if (!connection.isConnected) {
-            delay(1000L / (speed ?: 3))
+            delay(250L / (speed ?: 3))
         }
         if (connection.isConnected) {
             tryCalibrate(false)
@@ -211,7 +211,10 @@ class Robot(
         movementCount++
         if (connection.isConnected) {
             when (movement) {
-                Movement.TURN_LEFT, Movement.TURN_RIGHT -> connection.sendTurnCommandWithCountAndWait(movement, 1)
+                Movement.TURN_LEFT, Movement.TURN_RIGHT -> {
+                    connection.sendTurnCommandWithCountAndWait(movement, 1)
+                    delay(100L)
+                }
                 Movement.MOVE_FORWARD -> connection.sendMoveForwardWithDistanceAndWait(1)
             }
         }
@@ -324,7 +327,7 @@ class Robot(
             return
         }
         if (isAtFastestPath) {
-            val compactList = movements.compact()
+            val compactList = movements.compact(maxConsecutiveForward = 3)
             println("CompactList: $compactList")
             for ((movement, count) in compactList) {
                 if (movement == Movement.MOVE_FORWARD) {
@@ -333,7 +336,7 @@ class Robot(
                     }
                     for (i in 0 until count) {
                         if (!connection.isConnected) {
-                            delay(1000L / (speed ?: 3))
+                            delay(250L / (speed ?: 3))
                         }
                         moveForward()
                     }
@@ -343,7 +346,7 @@ class Robot(
                     }
                     for (i in 0 until count) {
                         if (!connection.isConnected) {
-                            delay(1000L / (speed ?: 3))
+                            delay(250L / (speed ?: 3))
                         }
                         if (movement == Movement.TURN_LEFT) {
                             turnLeft()
@@ -360,14 +363,14 @@ class Robot(
             for (movement in movements) {
                 move(movement)
                 if (connection.isConnected) {
-                    delay(500L)
+                    delay(600L)
                 }
             }
         }
     }
 
     private suspend fun tryCalibrate(force: Boolean) {
-        if (movementCount >= 6 || force) {
+        if (movementCount >= 5 || force) {
             val rightSide = explorationMaze.getSide(centerCell.copy(), Movement.TURN_RIGHT)
             val frontSide = explorationMaze.getSide(centerCell.copy(), Movement.MOVE_FORWARD)
             val leftSide = explorationMaze.getSide(centerCell.copy(), Movement.TURN_LEFT)
@@ -435,52 +438,74 @@ class Robot(
         }
     }
 
-    suspend fun calibrateAtCorner(col: Int, direction: Direction) {
+    suspend fun calibrateAtCorner(row: Int, col: Int, direction: Direction) {
         if (connection.isConnected) {
-            if (col == 1) {
-                when (direction) {
-                    Direction.UP -> tryCalibrate(true)
-                    Direction.DOWN -> {
-                        move(Movement.TURN_RIGHT)
-                        tryCalibrate(true)
-                        move(Movement.TURN_LEFT)
+            if (row == MAZE_ROWS - 1 - 1) {
+                if (col == 1) {
+                    when (direction) {
+                        Direction.UP -> tryCalibrate(true)
+                        Direction.DOWN -> {
+                            move(Movement.TURN_RIGHT)
+                            tryCalibrate(true)
+                            move(Movement.TURN_LEFT)
+                        }
+                        Direction.LEFT -> tryCalibrate(true)
+                        Direction.RIGHT -> {
+                            move(Movement.TURN_LEFT)
+                            tryCalibrate(true)
+                            move(Movement.TURN_RIGHT)
+                        }
                     }
-                    Direction.LEFT -> tryCalibrate(true)
-                    Direction.RIGHT -> {
-                        move(Movement.TURN_LEFT)
-                        tryCalibrate(true)
-                        move(Movement.TURN_RIGHT)
+                } else if (col == MAZE_COLUMNS - 1 - 1) {
+                    when (direction) {
+                        Direction.UP -> tryCalibrate(true)
+                        Direction.DOWN -> {
+                            move(Movement.TURN_LEFT)
+                            tryCalibrate(true)
+                            move(Movement.TURN_RIGHT)
+                        }
+                        Direction.LEFT -> {
+                            move(Movement.TURN_RIGHT)
+                            tryCalibrate(true)
+                            move(Movement.TURN_LEFT)
+                        }
+                        Direction.RIGHT -> tryCalibrate(true)
                     }
                 }
-            } else if (col == MAZE_COLUMNS - 1 - 1) {
-                when (direction) {
-                    Direction.UP -> tryCalibrate(true)
-                    Direction.DOWN -> {
-                        move(Movement.TURN_LEFT)
-                        tryCalibrate(true)
-                        move(Movement.TURN_RIGHT)
+            } else if (row == 1) {
+                if (col == MAZE_COLUMNS - 1 - 1) {
+                    when (direction) {
+                        Direction.UP -> {
+                            move(Movement.TURN_RIGHT)
+                            tryCalibrate(true)
+                            move(Movement.TURN_LEFT)
+                        }
+                        Direction.DOWN -> tryCalibrate(true)
+                        Direction.LEFT -> {
+                            move(Movement.TURN_RIGHT)
+                            tryCalibrate(true)
+                            move(Movement.TURN_LEFT)
+                        }
+                        Direction.RIGHT -> tryCalibrate(true)
                     }
-                    Direction.LEFT -> {
-                        move(Movement.TURN_RIGHT)
-                        tryCalibrate(true)
-                        move(Movement.TURN_LEFT)
-                    }
-                    Direction.RIGHT -> tryCalibrate(true)
                 }
             }
         }
     }
 }
 
-private fun List<Movement>.compact(): List<Pair<Movement, Int>> {
+private fun List<Movement>.compact(
+    maxConsecutiveForward: Int = 3,
+    maxConsecutiveTurns: Int = 1
+): List<Pair<Movement, Int>> {
     val compactList = mutableListOf<Pair<Movement, Int>>()
     compactList += first() to 1
     for (i in 1 until size) {
         val movement = this[i]
         val (lastMovement, count) = compactList.last()
         val countThreshold = when (movement) {
-            Movement.TURN_LEFT, Movement.TURN_RIGHT -> 1
-            Movement.MOVE_FORWARD -> 3
+            Movement.TURN_LEFT, Movement.TURN_RIGHT -> maxConsecutiveTurns
+            Movement.MOVE_FORWARD -> maxConsecutiveForward
         }
         if (movement == lastMovement && count < countThreshold) {
             compactList[compactList.lastIndex] = lastMovement to count + 1

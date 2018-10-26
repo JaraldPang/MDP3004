@@ -15,6 +15,7 @@ data class ExplorationJson(@get:JsonProperty("stack") val stack: List<CenterCell
 open class Exploration(private val robot: Robot, private val connection: Connection) {
     private var calibratedAtTopRightCorner = false
     private var calibratedAtTopLeftCorner = false
+    private var calibratedAtBottomRightCorner = false
 
     private val stack = Stack<CellInfoModel>().apply {
         push(robot.centerCell.copy())
@@ -38,16 +39,7 @@ open class Exploration(private val robot: Robot, private val connection: Connect
         var shouldBacktrack: Boolean
 
         do {
-            val (row, col, direction) = robot.centerCell
-            if (row == MAZE_ROWS - 1 - 1) {
-                if (col == MAZE_COLUMNS - 1 - 1 && !calibratedAtTopRightCorner) {
-                    robot.calibrateAtCorner(col, direction)
-                    calibratedAtTopRightCorner = true
-                } else if (col == 1 && !calibratedAtTopLeftCorner) {
-                    robot.calibrateAtCorner(col, direction)
-                    calibratedAtTopLeftCorner = true
-                }
-            }
+            tryToCalibrateAtCorner()
 
             val senseAgainMovement = robot.sense()
             if (senseAgainMovement != null) {
@@ -86,6 +78,24 @@ open class Exploration(private val robot: Robot, private val connection: Connect
             true
         } else {
             backtrack()
+        }
+    }
+
+    private suspend fun tryToCalibrateAtCorner() {
+        val (row, col, direction) = robot.centerCell
+        if (row == MAZE_ROWS - 1 - 1) {
+            if (col == MAZE_COLUMNS - 1 - 1 && !calibratedAtTopRightCorner) {
+                robot.calibrateAtCorner(row, col, direction)
+                calibratedAtTopRightCorner = true
+            } else if (col == 1 && !calibratedAtTopLeftCorner) {
+                robot.calibrateAtCorner(row, col, direction)
+                calibratedAtTopLeftCorner = true
+            }
+        } else if (row == 1) {
+            if (col == MAZE_COLUMNS - 1 - 1 && !calibratedAtBottomRightCorner) {
+                robot.calibrateAtCorner(row, col, direction)
+                calibratedAtBottomRightCorner = true
+            }
         }
     }
 

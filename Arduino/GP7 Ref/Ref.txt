@@ -728,6 +728,7 @@ int obstaclePosition(double val, int shortrange){
  * ============================== Calibrate robot ==============================
  */
 void autoCalibrate(int force_calibrate) {
+	
  	digitalWrite(pinGreenLED, HIGH);
  	digitalWrite(pinRedLED, HIGH);
  

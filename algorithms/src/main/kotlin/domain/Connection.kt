@@ -8,7 +8,6 @@ import io.ktor.network.sockets.aSocket
 import io.ktor.network.sockets.openReadChannel
 import io.ktor.network.sockets.openWriteChannel
 import io.ktor.util.KtorExperimentalAPI
-import javafx.beans.property.SimpleObjectProperty
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
@@ -16,7 +15,6 @@ import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.io.*
 import kotlinx.coroutines.selects.selectUnbiased
 import model.CellInfoModel
-import tornadofx.*
 import java.util.concurrent.TimeUnit
 
 data class ConnectionJson(@get:JsonProperty("isConnected") val isConnected: Boolean) : JsonSerializable {
@@ -85,8 +83,7 @@ class Connection(
         }
     }
 
-    val socketProperty = SimpleObjectProperty<Socket?>(null)
-    private var socket by socketProperty
+    private var socket: Socket? = null
     private var input: ByteReadChannel? = null
     private var output: ByteWriteChannel? = null
 
@@ -99,15 +96,23 @@ class Connection(
 
     @UseExperimental(KtorExperimentalAPI::class)
     suspend fun connect() {
-        check(socket == null)
-        println("Connecting...")
-        socket = aSocket(ActorSelectorManager(Dispatchers.IO)).tcp().connect(hostname, port)
-            .also { socket ->
-                println("Connected")
-                saveJson(ConnectionJson(true))
-                input = socket.openReadChannel()
-                output = socket.openWriteChannel(autoFlush = true)
+        while (true) {
+            println("Connecting...")
+            try {
+                socket = aSocket(ActorSelectorManager(Dispatchers.IO)).tcp().connect(hostname, port)
+                    .also {
+                        println("Connected")
+                        saveJson(ConnectionJson(true))
+                        input = it.openReadChannel()
+                        output = it.openWriteChannel(autoFlush = true)
+                    }
+                break
+            } catch (e: Exception) {
+                System.err.println(e.message)
+                disconnect()
+                delay(TimeUnit.SECONDS.toMillis(1L))
             }
+        }
     }
 
     suspend fun startReadingLoop() {
@@ -158,17 +163,9 @@ class Connection(
     }
 
     private suspend fun reconnect() {
-        while (true) {
-            delay(TimeUnit.SECONDS.toMillis(1))
-            disconnect()
-            try {
-                withTimeout(TimeUnit.SECONDS.toMillis(10)) { connect() }
-                break
-            } catch (e: Throwable) {
-                println(e.message)
-                continue
-            }
-        }
+        disconnect()
+        delay(TimeUnit.SECONDS.toMillis(1L))
+        connect()
     }
 
     fun disconnect() {

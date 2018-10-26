@@ -1,5 +1,6 @@
 package view
 
+import controller.ConnectionState
 import controller.MainController
 import javafx.event.EventHandler
 import javafx.geometry.Pos
@@ -119,18 +120,24 @@ class ConfigurationView : View() {
                 action { controller.runFastestPath() }
             }
             button {
-                textProperty().bind(controller.connection.socketProperty.stringBinding {
-                    if (it == null) {
-                        "Connect"
-                    } else {
-                        "Disconnect"
+                textProperty().bind(controller.connectionStateProperty.property.stringBinding {
+                    when (it) {
+                        null -> ""
+                        ConnectionState.DISCONNECTED -> "Connect"
+                        ConnectionState.CONNECTING -> "Connecting"
+                        ConnectionState.CONNECTED -> "Disconnect"
+                        ConnectionState.DISCONNECTING -> "Disconnecting"
                     }
                 })
-                onClick {
-                    if (!controller.connection.isConnected) {
-                        controller.connect()
-                    } else {
-                        controller.disconnect()
+                enableWhen(controller.connectionStateProperty.property.booleanBinding {
+                    !(it == ConnectionState.CONNECTING || it == ConnectionState.DISCONNECTING)
+                })
+                action {
+                    when (controller.connectionStateProperty.property.value) {
+                        ConnectionState.DISCONNECTED -> controller.connect()
+                        ConnectionState.CONNECTED -> controller.disconnect()
+                        else -> {
+                        }
                     }
                 }
             }

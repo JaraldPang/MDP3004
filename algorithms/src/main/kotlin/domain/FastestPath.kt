@@ -13,9 +13,9 @@ open class FastestPath(
     suspend fun runFastestPath() {
         val movements = findFastestPathMovements()
         robot.moveFollowingMovements(movements, true)
-        if (connection.isConnected) {
-            connection.sendStopCommand()
-        }
+//        if (connection.isConnected) {
+//            connection.sendStopCommand()
+//        }
     }
 
     open fun findFastestPathMovements(): List<Movement> {

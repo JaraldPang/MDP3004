@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="match_parent"
+	android:layout_height="wrap_content"
+	android:orientation="vertical"
+	android:padding="5dp"
+	android:paddingStart="14dp"
+	android:paddingEnd="14dp">
+
+	<TextView
+		style="@style/HeaderStyle"
+		android:layout_width="match_parent"
+		android:layout_height="30dp"
+		android:text="@string/bt_header" />
+
+	<ListView
+		android:id="@+id/bt_lv_devices"
+		android:layout_width="match_parent"
+		android:layout_height="320dp"
+		android:background="@drawable/d_box" />
+
+	<LinearLayout
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:orientation="horizontal">
+
+		<Button
+			android:id="@+id/bt_btn_find"
+			style="@style/ButtonStyle1"
+			android:layout_width="0dp"
+			android:layout_height="40dp"
+			android:layout_weight="1"
+			android:text="@string/bt_find" />
+
+		<Button
+			android:id="@+id/bt_btn_paired"
+			style="@style/ButtonStyle1"
+			android:layout_width="0dp"
+			android:layout_height="40dp"
+			android:layout_weight="1"
+			android:text="@string/bt_paired" />
+
+	</LinearLayout>
+
+</LinearLayout>

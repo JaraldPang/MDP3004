@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import domain.*
 import javafx.beans.property.SimpleBooleanProperty
+import javafx.beans.property.SimpleObjectProperty
 import kotlinx.atomicfu.AtomicRef
 import kotlinx.atomicfu.atomic
 import kotlinx.atomicfu.update
@@ -31,6 +32,13 @@ data class AppStateJson(@get:JsonProperty("appState") val appState: AppState) : 
     override val filename = "AppState"
 }
 
+enum class ConnectionState {
+    DISCONNECTED,
+    CONNECTING,
+    CONNECTED,
+    DISCONNECTING
+}
+
 inline fun AtomicRef<AppState>.withState(runningState: AppState, restoredState: AppState, block: () -> Unit) {
     if (!compareAndSet(restoredState, runningState)) {
         return
@@ -41,6 +49,25 @@ inline fun AtomicRef<AppState>.withState(runningState: AppState, restoredState: 
     saveJson(AppStateJson(restoredState))
 }
 
+class AtomicProperty<T>(initial: T) {
+    private val atomicRef = atomic(initial)
+    val property = SimpleObjectProperty(initial)
+
+    fun compareAndSet(expect: T, update: T): Boolean {
+        val result = atomicRef.compareAndSet(expect, update)
+        if (result) {
+            property.value = update
+        }
+        return result
+    }
+
+    fun update(function: (T) -> T) {
+        val cur = atomicRef.value
+        val upd = function(cur)
+        atomicRef.update { upd }
+        property.value = upd
+    }
+}
 
 class MainController : Controller(), CoroutineScope {
     private val job = Job()
@@ -53,10 +80,12 @@ class MainController : Controller(), CoroutineScope {
     val displayRealMaze = SimpleBooleanProperty(true)
     private val appState = atomic(AppState.IDLE)
 
+    val connectionStateProperty = AtomicProperty(ConnectionState.DISCONNECTED)
+
     private val wayPointChannel = Channel<Pair<Int, Int>>(Channel.UNLIMITED)
     private val startCommandChannel = Channel<String>(Channel.UNLIMITED)
 
-    val connection = Connection(wayPointChannel = wayPointChannel, startCommandChannel = startCommandChannel)
+    private val connection = Connection(wayPointChannel = wayPointChannel, startCommandChannel = startCommandChannel)
 
     init {
         with(centerCell) {
@@ -185,12 +214,18 @@ class MainController : Controller(), CoroutineScope {
     }
 
     fun connect() = launch {
-        connection.connect()
-        connection.startReadingLoop()
+        if (connectionStateProperty.compareAndSet(ConnectionState.DISCONNECTED, ConnectionState.CONNECTING)) {
+            connection.connect()
+            connectionStateProperty.update { ConnectionState.CONNECTED }
+            connection.startReadingLoop()
+        }
     }
 
     fun disconnect() {
-        connection.disconnect()
+        if (connectionStateProperty.compareAndSet(ConnectionState.CONNECTED, ConnectionState.DISCONNECTING)) {
+            connection.disconnect()
+            connectionStateProperty.update { ConnectionState.DISCONNECTED }
+        }
     }
 
     fun reset() {

@@ -1,7 +1,7 @@
-
 import java.net.*;
 import java.io.*;
 import java.util.*;
+import java.util.Random;
 
 public class RpiConnection
 {
@@ -38,7 +38,7 @@ public class RpiConnection
    
    public void write(String s)
    {
-      socketOut.write(s);
+      socketOut.write(s + "\n");
       socketOut.flush();   
    }
    
@@ -102,28 +102,45 @@ public class RpiConnection
    //basic connection program
    public static void main(String[] args)
    {
+      provideInput();
+   }
+   
+   public static void emulateAlgo1()
+   {
       try
       {
-         RpiConnection conn = new RpiConnection("192.168.1.11", 45000);
-         Scanner scn = new Scanner(System.in);
-         String input = "";
-         do
+         Random ran = new Random();
+         RpiConnection conn = new RpiConnection("192.168.17.1", 45000);
+         String msg;
+         for(int i = 0; i < 5; i++)
          {
-            try
+            switch(ran.nextInt(4))
             {
-               System.out.print("ENTER MSG TO SEND: ");
-               input = scn.nextLine();
-               System.out.println("");
-               conn.write(input);
-               System.out.println("RECEIVED: " + conn.read());
+               case 0:
+                  conn.write("arw");
+                  System.out.println("Forward");
+                  break;
+               case 1:
+                  conn.write("ara");
+                  System.out.println("Turn Left");
+                  break;
+               case 2:
+                  conn.write("ars");
+                  System.out.println("Backwards");
+                  break;
+               case 3:
+                  conn.write("ard");
+                  System.out.println("Turn Right");
+                  break;                  
             }
-            catch(SocketTimeoutException ste)
-            {
-               conn.reconnect();
-            }
-         
-         }while(input != "END" || conn.getConnected() == false);
-         
+            //emulate ack from algo
+            do
+            {            
+               msg = conn.read();
+            }while(msg != "ok");
+            
+            conn.write("rpic"+i);
+         }
          conn.close();
       }
       catch(IOException ioe)
@@ -131,5 +148,126 @@ public class RpiConnection
          ioe.printStackTrace();
       }
    }
+   
+   public static void emulateAlgo2()
+   {
+      try
+      {
+         Random ran = new Random();
+         RpiConnection conn = new RpiConnection("192.168.17.1", 45000);
+         String msg;
+
+         conn.write("arw");
+         System.out.println("Forward");
+         do
+         {            
+            msg = conn.read();
+            System.out.println("Received:" + msg);
+         }while(!msg.equalsIgnoreCase("ok"));
+         conn.write("rpi1,2,u");
+         
+         conn.write("ara");
+         System.out.println("Turn Left");
+         do
+         {            
+            msg = conn.read();
+            System.out.println("Received:" + msg);
+         }while(!msg.equalsIgnoreCase("ok"));
+         conn.write("rpi1,2,l");
+         
+         conn.write("ard");
+         System.out.println("Turn Right");
+         do
+         {            
+            msg = conn.read();
+            System.out.println("Received:" + msg);
+         }while(!msg.equalsIgnoreCase("ok"));
+         conn.write("rpi1,2,u");
+         
+         conn.write("ars");
+         System.out.println("Backwards");
+         do
+         {            
+            msg = conn.read();
+            System.out.println("Received:" + msg);
+         }while(!msg.equalsIgnoreCase("ok"));
+         conn.write("rpi1,1,u");
+         
+         try
+         {
+            Thread.sleep(1000);
+         }
+         catch(InterruptedException ie){}
+         
+         conn.write("rpi1,1,u");
+         conn.close();
+      }
+      catch(IOException ioe)
+      {
+         ioe.printStackTrace();
+      }
+   }   
+
+   public static void provideInput()
+   {
+      try
+      {
+         RpiConnection conn = new RpiConnection("192.168.17.1", 45000);
+         Scanner scn = new Scanner(System.in);
+         String input = "";
+         do
+         {
+            try
+            {
+              System.out.print("ENTER MSG TO SEND: ");
+              input = scn.nextLine();
+              System.out.println("");
+              conn.write(input);
+              System.out.println("RECEIVED: " + conn.read());
+            }
+            catch(SocketTimeoutException ste)
+            {
+               conn.reconnect();
+            }
+         
+         }while(input != "END" || conn.getConnected() == false);
+         conn.close();
+      }
+      catch(IOException ioe)
+      {
+         ioe.printStackTrace();
+      }
+   }
+
+   public static void readForever()
+   {
+      try
+      {
+         RpiConnection conn = new RpiConnection("192.168.17.1", 45000);
+         Scanner scn = new Scanner(System.in);
+         String input = "";
+         do
+         {
+            try
+            {
+              System.out.println("RECEIVED: " + conn.read());
+            }
+            catch(SocketTimeoutException ste)
+            {
+               conn.reconnect();
+            }
+         
+         }while(input != "END" || conn.getConnected() == false);
+         conn.close();
+      }
+      catch(IOException ioe)
+      {
+         ioe.printStackTrace();
+      }
+   }
+   
+   
+
+
 
 }

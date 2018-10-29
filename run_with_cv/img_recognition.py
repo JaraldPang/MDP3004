@@ -20,6 +20,7 @@ class ImageProcessor():
         while 1:
             img_name = listener_endpoint_pc.recv()
             start = timer()
+            time.sleep(0.05)
             yield "{}/capture/{}.jpg".format(dir,img_name)
             end = timer()
             #if(end-start < 0.1):
@@ -27,7 +28,7 @@ class ImageProcessor():
             #   print("Camera too fast: {}. Slept for: {}".format(end-start,0.1-(end-start)))
             listener_endpoint_pc.send("Captured")
             self.jobs.put(img_name)
-            print("Time taken for capturing {} : {}.".format(img_name, end - start))
+            print("Time taken for sequence capturing {} : {}.".format(img_name, end - start))
 
     def capture(self,listener_endpoint_pc):
         camera = PiCamera(resolution=(1920,1080))
@@ -50,7 +51,7 @@ class ImageProcessor():
                 camera.capture("{}/capture/{}.jpg".format(dir,img_name), use_video_port=True)
                 end = timer()
                 listener_endpoint_pc.send("Captured")
-                print("Time taken for capturing {} : {}".format(img_name, end - start))
+                print("Time taken for single capturing {} : {}".format(img_name, end - start))
                 self.jobs.put(img_name)
             print("Terminating Capture...")
         finally:
@@ -76,6 +77,8 @@ class ImageProcessor():
                         print("FOUND! For Status: {}, writing to endpoint arrow location: {}".format(robot_status,entry))
                         listener_endpoint_rpi.send("arrfound{}".format(entry))
                 else:
+                    #test
+                    listener_endpoint_rpi.send("NOT FOUND")
                     continue
             else:
                 time.sleep(0.5)
@@ -144,7 +147,7 @@ class ImageProcessor():
             approx = cv.approxPolyDP(c, 0.01 * peri, True)
             if(not(6 <= len(approx) <= 8 )):
                 continue
-            
+
             # conditional check
             # if contour matches any of the conditions we are looking for, we append the distance and location
             # condition: 6-8 edges; matches given shape up to 0.25 likeliness; object to image area ratio
@@ -156,20 +159,23 @@ class ImageProcessor():
                 # find ratio of the area of object to the area of whole image
                 objectAreaRatio = objectArea / imgArea
                 
-                #appends (distance in grid, image)    
-                if 0.130 > objectAreaRatio > 0.125:
+                #appends (distance in grid, image)
+                
+                if 0.105 < objectAreaRatio < 0.31:
                     # find X-axis of contour
-                    M = cv.moments(c)
-                    cx = int(M["m10"] / M["m00"])
+                    #M = cv.moments(c)
+                    #cx = int(M["m10"] / M["m00"])
                     # find which part of the image the contour is on
-                    if imgX / 3 < cx < 2 * (imgX / 3):
-                        a = "center"
-                    elif cx < imgX / 3:
-                        a = "left"
-                    else:
-                        a = "right"
+                    #if imgX / 3 < cx < 2 * (imgX / 3):
+                    #    a = "center"
+                    #elif cx < imgX / 3:
+                    #    a = "left"
+                    #else:
+                    #    a = "right"
+                    print("0cm: {}".format(objectAreaRatio))
+                    a = "center"
                     arrows.append((0, a))
-                elif 0.058 > objectAreaRatio > 0.053:
+                elif 0.048 < objectAreaRatio < 0.092:
                     # find X-axis of contour
                     M = cv.moments(c)
                     cx = int(M["m10"] / M["m00"])
@@ -180,8 +186,9 @@ class ImageProcessor():
                         a = "left"
                     else:
                         a = "right"
+                    print("10cm: {}".format(objectAreaRatio))                        
                     arrows.append((1, a))
-                elif 0.030 > objectAreaRatio > 0.025:
+                elif 0.026 < objectAreaRatio < 0.041:
                     # find X-axis of contour
                     M = cv.moments(c)
                     cx = int(M["m10"] / M["m00"])
@@ -192,8 +199,9 @@ class ImageProcessor():
                         a = "left"
                     else:
                         a = "right"
+                    print("20cm: {}".format(objectAreaRatio)) 
                     arrows.append((2, a))
-                elif 0.018 > objectAreaRatio > 0.013:
+                elif 0.015 < objectAreaRatio < 0.023:
                     # find X-axis of contour
                     M = cv.moments(c)
                     cx = int(M["m10"] / M["m00"])
@@ -205,7 +213,9 @@ class ImageProcessor():
                     else:
                         a = "right"
                     arrows.append((3, a))
-
+                    print("30cm: {}".format(objectAreaRatio))
+                else:
+                    print("No Match: {}".format(objectAreaRatio))
 
         return arrows
 

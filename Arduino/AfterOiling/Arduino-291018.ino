@@ -54,7 +54,9 @@ double distTL = 0.0, distTM = 0.0, distTR = 0.0, distBLT = 0.0, distBRT = 0.0, d
 #define WALL_GAP 10.75
 #define WALL_MIN_TOL 0.5
 #define WALL_MAX_TOL 3
-#define ANGLE_TOL 0.05
+#define ANGLE_TOL 0.04
+//define ANGLE_TOL 0.05
+
 
 //position calibration variables
 #define STEPS_TO_CALIBRATE 5
@@ -85,7 +87,7 @@ bool fastest_path = false;
  * md.setSpeeds(R,L) / (E1,E2)
  */
 
-#define kp 37
+#define kp 38
 #define ki 0.0004
 #define kd 0.0225
 
@@ -171,7 +173,7 @@ void moveForward(double cm) {
 
   // Move Forward 1 grid
   if (cm <= 10) {
-    targetTick = cm * 27.3;
+    targetTick = cm * 26.8;
     while (encoderLeftCounter < min(50, targetTick)) {
       pid = computePID();
       //Serial.println("R/E1 : " + String((0.6 * Set_Speed) + pid) + " L/E2 : " + String((0.6 * Set_Speed) - pid));
@@ -313,7 +315,8 @@ void moveForward(double cm) {
     }
   }
 
-  md.setBrakes(Speed_Brake, Speed_Brake-14);
+  //md.setBrakes(Speed_Brake, Speed_Brake-14);
+    md.setBrakes(382, 380);
 
   //moveRightAdjust(0.015);
 
@@ -389,7 +392,9 @@ void moveLeft(double deg) {
     else if (deg <= 360 ) targetTick = deg * 4.675;
     else targetTick = deg * 4.65;
     */
-  if (deg <= 90) targetTick = deg * 4.18;//4.17(test)//4.095(on maze)//4.0935;//4.0925;//4.09L;//4.085L;//4.08L;//4.0775L;
+  delay(50);
+   
+  if (deg <= 90) targetTick = deg * 4.07;//4.17(test)//4.095(on maze)//4.0935;//4.0925;//4.09L;//4.085L;//4.08L;//4.0775L;
   else if (deg <= 180 ) targetTick = deg * 4.322;//4.322(test)//4.62;
   else if (deg <= 360 ) targetTick = deg * 4.41;
   else targetTick = deg * 4.45;
@@ -427,6 +432,8 @@ void moveLeft(double deg) {
 
 void moveRight(double deg) {
 
+  delay(50);
+
   double pid;
   float targetTick;
   int Set_Speed = (calibration_angle == true) ? Speed_Calibration_Angle : Speed_Spin;
@@ -434,7 +441,7 @@ void moveRight(double deg) {
   integral = 0;
   encoderLeftCounter = encoderRightCounter = prevTick = 0;
 
-  if (deg <= 90) targetTick = deg * 4.21;//4.155(on maze)//4.175M;//4.186M;//4.19M;//4.185;//4.175L;
+  if (deg <= 90) targetTick = deg * 4.123;//4.155(on maze)//4.175M;//4.186M;//4.19M;//4.185;//4.175L;
 
   else if (deg <= 180) targetTick = deg * 4.36;//4.33(test)//4.333M;//4.335M;//4.336M;//4.338M;//4.342M;//4.335;
   //4.32L;//4.35M;
@@ -575,7 +582,7 @@ void calibrate_Robot_Angle(int tpinL, int tpinR, int tpinM) {
 
   counter = 0;
   while (calibration_angle) {
-  distL = final_MedianRead(tpinL) - 0.5;
+    distL = final_MedianRead(tpinL) - 0.5;
     distR = final_MedianRead(tpinR);
     diffLR = abs(distL - distR);
     if (diffLR < ANGLE_TOL || counter >= 10) {
@@ -962,42 +969,283 @@ void loop() {
     robotRead = "";
     newData = false;
   }
-//    calibrate_Robot_Position();
-//    moveLeft(90);
-//    print_Median_SensorData();
-//    print_Median_SensorData_Grids();
-  
+//    delay(2000);
+//    for(double i = 0; i < 10; i = i + 1)
+//    {
+//      calibrate_Robot_Position();
+//      delay(100);
+//      moveRight(90);
+//      delay(100);
+//      moveRight(90);
+//      delay(100);
+//      moveForwardParam(10,i);
+//      print_Median_SensorData_Grids();
+//      moveLeft(90);
+//      print_Median_SensorData_Grids();
+//            
+//      moveForwardParam(10,i);
+//      print_Median_SensorData_Grids();
+//      moveForwardParam(10,i);
+//      print_Median_SensorData_Grids();
+//      moveForwardParam(10,i);
+//      print_Median_SensorData_Grids();
+//      moveForwardParam(10,i);
+//      print_Median_SensorData_Grids();
+//      moveLeft(90);
+//      print_Median_SensorData_Grids();
+//
+//      moveForwardParam(10,i);
+//      print_Median_SensorData_Grids();
+//      moveForwardParam(10,i);
+//      print_Median_SensorData_Grids();
+//      moveForwardParam(10,i);
+//      print_Median_SensorData_Grids();
+//      moveForwardParam(10,i);
+//      print_Median_SensorData_Grids();
+//      moveForwardParam(10,i);
+//      print_Median_SensorData_Grids();
+//      moveForwardParam(10,i);
+//      print_Median_SensorData_Grids();
+//      moveLeft(90);
+//      print_Median_SensorData_Grids();
+//      
+//      moveForwardParam(10,i);
+//      print_Median_SensorData_Grids();
+//      moveForwardParam(10,i);
+//      print_Median_SensorData_Grids();
+//      moveForwardParam(10,i);
+//      print_Median_SensorData_Grids();
+//      moveForwardParam(10,i);
+//      print_Median_SensorData_Grids();
+//      moveLeft(90);
+//      print_Median_SensorData_Grids();
+//
+//      moveForwardParam(10,i);
+//
+//      //1 half 
+//      delay(3000);
+//
+//      calibrate_Robot_Position();
+//      delay(100);
+//      moveLeft(90);
+//      delay(100);
+//      moveLeft(90);
+//      delay(100);
+//      moveForwardParam(10,i);
+//      print_Median_SensorData_Grids();
+//      moveRight(90);
+//      print_Median_SensorData_Grids();
+//            
+//      moveForwardParam(10,i);
+//      print_Median_SensorData_Grids();
+//      moveForwardParam(10,i);
+//      print_Median_SensorData_Grids();
+//      moveForwardParam(10,i);
+//      print_Median_SensorData_Grids();
+//      moveForwardParam(10,i);
+//      print_Median_SensorData_Grids();
+//      moveRight(90);
+//      print_Median_SensorData_Grids();
+//
+//      moveForwardParam(10,i);
+//      print_Median_SensorData_Grids();
+//      moveForwardParam(10,i);
+//      print_Median_SensorData_Grids();
+//      moveForwardParam(10,i);
+//      print_Median_SensorData_Grids();
+//      moveForwardParam(10,i);
+//      print_Median_SensorData_Grids();
+//      moveForwardParam(10,i);
+//      print_Median_SensorData_Grids();
+//      moveForwardParam(10,i);
+//      print_Median_SensorData_Grids();
+//      moveRight(90);
+//      print_Median_SensorData_Grids();
+//      
+//      moveForwardParam(10,i);
+//      print_Median_SensorData_Grids();
+//      moveForwardParam(10,i);
+//      print_Median_SensorData_Grids();
+//      moveForwardParam(10,i);
+//      print_Median_SensorData_Grids();
+//      moveForwardParam(10,i);
+//      print_Median_SensorData_Grids();
+//      moveRight(90);
+//      print_Median_SensorData_Grids();
+//
+//      moveForwardParam(10,i);
+//
+//    
+//    }
 
 //  moveForward(10);
-//  print_Median_SensorData();
-//  print_Median_SensorData_Grids();
-//  moveForward(10);
-//  print_Median_SensorData();
-//  print_Median_SensorData_Grids();
-//  moveForward(10);
-//  print_Median_SensorData();
-//  print_Median_SensorData_Grids();
-//  moveForward(10);
-//  print_Median_SensorData();
-//  print_Median_SensorData_Grids();
-//  moveForward(10);
-//  print_Median_SensorData();
-//  print_Median_SensorData_Grids();
-//  moveForward(10);
-//  print_Median_SensorData();
-//  print_Median_SensorData_Grids();
-//  moveForward(10);
-//  print_Median_SensorData();
-//  print_Median_SensorData_Grids();
-//  moveForward(10);
-//  print_Median_SensorData();
-//  print_Median_SensorData_Grids();
-//  delay(250);
-//  moveLeft(180);
-//  delay(250);
-//  moveForward(30);
-//  delay(250);
-//  moveRight(180);
-  //delay(2000);
-//calibrate_Robot_Position();
+}
+
+
+void moveForwardParam(double cm,double param) {
+  double pid;
+  int targetTick;
+  int Set_Speed = (calibration_state == true) ? Speed_Calibration : Speed_Move;
+  Set_Speed = (fastest_path == true) ? Speed_Move_Fastest : Set_Speed;
+
+  integral = 0;
+  encoderLeftCounter = encoderRightCounter = prevTick = 0;
+  // Caliberated to 30.25 ticks per cm
+  //29.2; //29.3; //29.35; //29.38; //29.4; //29; //29.5; //29.85; //30.05; //30.15; //30.20; //30.35;
+  targetTick = cm * 29.65;
+
+  // Move Forward 1 grid
+  if (cm <= 10) {
+    targetTick = cm * 26.8;
+    while (encoderLeftCounter < min(50, targetTick)) {
+      pid = computePID();
+      //Serial.println("R/E1 : " + String((0.6 * Set_Speed) + pid) + " L/E2 : " + String((0.6 * Set_Speed) - pid));
+      md.setSpeeds(
+        ((Set_Speed) - pid),
+        ((Set_Speed) + pid)
+      );
+    }
+    while (encoderLeftCounter < targetTick - 50) {
+      pid = computePID();
+      //Serial.println("R/E1 : " + String((1.0 * Set_Speed) + pid) + " L/E2 : " + String((1.0 * Set_Speed) - pid));
+      md.setSpeeds(
+        ((Set_Speed) - pid),
+        ((Set_Speed) + pid)
+      );
+    }
+    while (encoderLeftCounter < targetTick - 25) {
+      pid = computePID();
+      //Serial.println("R/E1 : " + String((0.8 * Set_Speed) + pid) + " L/E2 : " + String((0.8 * Set_Speed) - pid));
+      md.setSpeeds(
+        ((Set_Speed) - pid),
+        ((Set_Speed) + pid)
+      );
+    }
+    while (encoderLeftCounter < targetTick - 15) {
+      pid = computePID();
+      //Serial.println("R/E1 : " + String((0.6 * Set_Speed) + pid) + " L/E2 : " + String((0.6 * Set_Speed) - pid));
+      md.setSpeeds(
+        ((Set_Speed) - pid),
+        ((Set_Speed) + pid)
+      );
+    }
+    while (encoderLeftCounter < targetTick) {
+      pid = computePID();
+      //Serial.println("R/E1 : " + String((0.5 * Set_Speed) + pid) + " L/E2 : " + String((0.5 * Set_Speed) - pid));
+      md.setSpeeds(
+        ((Set_Speed) - pid),
+        ((Set_Speed) + pid)
+      );
+    }
+  }
+  // Move Forward 2 grids
+  else if (cm <= 30) {
+    targetTick = cm * 29.1;
+    //28.25;//28.5; //29.2
+    while (encoderLeftCounter < targetTick) {
+      pid = computePID();
+      md.setSpeeds(
+        ((Set_Speed) - pid),
+        ((Set_Speed) + pid)
+      );
+    }
+    //moveRight_sil(1);
+  }
+  // Move Forward 5 grids
+  else if (cm <= 50) {
+    //28.75; //29M; //28.5; //29.2
+    while (encoderLeftCounter < targetTick - 50) {
+      targetTick = cm * 29.75;
+      pid = computePID();
+      //0.885
+      md.setSpeeds(
+        ((Set_Speed) - pid),
+        ((Set_Speed) + pid)
+      );
+    }
+
+    while (encoderLeftCounter < targetTick - 25) {
+      pid = computePID();
+      md.setSpeeds(
+        ((0.8 * Set_Speed) - pid),
+        ((0.8 * Set_Speed) + pid)
+      );
+    }
+    while (encoderLeftCounter < targetTick - 15) {
+      pid = computePID();
+      md.setSpeeds(
+        ((Set_Speed) - pid),
+        ((Set_Speed) + pid)
+      );
+    }
+    while (encoderLeftCounter < targetTick) {
+      pid = computePID();
+      md.setSpeeds(
+        ((Set_Speed) - pid),
+        ((Set_Speed) + pid)
+      );
+    }
+    //to bypass the curve motion movement
+    //moveRight_sil(2);
+  }
+  // Move Forward 6 grids
+  else if (cm <= 60) {
+    //28.5; //29.2
+    targetTick = cm * 29.75;
+    while (encoderLeftCounter < targetTick - 50) {
+      pid = computePID();
+      md.setSpeeds(
+        ((Set_Speed) - pid),
+        ((Set_Speed) + pid)
+      );
+    }
+
+    while (encoderLeftCounter < targetTick - 25) {
+      pid = computePID();
+      md.setSpeeds(
+        ((Set_Speed) - pid),
+        ((Set_Speed) + pid)
+      );
+    }
+    while (encoderLeftCounter < targetTick - 15) {
+      pid = computePID();
+      md.setSpeeds(
+        ((Set_Speed) - pid),
+        ((Set_Speed) + pid)
+      );
+    }
+    while (encoderLeftCounter < targetTick) {
+      pid = computePID();
+      md.setSpeeds(
+        ((Set_Speed) - pid),
+        ((Set_Speed) + pid)
+      );
+    }
+    //to bypass the curve motion movement
+    //moveRight_sil(2);
+  }
+  // Just Move Forward
+  else {
+    while (encoderLeftCounter < targetTick) {
+      pid = computePID();
+      md.setSpeeds (
+        (Set_Speed - pid),
+        (Set_Speed + pid)
+      );
+      //Serial.println("M1setSpeed: " + String(int((Set_Speed - pid))) + ", M2setSpeed: " + String(int((Set_Speed + pid))));
+      //Serial.println("M1Ticks: " + String(int((encoderRightCounter))) + ", M2Ticks: " + String(int((encoderLeftCounter))));
+      //Serial.println();
+    }
+  }
+
+  md.setBrakes(382, 380);
+
+  //moveRightAdjust(0.015);
+
+  if (calibration_state != true) {
+    replyFx(REPLY_AlAn_OK);
+  }
+  if (fastest_path == true) {
+    replyFx(REPLY_AlAn_OK);
+  }
 }

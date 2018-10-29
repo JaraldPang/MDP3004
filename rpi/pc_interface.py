@@ -54,7 +54,7 @@ class PcWrapper:
             try:
                 if(next_msg is None):
                     next_msg = self.queue.get()
-                print("Flushing...")
+                print("Flushing PC interface...")
                 conn.sendall("{}\n".format(next_msg).encode())
                 next_msg = None
             except(socket.timeout,socket.error,ConnectionResetError):
@@ -65,6 +65,7 @@ class PcWrapper:
     #we delegate read jobs to the read thread
     #we also delegate flushing of the queue to the reader thread
     def write(self,msg):
+        #print("Writing to PC: {}. Connection: {}".format(msg, self.conn))
         try:
             #if the queue is not empty there was a disconnect and the reader thread is flushing, enqueue this msg
             if(self.queue.empty() is False):
@@ -72,8 +73,8 @@ class PcWrapper:
             else:
                 self.conn.sendall("{}\n".format(msg).encode())
             return True
-        except Exception:
-            self.queue.put(msg)
+        except Exception as e:
+            print("\nPC Thread encountering the following write error: %s" % str(e))(e)
             return False
 
     #returns the socket for external handling

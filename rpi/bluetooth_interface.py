@@ -60,7 +60,7 @@ class BluetoothWrapper(object):
             try:
                 if(next_msg is None):
                     next_msg = self.queue.get()
-                print("Flushing...")
+                print("Flushing BT Interface...")
                 conn.sendall(next_msg.encode())
                 next_msg = None
             except(timeout,BluetoothError):

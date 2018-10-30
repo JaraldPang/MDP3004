@@ -145,7 +145,8 @@ void showEncode2() {
  */
 
 double computePID() {
-  //Serial.println("[PID] M1Ticks(" + String(M1Ticks) + ") - M2Ticks(" + String(M2Ticks) + ") = " + String(M1Ticks-M2Ticks));
+
+  //Serial.println("[PID] M1Ticks(" + String(encoderRightCounter) + ") - M2Ticks(" + String(encoderLeftCounter) + ") = " + String(encoderRightCounter-encoderLeftCounter));
   double p, i, d, pid, error, integral;
 
   error = encoderLeftCounter - encoderRightCounter;
@@ -316,9 +317,9 @@ void moveForward(double cm) {
   }
 
   //md.setBrakes(Speed_Brake, Speed_Brake-14);
-    md.setBrakes(382, 380);
+    md.setBrakes(380, 380);
 
-    moveRightAdjust(0.005);
+  //moveRightAdjust(0.005);
   //moveLeftAdjust(0.015);
 
   if (calibration_state != true) {
@@ -941,78 +942,84 @@ void loop() {
     char condition = robotRead.charAt(0);
 
     switch (condition) {
-    case 'W':
-    case 'w':
-    {
-      step_counter++;
-      (movementValue == 0) ? moveForward(10) : moveForward(movementValue);
-      break;
-    }
-    case 'A':
-    case 'a':
-    {
-      step_counter++;
-      (movementValue == 0) ? moveLeft(90) : moveLeft(movementValue);
-      break;
-    }
-    case 'S':
-    case 's':
-    {
-      step_counter++;
-      (movementValue == 0) ? moveReverse(10) : moveReverse(movementValue);
-      break;
-    }
-    case 'D':
-    case 'd':
-    {
-      step_counter++;
-      (movementValue == 0) ? moveRight(90) : moveRight(movementValue);
-      break;
-    }
-    case 'G':
-    case 'g':
-    {
-      //delay(50);
-      print_Median_SensorData_Grids();
-      replyFx(REPLY_An_Echo);
-      break;
-    }
-    case 'Z':
-    case 'z':
-    {
-      print_Median_SensorData();
-      print_Median_SensorData_Grids();
-      replyFx(REPLY_An_Echo);
-      break;
-    }
-    case 'X':
-    case 'x': {
-      fastest_path = true;
-      Serial.println("alok");
-      Serial.flush();
-      break;
-    }
-    case 'C':
-    case 'c':
-    {
-      calibrate_Robot_Position();
-      replyFx(REPLY_An_Echo);
-      break;
-    }
-    case 'p':
-    case 'P':
-    {//moveForward(10);
-      calibrate_Robot_Position();
-      moveLeft(90);
-      //delay(1000);
-      print_Median_SensorData();
-      print_Median_SensorData_Grids();
-    }
-    default:
-    {
-      //defaultResponse();
-      break;
-    }
+      case 'W':
+      case 'w':
+      {
+        step_counter++;
+        if(movementValue == 0) 
+        {
+          moveForward(10);          
+          //calibrate_Right_Wall();
+        }
+        else
+        {
+           moveForward(movementValue); 
+        }
+        break;
+      }
+      case 'A':
+      case 'a':
+      {
+        step_counter++;
+        (movementValue == 0) ? moveLeft(90) : moveLeft(movementValue);
+        break;
+      }
+      case 'S':
+      case 's':
+      {
+        step_counter++;
+        (movementValue == 0) ? moveReverse(10) : moveReverse(movementValue);
+        break;
+      }
+      case 'D':
+      case 'd':
+      {
+        step_counter++;
+        (movementValue == 0) ? moveRight(90) : moveRight(movementValue);
+        break;
+      }
+      case 'G':
+      case 'g':
+      {
+        //delay(50);
+        print_Median_SensorData_Grids();
+        replyFx(REPLY_An_Echo);
+        break;
+      }
+      case 'Z':
+      case 'z':
+      {
+        print_Median_SensorData();
+        print_Median_SensorData_Grids();
+        replyFx(REPLY_An_Echo);
+        break;
+      }
+      case 'X':
+      case 'x': {
+        fastest_path = true;
+        Serial.println("alok");
+        Serial.flush();
+        break;
+      }
+      case 'C':
+      case 'c':
+      {
+        calibrate_Robot_Position();
+        replyFx(REPLY_An_Echo);
+        break;
+      }
+      case 'R':
+      case 'r':
+      {
+        calibrate_Right_Wall();
+        replyFx(REPLY_An_Echo);
+        break;
+      }
+      default:
+      {
+        //defaultResponse();
+        break;
+      }
     }
     robotRead = "";
     newData = false;
@@ -1242,21 +1249,55 @@ void moveForwardParam(double cm,double param) {
   }
 }
 
-void calibrate_Right_Wall(int tpinL, int tpinR, int tpinM) {
-  calibration_angle = true;
+void calibrate_Right_Wall() {
+  calibration_state = true;
   double distL;
   double distR;
   double diffLR;
   double offset;
   int counter;
 
+  double RIGHT_WALL_TOL = 0.05;
+  boolean first_read = true;
+  double prev_abs_read = 0;
+
   counter = 0;
-  while (calibration_angle) {
-    distL = final_MedianRead(tpinL) - 0.5;
-    distR = final_MedianRead(tpinR);
+  while (calibration_state) 
+  {
+    //distL is top short sensor
+    distL = final_MedianRead(irBRT) + 6.7;
+     //distR is btm long sensor
+    distR = final_MedianRead(irBRB);
     diffLR = abs(distL - distR);
-    if (diffLR < ANGLE_TOL || counter >= 2) {
-      calibration_angle = false;
+
+    if(distL > 25 || distR > 25)
+    {
+        //too far from a wall
+        break;
+    }
+       
+    if(first_read)
+    {
+      first_read = false;
+      prev_abs_read = diffLR;
+    }
+    else
+    {
+      if(diffLR > prev_abs_read)
+      {
+         diffLR = diffLR - (diffLR - prev_abs_read)/2; 
+         //Serial.println("Compensated: Current DiffLR: " + String(diffLR) + " | Prev DiffLR: " + String(prev_abs_read));
+      }
+      else
+      {
+         //Serial.println("Uncompenstead: Current DiffLR: " + String(diffLR) + " | Prev DiffLR: " + String(prev_abs_read));
+      }
+      prev_abs_read = diffLR;
+    }  
+
+    //Serial.println("Short Sensor: " + String(distL) + "cm | Long Sensor: " + String(distR) + "cm | difference, absoluted and offset: " + String(diffLR));
+    if (diffLR < RIGHT_WALL_TOL || counter >= 5) {
+      calibration_state = false;
       break;
     }
     if (distL > distR) {
@@ -1267,4 +1308,5 @@ void calibrate_Right_Wall(int tpinL, int tpinR, int tpinM) {
     }
     counter++;
   }
+  //Serial.println("Completed Calibration");
 }

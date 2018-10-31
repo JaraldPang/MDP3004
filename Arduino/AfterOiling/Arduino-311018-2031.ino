@@ -54,7 +54,9 @@ double distTL = 0.0, distTM = 0.0, distTR = 0.0, distBLT = 0.0, distBRT = 0.0, d
 #define WALL_GAP 10.75
 #define WALL_MIN_TOL 0.5
 #define WALL_MAX_TOL 3
-#define ANGLE_TOL 0.05
+#define ANGLE_TOL 0.04
+//define ANGLE_TOL 0.05
+
 
 //position calibration variables
 #define STEPS_TO_CALIBRATE 5
@@ -85,12 +87,13 @@ bool fastest_path = false;
  * md.setSpeeds(R,L) / (E1,E2)
  */
 
-#define kp 37
+#define kp -38
 #define ki 0.0004
 #define kd 0.0225
 
+
 // Moving speed.
-#define Speed_Move 325
+#define Speed_Move 275
 
 // Turning speed
 #define Speed_Spin 325
@@ -130,11 +133,11 @@ bool robotReady = false;
  */
 
 //E1
-void showEncode1() {
+void showEncodeLeft() {
   encoderLeftCounter++;
 }
 //E2
-void showEncode2() {
+void showEncodeRight() {
   encoderRightCounter++;
 }
 
@@ -171,7 +174,7 @@ void moveForward(double cm) {
 
   // Move Forward 1 grid
   if (cm <= 10) {
-    targetTick = cm * 27.3;
+    targetTick = cm * 26.8;
     while (encoderLeftCounter < min(50, targetTick)) {
       pid = computePID();
       //Serial.println("R/E1 : " + String((0.6 * Set_Speed) + pid) + " L/E2 : " + String((0.6 * Set_Speed) - pid));
@@ -313,7 +316,8 @@ void moveForward(double cm) {
     }
   }
 
-  md.setBrakes(Speed_Brake, Speed_Brake-14);
+  //md.setBrakes(Speed_Brake, Speed_Brake-14);
+    md.setBrakes(380, 380);
 
   //moveRightAdjust(0.015);
 
@@ -389,7 +393,9 @@ void moveLeft(double deg) {
     else if (deg <= 360 ) targetTick = deg * 4.675;
     else targetTick = deg * 4.65;
     */
-  if (deg <= 90) targetTick = deg * 4.18;//4.17(test)//4.095(on maze)//4.0935;//4.0925;//4.09L;//4.085L;//4.08L;//4.0775L;
+    delay(50);
+   
+  if (deg <= 90) targetTick = deg * 4.07;//4.17(test)//4.095(on maze)//4.0935;//4.0925;//4.09L;//4.085L;//4.08L;//4.0775L;
   else if (deg <= 180 ) targetTick = deg * 4.322;//4.322(test)//4.62;
   else if (deg <= 360 ) targetTick = deg * 4.41;
   else targetTick = deg * 4.45;
@@ -427,6 +433,8 @@ void moveLeft(double deg) {
 
 void moveRight(double deg) {
 
+  delay(50);
+
   double pid;
   float targetTick;
   int Set_Speed = (calibration_angle == true) ? Speed_Calibration_Angle : Speed_Spin;
@@ -434,7 +442,7 @@ void moveRight(double deg) {
   integral = 0;
   encoderLeftCounter = encoderRightCounter = prevTick = 0;
 
-  if (deg <= 90) targetTick = deg * 4.21;//4.155(on maze)//4.175M;//4.186M;//4.19M;//4.185;//4.175L;
+  if (deg <= 90) targetTick = deg * 4.11; //4.123;//4.155(on maze)//4.175M;//4.186M;//4.19M;//4.185;//4.175L;
 
   else if (deg <= 180) targetTick = deg * 4.36;//4.33(test)//4.333M;//4.335M;//4.336M;//4.338M;//4.342M;//4.335;
   //4.32L;//4.35M;
@@ -519,6 +527,52 @@ void moveRightAdjust(double deg) {
 
 }
 
+void moveLeftAdjust(double deg) {
+
+  double pid;
+  float targetTick;
+  int Set_Speed = (calibration_angle == true) ? Speed_Calibration_Angle : Speed_Spin;
+
+  integral = 0;
+  encoderLeftCounter = encoderRightCounter = prevTick = 0;
+
+  /*
+    if (deg <= 90) targetTick = deg * 4.39; //4.523
+    else if (deg <= 180 ) targetTick = deg * 4.62;
+    else if (deg <= 360 ) targetTick = deg * 4.675;
+    else targetTick = deg * 4.65;
+    */
+
+  if (deg <= 90) targetTick = deg * 4.07;//4.17(test)//4.095(on maze)//4.0935;//4.0925;//4.09L;//4.085L;//4.08L;//4.0775L;
+  else if (deg <= 180 ) targetTick = deg * 4.322;//4.322(test)//4.62;
+  else if (deg <= 360 ) targetTick = deg * 4.41;
+  else targetTick = deg * 4.45;
+
+  while ( encoderLeftCounter < min(50, targetTick)) {
+    pid = computePID();
+    md.setSpeeds(
+      ((Set_Speed) - pid),
+      -((Set_Speed) + pid)
+    );
+  }
+  while ( encoderLeftCounter < targetTick - 50) {
+    pid = computePID();
+    md.setSpeeds(
+      ((Set_Speed) - pid),
+      -((Set_Speed) + pid)
+    );
+  }
+  while ( encoderLeftCounter < targetTick) {
+    pid = computePID();
+    md.setSpeeds(
+      ((Set_Speed) - pid),
+      -((Set_Speed) + pid));
+  }
+
+  md.setBrakes(Speed_Brake, Speed_Brake);
+
+}
+
 void replyFx(int category) {
   switch (category)
   {
@@ -575,7 +629,7 @@ void calibrate_Robot_Angle(int tpinL, int tpinR, int tpinM) {
 
   counter = 0;
   while (calibration_angle) {
-  distL = final_MedianRead(tpinL) - 0.5;
+    distL = final_MedianRead(tpinL) - 0.5;
     distR = final_MedianRead(tpinR);
     diffLR = abs(distL - distR);
     if (diffLR < ANGLE_TOL || counter >= 10) {
@@ -872,132 +926,494 @@ void setup() {
   digitalWrite(irBRB, LOW);
   digitalWrite(irBLT, LOW);
 
+  //E1 Right Side
+//const int M1A = 3;
+//const int M1B = 5;
 
-  enableInterrupt(M1A, showEncode1, RISING);
-  enableInterrupt(M2B, showEncode2, RISING);
+//E2 Left Side
+//const int M2A = 11;
+//const int M2B = 13;
+
+  enableInterrupt(M2B, showEncodeLeft, RISING);
+  enableInterrupt(M1A, showEncodeRight, RISING);
 
   md.init();
 }
 
 void loop() {
-
   if (newData) {
     double movementValue = getValue(robotRead, ';', 1).toFloat();
     char condition = robotRead.charAt(0);
 
     switch (condition) {
-    case 'W':
-    case 'w':
-    {
-      step_counter++;
-      (movementValue == 0) ? moveForward(10) : moveForward(movementValue);
-      break;
-    }
-    case 'A':
-    case 'a':
-    {
-      step_counter++;
-      (movementValue == 0) ? moveLeft(90) : moveLeft(movementValue);
-      break;
-    }
-    case 'S':
-    case 's':
-    {
-      step_counter++;
-      (movementValue == 0) ? moveReverse(10) : moveReverse(movementValue);
-      break;
-    }
-    case 'D':
-    case 'd':
-    {
-      step_counter++;
-      (movementValue == 0) ? moveRight(90) : moveRight(movementValue);
-      break;
-    }
-    case 'G':
-    case 'g':
-    {
-      //delay(50);
-      print_Median_SensorData_Grids();
-      replyFx(REPLY_An_Echo);
-      break;
-    }
-    case 'Z':
-    case 'z':
-    {
-      print_Median_SensorData();
-      print_Median_SensorData_Grids();
-      replyFx(REPLY_An_Echo);
-      break;
-    }
-    case 'X':
-    case 'x': {
-      fastest_path = true;
-      Serial.println("alok");
-      Serial.flush();
-      break;
-    }
-    case 'C':
-    case 'c':
-    {
-      calibrate_Robot_Position();
-      replyFx(REPLY_An_Echo);
-      break;
-    }
-    case 'p':
-    case 'P':
-    {//moveForward(10);
-      calibrate_Robot_Position();
-      moveLeft(90);
-      //delay(1000);
-      print_Median_SensorData();
-      print_Median_SensorData_Grids();
-    }
-    default:
-    {
-      //defaultResponse();
-      break;
-    }
+      case 'W':
+      case 'w':
+      {
+        step_counter++;
+        (movementValue == 0) ? moveForward(10) : moveForward(movementValue);
+        break;
+      }
+      case 'A':
+      case 'a':
+      {
+        step_counter++;
+        (movementValue == 0) ? moveLeft(90) : moveLeft(movementValue);
+        break;
+      }
+      case 'S':
+      case 's':
+      {
+        step_counter++;
+        (movementValue == 0) ? moveReverse(10) : moveReverse(movementValue);
+        break;
+      }
+      case 'D':
+      case 'd':
+      {
+        step_counter++;
+        (movementValue == 0) ? moveRight(90) : moveRight(movementValue);
+        break;
+      }
+      case 'G':
+      case 'g':
+      {
+        //delay(50);
+        print_Median_SensorData_Grids();
+        replyFx(REPLY_An_Echo);
+        break;
+      }
+      case 'Z':
+      case 'z':
+      {
+        print_Median_SensorData();
+        print_Median_SensorData_Grids();
+        replyFx(REPLY_An_Echo);
+        break;
+      }
+      case 'X':
+      case 'x': {
+        fastest_path = true;
+        Serial.println("alok");
+        Serial.flush();
+        break;
+      }
+      case 'C':
+      case 'c':
+      {
+        calibrate_Robot_Position();
+        replyFx(REPLY_An_Echo);
+        break;
+      }
+      case 'R':
+      case 'r':
+      {
+        calibrate_Right_Wall();
+        break;  
+      }
+      case 'T':
+      case 't':
+      {
+        step_counter++;
+        (movementValue == 0) ? moveForwardParam(10,0) : moveForwardParam(movementValue,0);
+        break;
+      }
+      default:
+      {
+        //defaultResponse();
+        break;
+      }
     }
     robotRead = "";
     newData = false;
   }
-//    calibrate_Robot_Position();
-//    moveLeft(90);
-//    print_Median_SensorData();
-//    print_Median_SensorData_Grids();
-  
+//(R,L)
+//(E1,E2)
 
-//  moveForward(10);
-//  print_Median_SensorData();
-//  print_Median_SensorData_Grids();
-//  moveForward(10);
-//  print_Median_SensorData();
-//  print_Median_SensorData_Grids();
-//  moveForward(10);
-//  print_Median_SensorData();
-//  print_Median_SensorData_Grids();
-//  moveForward(10);
-//  print_Median_SensorData();
-//  print_Median_SensorData_Grids();
-//  moveForward(10);
-//  print_Median_SensorData();
-//  print_Median_SensorData_Grids();
-//  moveForward(10);
-//  print_Median_SensorData();
-//  print_Median_SensorData_Grids();
-//  moveForward(10);
-//  print_Median_SensorData();
-//  print_Median_SensorData_Grids();
-//  moveForward(10);
-//  print_Median_SensorData();
-//  print_Median_SensorData_Grids();
-//  delay(250);
-//  moveLeft(180);
-//  delay(250);
-//  moveForward(30);
-//  delay(250);
-//  moveRight(180);
-  //delay(2000);
-//calibrate_Robot_Position();
+  for(double i = 0; i <= 0.03; i = i + 0.01)
+  {
+    calibrate_Robot_Position();
+    delay(500);
+    moveRightParam(90,i);
+    delay(500);
+    moveRightParam(90,i);
+    delay(500);
+    moveRightParam(90,i);
+    delay(500);
+    moveRightParam(90,i);
+    delay(500);
+  }
+  delay(4000);
+}
+
+
+void calibrate_angle_1_sensor(int tpin)
+{
+  double readingR;
+  double readingL;
+  double distR;
+  double max_tol = 0.2; //max tol is min tol in my notes
+    
+  moveRight(5);
+  readingR = final_MedianRead(tpin);
+  moveLeft(10);
+  readingL = final_MedianRead(tpin);
+
+  //if the robot is aligned then the distance readings from both angles should be roughly the same
+  //otherwise if R > L, robot is slanted right
+  //performance or speed of calibration can be improved by comparing T and T-1 reading 
+  if(abs(readingR - readingL) > max_tol)
+  {
+    while(abs(readingR - readingL) > max_tol)
+    {
+      moveLeft(15); //robot facing more left
+      readingL = final_MedianRead(tpin);
+      moveRight(10); //robot facing more Right
+      readingR = final_MedianRead(tpin);
+    }
+  }
+  //robot is slanted towards right
+  //how much to move?
+  //another idea, take T-2 reading.
+  else if(abs(readingL - readingR) > max_tol)
+  {
+  //robot is slanted towards left
+    while(abs(readingR - readingL) > max_tol)
+    {
+      moveRight(15); //robot facing more left
+      readingL = final_MedianRead(tpin);
+      moveLeft(10); //robot facing more Right
+      readingR = final_MedianRead(tpin);
+    }
+  }
+}
+
+
+void calibrate_Right_Wall() {
+  calibration_state = true;
+  double distL;
+  double distR;
+  double diffLR;
+  double offset;
+  int counter;
+
+  double RIGHT_WALL_TOL = 0.05;
+  boolean first_read = true;
+  double prev_abs_read = 0;
+
+  counter = 0;
+  while (calibration_state) 
+  {
+    Serial.println("Short Sensor: " + String(distL) + "cm | Long Sensor: " + String(distR) + "cm | difference, absoluted: " + String(diffLR));
+    
+    //distL is top short sensor
+    distL = final_MedianRead(irBRT);
+     //distR is btm long sensor
+    distR = final_MedianRead(irBRB);
+    diffLR = abs(distL - distR);
+
+    if(distL > 25 || distR > 25)
+    {
+        //too far from a wall
+        break;
+    }       
+
+    if (diffLR < RIGHT_WALL_TOL || counter >= 5) {
+      calibration_state = false;
+      break;
+    }
+    if (diffLR > 6.75) {
+      moveLeft(10);
+    }
+    else if (diffLR < 6.25) {
+      moveRight(10);
+    }
+    counter++;
+  }
+  //Serial.println("Completed Calibration");
+}
+
+
+
+void moveForwardParam(double cm,double param) {
+  double pid;
+  int targetTick;
+  int Set_Speed = (calibration_state == true) ? Speed_Calibration : Speed_Move;
+  Set_Speed = (fastest_path == true) ? Speed_Move_Fastest : Set_Speed;
+
+  integral = 0;
+  encoderLeftCounter = encoderRightCounter = prevTick = 0;
+  // Caliberated to 30.25 ticks per cm
+  //29.2; //29.3; //29.35; //29.38; //29.4; //29; //29.5; //29.85; //30.05; //30.15; //30.20; //30.35;
+  targetTick = cm * 29.65;
+
+  // Move Forward 1 grid
+  if (cm <= 10) {
+    targetTick = cm * 26.8;
+    while (encoderLeftCounter < min(50, targetTick)) {
+      pid = computePID();
+      //Serial.println("R/E1 : " + String((0.6 * Set_Speed) + pid) + " L/E2 : " + String((0.6 * Set_Speed) - pid));
+      md.setSpeeds(
+        ((Set_Speed) - pid),
+        ((Set_Speed) + pid)
+      );
+    }
+    while (encoderLeftCounter < targetTick - 50) {
+      pid = computePID();
+      //Serial.println("R/E1 : " + String((1.0 * Set_Speed) + pid) + " L/E2 : " + String((1.0 * Set_Speed) - pid));
+      md.setSpeeds(
+        ((Set_Speed) - pid),
+        ((Set_Speed) + pid)
+      );
+    }
+    while (encoderLeftCounter < targetTick - 25) {
+      pid = computePID();
+      //Serial.println("R/E1 : " + String((0.8 * Set_Speed) + pid) + " L/E2 : " + String((0.8 * Set_Speed) - pid));
+      md.setSpeeds(
+        ((Set_Speed) - pid),
+        ((Set_Speed) + pid)
+      );
+    }
+    while (encoderLeftCounter < targetTick - 15) {
+      pid = computePID();
+      //Serial.println("R/E1 : " + String((0.6 * Set_Speed) + pid) + " L/E2 : " + String((0.6 * Set_Speed) - pid));
+      md.setSpeeds(
+        ((Set_Speed) - pid),
+        ((Set_Speed) + pid)
+      );
+    }
+    while (encoderLeftCounter < targetTick) {
+      pid = computePID();
+      //Serial.println("R/E1 : " + String((0.5 * Set_Speed) + pid) + " L/E2 : " + String((0.5 * Set_Speed) - pid));
+      md.setSpeeds(
+        ((Set_Speed) - pid),
+        ((Set_Speed) + pid)
+      );
+    }
+  }
+  // Move Forward 2 grids
+  else if (cm <= 30) {
+    targetTick = cm * 29.1;
+    //28.25;//28.5; //29.2
+    while (encoderLeftCounter < targetTick) {
+      pid = computePID();
+      md.setSpeeds(
+        ((Set_Speed) - pid),
+        ((Set_Speed) + pid)
+      );
+    }
+    //moveRight_sil(1);
+  }
+  // Move Forward 5 grids
+  else if (cm <= 50) {
+    //28.75; //29M; //28.5; //29.2
+    while (encoderLeftCounter < targetTick - 50) {
+      targetTick = cm * 29.75;
+      pid = computePID();
+      //0.885
+      md.setSpeeds(
+        ((Set_Speed) - pid),
+        ((Set_Speed) + pid)
+      );
+    }
+
+    while (encoderLeftCounter < targetTick - 25) {
+      pid = computePID();
+      md.setSpeeds(
+        ((0.8 * Set_Speed) - pid),
+        ((0.8 * Set_Speed) + pid)
+      );
+    }
+    while (encoderLeftCounter < targetTick - 15) {
+      pid = computePID();
+      md.setSpeeds(
+        ((Set_Speed) - pid),
+        ((Set_Speed) + pid)
+      );
+    }
+    while (encoderLeftCounter < targetTick) {
+      pid = computePID();
+      md.setSpeeds(
+        ((Set_Speed) - pid),
+        ((Set_Speed) + pid)
+      );
+    }
+    //to bypass the curve motion movement
+    //moveRight_sil(2);
+  }
+  // Move Forward 6 grids
+  else if (cm <= 60) {
+    //28.5; //29.2
+    targetTick = cm * 29.75;
+    while (encoderLeftCounter < targetTick - 50) {
+      pid = computePID();
+      md.setSpeeds(
+        ((Set_Speed) - pid),
+        ((Set_Speed) + pid)
+      );
+    }
+
+    while (encoderLeftCounter < targetTick - 25) {
+      pid = computePID();
+      md.setSpeeds(
+        ((Set_Speed) - pid),
+        ((Set_Speed) + pid)
+      );
+    }
+    while (encoderLeftCounter < targetTick - 15) {
+      pid = computePID();
+      md.setSpeeds(
+        ((Set_Speed) - pid),
+        ((Set_Speed) + pid)
+      );
+    }
+    while (encoderLeftCounter < targetTick) {
+      pid = computePID();
+      md.setSpeeds(
+        ((Set_Speed) - pid),
+        ((Set_Speed) + pid)
+      );
+    }
+  }
+  // Just Move Forward
+  else {
+    while (encoderLeftCounter < targetTick) {
+      pid = computePID();
+      md.setSpeeds (
+        (Set_Speed - pid),
+        (Set_Speed + pid)
+      );
+    }
+  }
+  //E1/M1 is right, E2/M2 is left
+
+
+  Serial.println("Before Brake - M1Ticks: " + String(int((encoderRightCounter))) + ", M2Ticks: " + String(int((encoderLeftCounter))));
+  
+  md.setBrakes(350, 350);
+
+//  int delayCount = 0;
+//  while(delayCount <=300)
+//  {
+//    Serial.println("After Brake: " + String(delayCount) 
+//      + "ms - Right/M1Ticks: " 
+//      + String(int((encoderRightCounter))) 
+//      + ", Left/M2Ticks: " + String(int((encoderLeftCounter))) 
+//    );   
+//    delay(20);
+//    delayCount = delayCount + 20;
+//  }
+
+  int delayCount = 0;
+  int tickDifference = 0;
+  int leftBrake = 380;
+  int rightBrake = 380;
+  //maybe brake takes up to 50 ticks to work
+  while (delayCount < 50) {
+    Serial.println("After Brake: " + String(delayCount) 
+      + "ms - Right/M1Ticks: " 
+      + String(int((encoderRightCounter))) 
+      + ", Left/M2Ticks: " + String(int((encoderLeftCounter))) 
+      + ", Left Brake Value: " + String(leftBrake)
+      + ", Right Brake Value: " + String(rightBrake)
+    );   
+    delayCount = delayCount + 1;
+    tickDifference = abs(encoderLeftCounter - encoderRightCounter);
+    //left wheel moved slightly more, move right 1 tick first, try more later
+    if(encoderLeftCounter > encoderRightCounter)
+    {
+     leftBrake = leftBrake + 4;
+     rightBrake = rightBrake - 4;
+     md.setBrakes(rightBrake,leftBrake);
+     delay(10);
+    }
+    //right wheel moved slightly more, move left 1 tick first, try more later
+    else if(encoderRightCounter > encoderLeftCounter)
+    {
+     leftBrake = leftBrake - 4;
+     rightBrake = rightBrake + 4;
+     md.setBrakes(rightBrake,leftBrake);
+     delay(10);
+    }
+   }
+//
+  //moveRightAdjust(0.015);
+
+  if (calibration_state != true) {
+    replyFx(REPLY_AlAn_OK);
+  }
+  if (fastest_path == true) {
+    replyFx(REPLY_AlAn_OK);
+  }
+}
+
+void test()
+{
+  double pid;
+  encoderLeftCounter = encoderRightCounter = prevTick = 0;
+  while (encoderLeftCounter < 250) {
+    pid = computePID();
+    Serial.println("Right/M1Ticks: " + String(int((encoderRightCounter))) + ", Left/M2Ticks: " + String(int((encoderLeftCounter))));   
+      md.setSpeeds(
+        ((325) - pid),
+        ((325))
+      );
+    delay(50);
+    
+    md.setBrakes(400,400);
+  }
+  Serial.println("Complete");
+  md.setBrakes(400,400);
+}
+
+
+void moveRightParam(double deg, double param) {
+
+  delay(50);
+
+  double pid;
+  float targetTick;
+  int Set_Speed = (calibration_angle == true) ? Speed_Calibration_Angle : Speed_Spin;
+
+  integral = 0;
+  encoderLeftCounter = encoderRightCounter = prevTick = 0;
+
+  if (deg <= 90) targetTick = deg * (4.11); //4.123;//4.155(on maze)//4.175M;//4.186M;//4.19M;//4.185;//4.175L;
+
+  else if (deg <= 180) targetTick = deg * 4.36;//4.33(test)//4.333M;//4.335M;//4.336M;//4.338M;//4.342M;//4.335;
+  //4.32L;//4.35M;
+  //4.34;//4.33;
+  //4.34;//4.35M;//4.36;//4.415;//4.63;
+  else if (deg <= 360) targetTick = deg * 4.42;//4.4(test)
+  else targetTick = deg * 4.48;
+
+  while ( encoderLeftCounter < min(50, targetTick)) {
+    pid = computePID();
+    md.setSpeeds(
+      -((Set_Speed) - pid),
+      ((Set_Speed) + pid)
+    );
+  }
+  while (encoderLeftCounter < targetTick - 50) {
+    pid = computePID();
+    md.setSpeeds(
+      -((Set_Speed) - pid),
+      ((Set_Speed) + pid)
+    );
+  }
+  while (encoderLeftCounter < targetTick) {
+    pid = computePID();
+    md.setSpeeds(
+      -((Set_Speed) - pid),
+      ((Set_Speed) + pid)
+    );
+  }
+
+  md.setBrakes(Speed_Brake, Speed_Brake);
+
+  if (calibration_state != true) {
+    replyFx(REPLY_AlAn_OK);
+  }
+  if (fastest_path == true) {
+    replyFx(REPLY_AlAn_OK);
+  }
 }

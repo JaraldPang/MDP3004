@@ -20,7 +20,6 @@ class ImageProcessor():
         while 1:
             img_name = listener_endpoint_pc.recv()
             start = timer()
-            time.sleep(0.05)
             yield "{}/capture/{}.jpg".format(dir,img_name)
             end = timer()
             #if(end-start < 0.1):
@@ -78,7 +77,7 @@ class ImageProcessor():
                         listener_endpoint_rpi.send("arrfound{}".format(entry))
                 else:
                     #test
-                    listener_endpoint_rpi.send("NOT FOUND")
+                    #listener_endpoint_rpi.send("NOT FOUND")
                     continue
             else:
                 time.sleep(0.5)
@@ -134,8 +133,10 @@ class ImageProcessor():
         gray = cv.cvtColor(captured_image, cv.COLOR_RGB2GRAY)
         blur = cv.GaussianBlur(gray, (5, 5), 2)
         ret, thresholded_img = cv.threshold(blur, 50, 255, cv.THRESH_BINARY)
-        #cv.imwrite("capture/{}_th.jpg".format(captured_image_location),thresholded_img)
+        #cv.imwrite("{}/capture/{}_th.jpg".format(captured_image_location),thresholded_img)
         captured_cnts = cv.findContours(thresholded_img, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)[1]
+        cnt_image = cv.drawContours(captured_image,captured_cnts,-1,(0,255,0),3)
+        #cv.imwrite("{}/capture/{}_cnt.jpg".format(dir,captured_image_location),cnt_image)
         # get image size
         imgX = captured_image.shape[1]
         imgY = captured_image.shape[0]

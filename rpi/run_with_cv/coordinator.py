@@ -92,20 +92,11 @@ def listen_to_pc(pc_wrapper,arduino_wrapper=None,bt_wrapper=None,opencv_pipe=Non
                         #block thread until received job finished from camera
                         opencv_pipe.recv()
             elif(msg.startswith("ar")):
-                #if(exploration_mode):
-                #   print("PC HOLDING ARDUINO: {}".format(msg))
-                    #reroute all messsages to the opencv thread. opencv thread now has command authority to release instructions by algorithm to arduino
-                #   arduino_wrapper.hold(msg[2:])
-                #else:
                 #print("PC WRITING TO ARDUINO: {}".format(msg))
                 arduino_wrapper.write(msg[2:])
             elif(msg.startswith("an")):
                 #print("PC WRITING TO ANDROID: {}".format(msg))
                 bt_wrapper.write(msg[2:])
-            #raises a connectione error for the following situation
-            #1) RPI resets while PC is connected
-            #2) PC reconnects
-            #3) msg is sent to PC
             else:
                 if(msg is False):
                     raise ConnectionResetError("Null or empty string received arising from connection reset")

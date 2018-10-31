@@ -130,14 +130,12 @@ double SharpIR::distance() {
     else if (_model == 201505) {
     #ifdef ARDUINO
         voltage = (map(ir_val[NB_SAMPLE / 2], 0, 1023, 0, 5000) / 1000.0);
-        distanceCM = (1 / ((-0.001502 * pow(voltage,6)) + (0.017811 * pow(voltage,5)) - 
-            (0.075565 * pow(voltage,4)) + (0.151922 * pow(voltage,3)) - 
-            (0.155959 * pow(voltage,2)) + (0.093823 * pow(voltage,1)) - 0.007963)) - 0.42;
+        distanceCM = (1 / ((0.019330 * pow(voltage,4)) - (0.094384 * pow(voltage,3)) + (0.158652 * pow(voltage,2)) - 
+            (0.089789 * pow(voltage,1)) + 0.024171)) - 0.42;
     #elif defined(SPARK)
         voltage = (map(ir_val[NB_SAMPLE / 2], 0, 4095, 0, 5000) / 1000.0);
-        distanceCM = (1 / ((-0.001502 * pow(voltage,6)) + (0.017811 * pow(voltage,5)) - 
-            (0.075565 * pow(voltage,4)) + (0.151922 * pow(voltage,3)) - 
-            (0.155959 * pow(voltage,2)) + (0.093823 * pow(voltage,1)) - 0.007963)) - 0.42;
+        distanceCM = (1 / ((0.019330 * pow(voltage,4)) - (0.094384 * pow(voltage,3)) + (0.158652 * pow(voltage,2)) - 
+            (0.089789 * pow(voltage,1)) + 0.024171)) - 0.42;
     #endif
     }
     else if (_model == 10806) {

@@ -88,9 +88,12 @@ def listen_to_pc(pc_wrapper,arduino_wrapper=None,bt_wrapper=None,opencv_pipe=Non
                 #signal new capture job
                 with exploration_lock:
                     if(exploration_mode):
+                        #send robot status to image recognittion
                         opencv_pipe.send(msg[3:])
-                        #block thread until received job finished from camera
-                        opencv_pipe.recv()
+                        #poll for at most 1 second. image capturing should not take more 0.5 seconds or else there is a problem
+                        if(opencv_pipe.poll(1)):
+                            #clear the received message
+                            opencv_pipe.recv()
             elif(msg.startswith("ar")):
                 #if(exploration_mode):
                 #   print("PC HOLDING ARDUINO: {}".format(msg))

@@ -36,6 +36,11 @@ class Robot(
     private val speed: Int?,
     private val connection: Connection
 ) : CoroutineScope {
+
+    companion object {
+        private const val UNCALIBRATED_THRESHOLD = 4
+    }
+
     private val job = Job()
 
     override val coroutineContext: CoroutineContext
@@ -48,6 +53,8 @@ class Robot(
     val correctArrows = mutableListOf<CellInfoModel>()
 
     private var movementCount = 0
+    private var horizontalUncalibratedCount = 0
+    private var verticalUncalibratedCount = 0
 
     init {
         startProcessingArrowFound()
@@ -208,7 +215,8 @@ class Robot(
         if (connection.isConnected) {
             tryCalibrate(false)
         }
-        movementCount++
+        horizontalUncalibratedCount++
+        verticalUncalibratedCount++
         if (connection.isConnected) {
             when (movement) {
                 Movement.TURN_LEFT, Movement.TURN_RIGHT -> {
@@ -369,62 +377,260 @@ class Robot(
         }
     }
 
-    private suspend fun tryCalibrate(force: Boolean) {
-        if (movementCount >= 4 || force) {
+    private suspend fun tryCalibrate(isForced: Boolean) {
+        val shouldCalibrateHorizontally = horizontalUncalibratedCount >= UNCALIBRATED_THRESHOLD
+        val shouldCalibrateVertically = verticalUncalibratedCount >= UNCALIBRATED_THRESHOLD
+        if (shouldCalibrateHorizontally || shouldCalibrateVertically || isForced) {
             val rightSide = explorationMaze.getSide(centerCell.copy(), Movement.TURN_RIGHT)
             val frontSide = explorationMaze.getSide(centerCell.copy(), Movement.MOVE_FORWARD)
             val leftSide = explorationMaze.getSide(centerCell.copy(), Movement.TURN_LEFT)
-            println("tryCalibrate, force=$force, movementCount=$movementCount")
+            val backSide = explorationMaze.getSide(
+                centerCell.copy(direction = centerCell.direction.turnRight()),
+                Movement.TURN_RIGHT
+            )
+            println("tryCalibrate, isForced=$isForced")
+            println("horizontalUncalibratedCount=$horizontalUncalibratedCount, verticalUncalibratedCount=$verticalUncalibratedCount")
             println("Center=$centerCell")
             println("Right=${rightSide.joinToString()}")
             println("Front=${frontSide.joinToString()}")
             println("Left=${leftSide.joinToString()}")
-            when {
-                frontSide.all { it == CELL_OBSTACLE } && leftSide.all { it == CELL_OBSTACLE } -> {
-                    movementCount = 0
-                    connection.sendCalibrationCommandAndWait()
-                    move(Movement.TURN_LEFT)
-                    delay(250L)
-                    connection.sendCalibrationCommandAndWait()
-                    move(Movement.TURN_RIGHT)
-                    delay(250L)
-                    movementCount = 0
+            println("Back=${backSide.joinToString()}")
+
+            val canCalibrateInFront = frontSide.all { it == CELL_OBSTACLE }
+            val canCalibrateOnLHS = leftSide.all { it == CELL_OBSTACLE }
+            val canCalibrateOnRHS = rightSide.all { it == CELL_OBSTACLE }
+            val canCalibrateAtBack = backSide.all { it == CELL_OBSTACLE }
+
+            if (canCalibrateInFront && canCalibrateOnLHS) {
+                calibrateFrontAndLHS()
+            } else if (canCalibrateInFront && canCalibrateOnRHS) {
+                calibrateFrontAndRHS()
+            } else if (canCalibrateAtBack && canCalibrateOnLHS) {
+                calibrateBackAndLHS()
+            } else if (canCalibrateAtBack && canCalibrateOnRHS) {
+                calibrateBackAndRHS()
+            } else if (canCalibrateInFront) {
+                when (centerCell.direction) {
+                    Direction.UP, Direction.DOWN -> {
+                        if (shouldCalibrateVertically) {
+                            val tempHorizontalCount = horizontalUncalibratedCount
+                            horizontalUncalibratedCount = 0
+                            verticalUncalibratedCount = 0
+                            calibrateFront()
+                            horizontalUncalibratedCount = tempHorizontalCount
+                            verticalUncalibratedCount = 0
+                        }
+                    }
+                    Direction.LEFT, Direction.RIGHT -> {
+                        if (shouldCalibrateHorizontally) {
+                            val tempVerticalCount = verticalUncalibratedCount
+                            horizontalUncalibratedCount = 0
+                            verticalUncalibratedCount = 0
+                            calibrateFront()
+                            horizontalUncalibratedCount = 0
+                            verticalUncalibratedCount = tempVerticalCount
+                        }
+                    }
                 }
-                frontSide.all { it == CELL_OBSTACLE } && rightSide.all { it == CELL_OBSTACLE } -> {
-                    movementCount = 0
-                    connection.sendCalibrationCommandAndWait()
-                    move(Movement.TURN_RIGHT)
-                    delay(250L)
-                    connection.sendCalibrationCommandAndWait()
-                    move(Movement.TURN_LEFT)
-                    delay(250L)
-                    movementCount = 0
+            } else if (canCalibrateOnLHS) {
+                when (centerCell.direction) {
+                    Direction.UP, Direction.DOWN -> {
+                        if (shouldCalibrateHorizontally) {
+                            val tempVerticalCount = verticalUncalibratedCount
+                            horizontalUncalibratedCount = 0
+                            verticalUncalibratedCount = 0
+                            calibrateLHS()
+                            horizontalUncalibratedCount = 0
+                            verticalUncalibratedCount = tempVerticalCount
+                        }
+                    }
+                    Direction.LEFT, Direction.RIGHT -> {
+                        if (shouldCalibrateVertically) {
+                            val tempHorizontalCount = horizontalUncalibratedCount
+                            horizontalUncalibratedCount = 0
+                            verticalUncalibratedCount = 0
+                            calibrateLHS()
+                            horizontalUncalibratedCount = tempHorizontalCount
+                            verticalUncalibratedCount = 0
+                        }
+                    }
                 }
-                frontSide.all { it == CELL_OBSTACLE } -> {
-                    movementCount = 0
-                    connection.sendCalibrationCommandAndWait()
-                    movementCount = 0
-                }
-                leftSide.all { it == CELL_OBSTACLE } -> {
-                    movementCount = 0
-                    move(Movement.TURN_LEFT)
-                    delay(250L)
-                    connection.sendCalibrationCommandAndWait()
-                    move(Movement.TURN_RIGHT)
-                    delay(250L)
-                    movementCount = 0
-                }
-                rightSide.all { it == CELL_OBSTACLE } -> {
-                    movementCount = 0
-                    move(Movement.TURN_RIGHT)
-                    delay(250L)
-                    connection.sendCalibrationCommandAndWait()
-                    move(Movement.TURN_LEFT)
-                    delay(250L)
-                    movementCount = 0
+            } else if (canCalibrateOnRHS) {
+                when (centerCell.direction) {
+                    Direction.UP, Direction.DOWN -> {
+                        if (shouldCalibrateHorizontally) {
+                            val tempVerticalCount = verticalUncalibratedCount
+                            horizontalUncalibratedCount = 0
+                            verticalUncalibratedCount = 0
+                            calibrateRHS()
+                            horizontalUncalibratedCount = 0
+                            verticalUncalibratedCount = tempVerticalCount
+                        }
+                    }
+                    Direction.LEFT, Direction.RIGHT -> {
+                        if (shouldCalibrateVertically) {
+                            val tempHorizontalCount = horizontalUncalibratedCount
+                            horizontalUncalibratedCount = 0
+                            verticalUncalibratedCount = 0
+                            calibrateRHS()
+                            horizontalUncalibratedCount = tempHorizontalCount
+                            verticalUncalibratedCount = 0
+                        }
+                    }
                 }
             }
         }
+//        if (movementCount >= 4 || isForced) {
+//            val rightSide = explorationMaze.getSide(centerCell.copy(), Movement.TURN_RIGHT)
+//            val frontSide = explorationMaze.getSide(centerCell.copy(), Movement.MOVE_FORWARD)
+//            val leftSide = explorationMaze.getSide(centerCell.copy(), Movement.TURN_LEFT)
+//            println("tryCalibrate, isForced=$isForced, movementCount=$movementCount")
+//            println("Center=$centerCell")
+//            println("Right=${rightSide.joinToString()}")
+//            println("Front=${frontSide.joinToString()}")
+//            println("Left=${leftSide.joinToString()}")
+//            when {
+//                frontSide.all { it == CELL_OBSTACLE } && leftSide.all { it == CELL_OBSTACLE } -> {
+//                    movementCount = 0
+//                    connection.sendCalibrationCommandAndWait()
+//                    move(Movement.TURN_LEFT)
+//                    delay(250L)
+//                    connection.sendCalibrationCommandAndWait()
+//                    delay(250L)
+//                    move(Movement.TURN_RIGHT)
+//                    delay(250L)
+//                    movementCount = 0
+//                }
+//                frontSide.all { it == CELL_OBSTACLE } && rightSide.all { it == CELL_OBSTACLE } -> {
+//                    movementCount = 0
+//                    connection.sendCalibrationCommandAndWait()
+//                    move(Movement.TURN_RIGHT)
+//                    delay(250L)
+//                    connection.sendCalibrationCommandAndWait()
+//                    delay(250L)
+//                    move(Movement.TURN_LEFT)
+//                    delay(250L)
+//                    movementCount = 0
+//                }
+//                frontSide.all { it == CELL_OBSTACLE } -> {
+//                    movementCount = 0
+//                    connection.sendCalibrationCommandAndWait()
+//                    delay(250L)
+//                    movementCount = 0
+//                }
+//                leftSide.all { it == CELL_OBSTACLE } -> {
+//                    movementCount = 0
+//                    move(Movement.TURN_LEFT)
+//                    delay(250L)
+//                    connection.sendCalibrationCommandAndWait()
+//                    delay(250L)
+//                    move(Movement.TURN_RIGHT)
+//                    delay(250L)
+//                    movementCount = 0
+//                }
+//                rightSide.all { it == CELL_OBSTACLE } -> {
+//                    movementCount = 0
+//                    move(Movement.TURN_RIGHT)
+//                    delay(250L)
+//                    connection.sendCalibrationCommandAndWait()
+//                    delay(250L)
+//                    move(Movement.TURN_LEFT)
+//                    delay(250L)
+//                    movementCount = 0
+//                }
+//            }
+//        }
+    }
+
+    private suspend fun calibrateFrontAndLHS() {
+        horizontalUncalibratedCount = 0
+        verticalUncalibratedCount = 0
+        connection.sendCalibrationCommandAndWait()
+        delay(250L)
+        move(Movement.TURN_LEFT)
+        delay(250L)
+        connection.sendCalibrationCommandAndWait()
+        delay(250L)
+        move(Movement.TURN_RIGHT)
+        delay(250L)
+        horizontalUncalibratedCount = 0
+        verticalUncalibratedCount = 0
+    }
+
+    private suspend fun calibrateFrontAndRHS() {
+        horizontalUncalibratedCount = 0
+        verticalUncalibratedCount = 0
+        connection.sendCalibrationCommandAndWait()
+        delay(250L)
+        move(Movement.TURN_RIGHT)
+        delay(250L)
+        connection.sendCalibrationCommandAndWait()
+        delay(250L)
+        move(Movement.TURN_LEFT)
+        delay(250L)
+        horizontalUncalibratedCount = 0
+        verticalUncalibratedCount = 0
+    }
+
+    private suspend fun calibrateFront() {
+        connection.sendCalibrationCommandAndWait()
+        delay(250L)
+    }
+
+    private suspend fun calibrateBackAndLHS() {
+        horizontalUncalibratedCount = 0
+        verticalUncalibratedCount = 0
+        move(Movement.TURN_RIGHT)
+        delay(100L)
+        move(Movement.TURN_RIGHT)
+        delay(100L)
+        connection.sendCalibrationCommandAndWait()
+        delay(250L)
+        move(Movement.TURN_RIGHT)
+        delay(250L)
+        connection.sendCalibrationCommandAndWait()
+        delay(250L)
+        move(Movement.TURN_RIGHT)
+        delay(250L)
+        horizontalUncalibratedCount = 0
+        verticalUncalibratedCount = 0
+    }
+
+    private suspend fun calibrateBackAndRHS() {
+        horizontalUncalibratedCount = 0
+        verticalUncalibratedCount = 0
+        move(Movement.TURN_LEFT)
+        delay(100L)
+        move(Movement.TURN_LEFT)
+        delay(100L)
+        connection.sendCalibrationCommandAndWait()
+        delay(250L)
+        move(Movement.TURN_LEFT)
+        delay(250L)
+        connection.sendCalibrationCommandAndWait()
+        delay(250L)
+        move(Movement.TURN_LEFT)
+        delay(250L)
+        horizontalUncalibratedCount = 0
+        verticalUncalibratedCount = 0
+    }
+
+    private suspend fun calibrateLHS() {
+        move(Movement.TURN_LEFT)
+        delay(250L)
+        connection.sendCalibrationCommandAndWait()
+        delay(250L)
+        move(Movement.TURN_RIGHT)
+        delay(250L)
+    }
+
+    private suspend fun calibrateRHS() {
+        move(Movement.TURN_RIGHT)
+        delay(250L)
+        connection.sendCalibrationCommandAndWait()
+        delay(250L)
+        move(Movement.TURN_LEFT)
+        delay(250L)
     }
 
     suspend fun calibrateForFastestPath() {

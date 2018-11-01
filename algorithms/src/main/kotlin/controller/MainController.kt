@@ -159,6 +159,9 @@ class MainController : Controller(), CoroutineScope {
             configurationModel.mapDescriptorPart2 = part2
             if (connection.isConnected) {
                 connection.sendMdfString(part1, part2)
+                for (arrow in robot.correctArrows) {
+                    connection.sendArrowCommand(arrow.col, arrow.row, arrow.direction)
+                }
             }
         }
     }

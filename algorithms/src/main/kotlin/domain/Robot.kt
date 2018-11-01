@@ -45,7 +45,7 @@ class Robot(
     private var sensors = listOf<Sensor>()
 
     private val arrowsFound = hashMapOf<Pair<Int, Int>, Direction>()
-    private val correctArrows = mutableListOf<CellInfoModel>()
+    val correctArrows = mutableListOf<CellInfoModel>()
 
     private var movementCount = 0
 

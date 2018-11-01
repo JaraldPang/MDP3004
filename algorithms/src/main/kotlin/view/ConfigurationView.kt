@@ -1,21 +1,11 @@
 package view
 
+import controller.ConnectionState
 import controller.MainController
-import javafx.event.EventHandler
 import javafx.geometry.Pos
-import javafx.scene.Node
-import javafx.scene.input.MouseEvent
 import javafx.util.converter.DoubleStringConverter
 import javafx.util.converter.IntegerStringConverter
 import javafx.util.converter.LongStringConverter
-import kotlinx.coroutines.experimental.Dispatchers
-import kotlinx.coroutines.experimental.GlobalScope
-import kotlinx.coroutines.experimental.channels.Channel
-import kotlinx.coroutines.experimental.channels.ReceiveChannel
-import kotlinx.coroutines.experimental.channels.actor
-import kotlinx.coroutines.experimental.channels.produce
-import kotlinx.coroutines.experimental.javafx.JavaFx
-import kotlinx.coroutines.experimental.selects.whileSelect
 import tornadofx.*
 
 class ConfigurationView : View() {
@@ -119,9 +109,27 @@ class ConfigurationView : View() {
             button("Fastest Path") {
                 action { controller.runFastestPath() }
             }
-            button("Connect") {
-                enableWhen(controller.connection.socketProperty.booleanBinding { it == null })
-                onClick { controller.connect() }
+            button {
+                textProperty().bind(controller.connectionStateProperty.property.stringBinding {
+                    when (it) {
+                        null -> ""
+                        ConnectionState.DISCONNECTED -> "Connect"
+                        ConnectionState.CONNECTING -> "Connecting"
+                        ConnectionState.CONNECTED -> "Disconnect"
+                        ConnectionState.DISCONNECTING -> "Disconnecting"
+                    }
+                })
+                enableWhen(controller.connectionStateProperty.property.booleanBinding {
+                    !(it == ConnectionState.CONNECTING || it == ConnectionState.DISCONNECTING)
+                })
+                action {
+                    when (controller.connectionStateProperty.property.value) {
+                        ConnectionState.DISCONNECTED -> controller.connect()
+                        ConnectionState.CONNECTED -> controller.disconnect()
+                        else -> {
+                        }
+                    }
+                }
             }
             button("Reset") {
                 action { controller.reset() }
@@ -130,28 +138,33 @@ class ConfigurationView : View() {
     }
 }
 
-fun Node.onClick(action: suspend (MouseEvent) -> Unit) {
-    val eventActor = GlobalScope.actor<MouseEvent>(Dispatchers.JavaFx, capacity = Channel.CONFLATED) {
-        for (event in channel.debounce(300)) {
-            action(event)
-        }
-    }
-
-    onMouseClicked = EventHandler { eventActor.offer(it) }
-}
-
-fun <T> ReceiveChannel<T>.debounce(timeMillis: Long) =
-    GlobalScope.produce(Dispatchers.JavaFx) {
-        var value = receive()
-        whileSelect {
-            onTimeout(timeMillis) {
-                send(value)
-                value = receive()
-                true
-            }
-            onReceive {
-                value = it
-                true
-            }
-        }
-    }
+//fun Node.onClick(action: suspend (MouseEvent) -> Unit) {
+//    val eventActor = Channel<MouseEvent>(Channel.CONFLATED)
+//    GlobalScope.launch(Dispatchers.Main) {
+//        for (event in eventActor.debounce(300)) {
+//            action(event)
+//        }
+//    }
+//
+//    onMouseClicked = EventHandler { eventActor.offer(it) }
+//}
+//
+//@UseExperimental(ExperimentalCoroutinesApi::class)
+//fun <T> ReceiveChannel<T>.debounce(timeMillis: Long): ReceiveChannel<T> {
+//    val producer = Channel<T>(Channel.UNLIMITED)
+//    GlobalScope.launch(Dispatchers.Main) {
+//        var value = receive()
+//        while (true) {
+//            selectUnbiased<Unit> {
+//                onTimeout(timeMillis) {
+//                    producer.send(value)
+//                    value = receive()
+//                }
+//                onReceive {
+//                    value = it
+//                }
+//            }
+//        }
+//    }
+//    return producer
+//}

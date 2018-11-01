@@ -1,6 +1,6 @@
 package domain
 
-import kotlinx.coroutines.experimental.channels.ReceiveChannel
+import kotlinx.coroutines.channels.ReceiveChannel
 import model.MazeModel
 
 /**
@@ -25,14 +25,21 @@ class SimulatedSensor(position: Int, senseRange: IntRange, private val robot: Ro
     override suspend fun sense(): Int {
         val (centerRow, centerCol, direction) = robot.centerCell
         val (rowDiff, colDiff, rowInc, colInc) = SENSOR_INFO[position][direction.ordinal]
+        for (i in 0 until senseRange.first) {
+            val row = centerRow + rowDiff + rowInc * i
+            val col = centerCol + colDiff + colInc * i
+            if (MazeModel.isOutsideOfMaze(row, col) || realMaze[row, col] == CELL_OBSTACLE) {
+                return -1
+            }
+        }
         for (i in senseRange) {
             val row = centerRow + rowDiff + rowInc * i
             val col = centerCol + colDiff + colInc * i
-            if (MazeModel.isOutsideOfMaze(row, col) || realMaze[row][col] == CELL_OBSTACLE) {
+            if (MazeModel.isOutsideOfMaze(row, col) || realMaze[row, col] == CELL_OBSTACLE) {
                 return i
             }
         }
-        return -1
+        return senseRange.last
     }
 }
 

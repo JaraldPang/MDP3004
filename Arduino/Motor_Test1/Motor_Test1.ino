@@ -43,7 +43,7 @@ void loop()
   }*/
   if(millis()>0) {
     md.setM1Speed(400); //Right 11
-    md.setM2Speed(400); //Left 3
+    md.setM2Speed(0); //Left 3
     Serial.print("400");
     Serial.print("\t");
   }

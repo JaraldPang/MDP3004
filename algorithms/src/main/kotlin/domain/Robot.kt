@@ -213,7 +213,7 @@ class Robot(
             when (movement) {
                 Movement.TURN_LEFT, Movement.TURN_RIGHT -> {
                     connection.sendTurnCommandWithCountAndWait(movement, 1)
-                    delay(100L)
+                    delay(250L)
                 }
                 Movement.MOVE_FORWARD -> connection.sendMoveForwardWithDistanceAndWait(1)
             }
@@ -370,7 +370,7 @@ class Robot(
     }
 
     private suspend fun tryCalibrate(force: Boolean) {
-        if (movementCount >= 5 || force) {
+        if (movementCount >= 4 || force) {
             val rightSide = explorationMaze.getSide(centerCell.copy(), Movement.TURN_RIGHT)
             val frontSide = explorationMaze.getSide(centerCell.copy(), Movement.MOVE_FORWARD)
             val leftSide = explorationMaze.getSide(centerCell.copy(), Movement.TURN_LEFT)

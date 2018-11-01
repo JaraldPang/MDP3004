@@ -17,9 +17,9 @@ open class Exploration(private val robot: Robot, private val connection: Connect
     private var calibratedAtTopLeftCorner = false
     private var calibratedAtBottomRightCorner = false
 
-    private val stack = Stack<CellInfoModel>().apply {
+    private val stacks = mutableListOf(Stack<CellInfoModel>().apply {
         push(robot.centerCell.copy())
-    }
+    })
 
     open suspend fun explore() {
         while (!exploreInternal(100.0)) {
@@ -129,51 +129,111 @@ open class Exploration(private val robot: Robot, private val connection: Connect
 
     private suspend fun backtrack(): Boolean {
         println("Backtracking")
-        while (stack.isNotEmpty()) {
-            val cell = stack.pop()
-            saveJson(ExplorationJson(stack.map { CenterCell(it.row, it.col, it.direction) }))
-            val sides = robot.explorationMaze.getEnvironmentOnSides(cell)
-            println("Checking $cell, sides=${sides.joinToString()}")
-            if (sides.any { it == CELL_UNKNOWN || it == CELL_SENSED }) {
-                val pathsToCell = findFastestPathToDestination(
-                    robot.explorationMaze.copy(),
-                    robot.centerCell.copy(),
-                    cell.row to cell.col
-                )
-                if (pathsToCell.size <= cell.direction.ordinal || pathsToCell[cell.direction.ordinal].isEmpty()) {
-                    throw IllegalStateException("Unable to go back to cell $cell")
+
+        // Use Dijkstra to find the shortest path to all empty grids.
+        val backtrace = mutableMapOf<CellInfoModel, CellInfoModel>()
+        val distanceMap = mutableMapOf<CellInfoModel, Int>()
+        dijkstra(robot.explorationMaze.copy(), robot.centerCell.copy(), backtrace, distanceMap)
+
+        val distanceSequence = distanceMap.asSequence().sortedBy { it.value }
+        // Find any cell which has minimal distance from the robot's current cell
+        // and one side of it is unknown.
+        for ((dest, distance) in distanceSequence) {
+            println("dest=$dest, distance=$distance")
+            for (movement in Movement.values()) {
+                val sides = robot.explorationMaze.getSide(dest, movement)
+                if (sides.any { it == CELL_UNKNOWN }) {
+                    println("At $dest, one side is unknown")
+                    val path = buildPath(dest, backtrace)
+                    val movements = path.toMovements()
+                    robot.moveFollowingMovements(movements)
+                    return false
                 }
-                val movement = Movement.values()[sides.indexOfFirst { it == CELL_UNKNOWN || it == CELL_SENSED }]
-                val direction = when (movement) {
-                    Movement.TURN_RIGHT -> cell.direction.turnRight()
-                    Movement.TURN_LEFT -> cell.direction.turnLeft()
-                    Movement.MOVE_FORWARD -> cell.direction
-                }
-                val pathToCell = pathsToCell[direction.ordinal]
-                val movements = pathToCell.toMovements()
-                robot.moveFollowingMovements(movements)
-                return false
             }
         }
+
+//        while (stacks.isNotEmpty()) {
+//            val stack = stacks.last()
+//            val copy = Stack<CellInfoModel>().apply { addAll(stack) }
+//
+//            // Check if copy contains any side that is unknown
+//            println("Checking copy for CELL_UNKNOWN")
+//            while (copy.isNotEmpty()) {
+//                val cell = copy.pop()
+//                val sides = robot.explorationMaze.getEnvironmentOnSides(cell)
+//                println("Checking $cell, sides=${sides.joinToString()}")
+//                if (sides.any { it == CELL_UNKNOWN }) {
+//                    stacks += copy
+//                    val pathsToCell = findFastestPathToDestination(
+//                        robot.explorationMaze.copy(),
+//                        robot.centerCell.copy(),
+//                        cell.row to cell.col
+//                    )
+//                    if (pathsToCell.size <= cell.direction.ordinal || pathsToCell[cell.direction.ordinal].isEmpty()) {
+//                        throw IllegalStateException("Unable to go back to cell $cell")
+//                    }
+//                    val movement = Movement.values()[sides.indexOfFirst { it == CELL_UNKNOWN }]
+//                    val direction = when (movement) {
+//                        Movement.TURN_RIGHT -> cell.direction.turnRight()
+//                        Movement.TURN_LEFT -> cell.direction.turnLeft()
+//                        Movement.MOVE_FORWARD -> cell.direction
+//                    }
+//                    val pathToCell = pathsToCell[direction.ordinal]
+//                    val movements = pathToCell.toMovements()
+//                    robot.moveFollowingMovements(movements)
+//                    return false
+//                }
+//            }
+//
+//            // No unknown found in the copy, check if any state has any empty side
+//            println("Checking stack for CELL_SENSED")
+//            while (stack.isNotEmpty()) {
+//                val cell = stack.pop()
+//                val sides = robot.explorationMaze.getEnvironmentOnSides(cell)
+//                println("Checking $cell, sides=${sides.joinToString()}")
+//                if (sides.any { it == CELL_SENSED }) {
+//                    val pathsToCell = findFastestPathToDestination(
+//                        robot.explorationMaze.copy(),
+//                        robot.centerCell.copy(),
+//                        cell.row to cell.col
+//                    )
+//                    if (pathsToCell.size <= cell.direction.ordinal || pathsToCell[cell.direction.ordinal].isEmpty()) {
+//                        throw IllegalStateException("Unable to go back to cell $cell")
+//                    }
+//                    val movement = Movement.values()[sides.indexOfFirst { it == CELL_SENSED }]
+//                    val direction = when (movement) {
+//                        Movement.TURN_RIGHT -> cell.direction.turnRight()
+//                        Movement.TURN_LEFT -> cell.direction.turnLeft()
+//                        Movement.MOVE_FORWARD -> cell.direction
+//                    }
+//                    val pathToCell = pathsToCell[direction.ordinal]
+//                    val movements = pathToCell.toMovements()
+//                    robot.moveFollowingMovements(movements)
+//                    return false
+//                }
+//            }
+//
+//            stacks.removeAt(stacks.lastIndex)
+//        }
         return true
     }
 
     private suspend fun moveForward() {
         robot.move(Movement.MOVE_FORWARD)
-        stack += robot.centerCell.copy()
-        saveJson(ExplorationJson(stack.map { CenterCell(it.row, it.col, it.direction) }))
+        stacks.last() += robot.centerCell.copy()
+        saveJson(ExplorationJson(stacks.last().map { CenterCell(it.row, it.col, it.direction) }))
     }
 
     private suspend fun turnLeft() {
         robot.move(Movement.TURN_LEFT)
-        stack += robot.centerCell.copy()
-        saveJson(ExplorationJson(stack.map { CenterCell(it.row, it.col, it.direction) }))
+        stacks.last() += robot.centerCell.copy()
+        saveJson(ExplorationJson(stacks.last().map { CenterCell(it.row, it.col, it.direction) }))
     }
 
     private suspend fun turnRight() {
         robot.move(Movement.TURN_RIGHT)
-        stack += robot.centerCell.copy()
-        saveJson(ExplorationJson(stack.map { CenterCell(it.row, it.col, it.direction) }))
+        stacks.last() += robot.centerCell.copy()
+        saveJson(ExplorationJson(stacks.last().map { CenterCell(it.row, it.col, it.direction) }))
     }
 }
 

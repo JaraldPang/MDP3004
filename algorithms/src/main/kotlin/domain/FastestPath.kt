@@ -68,15 +68,16 @@ class FastestPathWithWayPoint(
     }
 }
 
-fun findFastestPathToDestination(
+fun dijkstra(
     realMaze: MazeModel,
     start: CellInfoModel,
-    dest: Pair<Int, Int>
-): List<List<CellInfoModel>> {
+    backtrace: MutableMap<CellInfoModel, CellInfoModel>,
+    distanceMap: MutableMap<CellInfoModel, Int>
+) {
     realMaze.resetForFastestPath()
 
-    val backtrace = mutableMapOf(start to start)
-    val distanceMap = mutableMapOf(start to 0)
+    backtrace[start] = start
+    distanceMap[start] = 0
     val queue = PriorityQueue<Pair<CellInfoModel, Int>> { o1, o2 -> o1.second.compareTo(o2.second) }
     queue.add(start to 0)
 
@@ -89,8 +90,12 @@ fun findFastestPathToDestination(
         val sides = realMaze.getEnvironmentOnSides(CellInfoModel(cell.row, cell.col, cell.direction))
 
         for (movement in Movement.values()) {
-            if (movement == Movement.MOVE_FORWARD && sides[Movement.MOVE_FORWARD.ordinal] == CELL_OBSTACLE) {
-                continue
+            if (movement == Movement.MOVE_FORWARD) {
+                val side = sides[Movement.MOVE_FORWARD.ordinal]
+                // Should not move into an obstacle or unknown space
+                if (side == CELL_OBSTACLE || side == CELL_OBSTACLE) {
+                    continue
+                }
             }
             val nextCell = cell + movement
             val distanceOfNextCell = distanceMap[nextCell]
@@ -102,24 +107,36 @@ fun findFastestPathToDestination(
             }
         }
     }
+}
 
-    return Direction.values().map {
-        val path = ArrayDeque<CellInfoModel>()
-        var cell = CellInfoModel(dest.first, dest.second, it)
-        while (true) {
-            val prevCell = backtrace[cell]
-            if (prevCell != null) {
-                path.addFirst(cell)
-                if (prevCell == cell) {
-                    break
-                }
-                cell = prevCell
-            } else {
+fun buildPath(dest: CellInfoModel, backtrace: Map<CellInfoModel, CellInfoModel>): List<CellInfoModel> {
+    val path = LinkedList<CellInfoModel>()
+    var cell = dest
+    while (true) {
+        val prevCell = backtrace[cell]
+        if (prevCell != null) {
+            path.addFirst(cell)
+            if (prevCell == cell) {
                 break
             }
+            cell = prevCell
+        } else {
+            break
         }
-        path.toList()
     }
+    return path
+}
+
+fun findFastestPathToDestination(
+    realMaze: MazeModel,
+    start: CellInfoModel,
+    dest: Pair<Int, Int>
+): List<List<CellInfoModel>> {
+    val backtrace = mutableMapOf<CellInfoModel, CellInfoModel>()
+    val distanceMap = mutableMapOf<CellInfoModel, Int>()
+    dijkstra(realMaze, start, backtrace, distanceMap)
+
+    return Direction.values().map { buildPath(CellInfoModel(dest.first, dest.second, it), backtrace) }
 }
 
 fun List<CellInfoModel>.toMovements(): List<Movement> {

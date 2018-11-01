@@ -1,11 +1,10 @@
 buildscript {
-    ext.kotlin_version = '1.3.0-rc-190'
-    ext.ktor_version = '1.0.0-beta-1'
-    ext.atomicfu_version = '0.11.11'
+    ext.kotlin_version = '1.3.0'
+    ext.ktor_version = '1.0.0-beta-3'
+    ext.atomicfu_version = '0.11.12'
 
     repositories {
         mavenCentral()
-        maven { url 'https://kotlin.bintray.com/kotlinx' }
         maven { url "https://dl.bintray.com/kotlin/kotlin-eap" }
     }
 
@@ -28,14 +27,13 @@ repositories {
     mavenCentral()
     jcenter()
     maven { url "https://dl.bintray.com/kotlin/ktor" }
-    maven { url 'https://kotlin.bintray.com/kotlinx' }
     maven { url "https://dl.bintray.com/kotlin/kotlin-eap" }
 }
 
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     compile 'no.tornado:tornadofx:1.7.17'
-    compile 'org.jetbrains.kotlinx:kotlinx-coroutines-javafx:1.0.0-RC1'
+    compile 'org.jetbrains.kotlinx:kotlinx-coroutines-javafx:1.0.0'
     compile "io.ktor:ktor-network:$ktor_version"
     compile "io.ktor:ktor-server-core:$ktor_version"
     compile "org.jetbrains.kotlinx:atomicfu:$atomicfu_version"

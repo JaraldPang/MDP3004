@@ -2,20 +2,10 @@ package view
 
 import controller.ConnectionState
 import controller.MainController
-import javafx.event.EventHandler
 import javafx.geometry.Pos
-import javafx.scene.Node
-import javafx.scene.input.MouseEvent
 import javafx.util.converter.DoubleStringConverter
 import javafx.util.converter.IntegerStringConverter
 import javafx.util.converter.LongStringConverter
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.ReceiveChannel
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.selects.selectUnbiased
 import tornadofx.*
 
 class ConfigurationView : View() {
@@ -148,33 +138,33 @@ class ConfigurationView : View() {
     }
 }
 
-fun Node.onClick(action: suspend (MouseEvent) -> Unit) {
-    val eventActor = Channel<MouseEvent>(Channel.CONFLATED)
-    GlobalScope.launch(Dispatchers.Main) {
-        for (event in eventActor.debounce(300)) {
-            action(event)
-        }
-    }
-
-    onMouseClicked = EventHandler { eventActor.offer(it) }
-}
-
-@UseExperimental(ExperimentalCoroutinesApi::class)
-fun <T> ReceiveChannel<T>.debounce(timeMillis: Long): ReceiveChannel<T> {
-    val producer = Channel<T>(Channel.UNLIMITED)
-    GlobalScope.launch(Dispatchers.Main) {
-        var value = receive()
-        while (true) {
-            selectUnbiased<Unit> {
-                onTimeout(timeMillis) {
-                    producer.send(value)
-                    value = receive()
-                }
-                onReceive {
-                    value = it
-                }
-            }
-        }
-    }
-    return producer
-}
+//fun Node.onClick(action: suspend (MouseEvent) -> Unit) {
+//    val eventActor = Channel<MouseEvent>(Channel.CONFLATED)
+//    GlobalScope.launch(Dispatchers.Main) {
+//        for (event in eventActor.debounce(300)) {
+//            action(event)
+//        }
+//    }
+//
+//    onMouseClicked = EventHandler { eventActor.offer(it) }
+//}
+//
+//@UseExperimental(ExperimentalCoroutinesApi::class)
+//fun <T> ReceiveChannel<T>.debounce(timeMillis: Long): ReceiveChannel<T> {
+//    val producer = Channel<T>(Channel.UNLIMITED)
+//    GlobalScope.launch(Dispatchers.Main) {
+//        var value = receive()
+//        while (true) {
+//            selectUnbiased<Unit> {
+//                onTimeout(timeMillis) {
+//                    producer.send(value)
+//                    value = receive()
+//                }
+//                onReceive {
+//                    value = it
+//                }
+//            }
+//        }
+//    }
+//    return producer
+//}
